@@ -23,7 +23,7 @@ function CardLivro({props}){
             viewport={{ once: true }}             // anima apenas uma vez
             transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo mnkkj
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {livrosFiltrados.map(livro => (
+        {livros.map(livro => (
           <section key={livro.id} className="bg-white rounded-md shadow overflow-hidden relative hover:scale-105 duration-300 ease-in-out transition-transform cursor-pointer">
             <img
               src={livro.capa}
