@@ -1,0 +1,531 @@
+{
+    
+    "livros" : [
+        {
+            "id": 1,
+            "titulo": "Tecnologias Digitais na Educação",
+            "autor": "Ana Beatriz Andrades",
+            "categoria": "Tecnologia",
+            "descricao": "Um estudo prático sobre como ferramentas digitais transformam o processo de ensino e aprendizagem trazendo novas possiblidades para professores e alunos.",
+            "sumario":[
+                "A evoluição das tecnologias digitais",
+                "Aprendizagem mediada por dispositivos",
+                "Ferramentas digitais para sala de aulas",
+                "Desafios da educação digital",
+                "Estratégias pedagógicas inovadoras",
+                "Futuro da educação integradas na tecnologia"
+            ],
+            "n_paginas": 198,
+            "data_publicacao": "2023",
+            "editora": "EdTech Press",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765812599/livro02_hawwht.webp",
+            "estado": "Disponível",
+            "extra": "recente",
+            "label": "Este livro está disponível para reserva",
+            "isbn": 56791110092827,
+            "nlivro":21
+        },
+
+        {
+            "id": 7,
+            "titulo": "Cultura e Elegância",
+            "autor": "Valéria Monteiro",
+            "categoria": "Cultura e História",
+            "descricao": "Um olhar refinado sobre como a cultura molda comportamentos elegantes, hábitos sociais e expressões de identidade ao longo do tempo.",
+            "sumario":[
+                "A evoluição da elegância ",
+                "Cultura e comportamento social",
+                "Moda, arte e estilo de vida",
+                "Espressões culturais contemporâneas",
+                "A elegância como identidade",
+                "A influência cultural global"
+            ],
+            "n_paginas": 215,
+            "data_publicacao": "2024",
+            "editora": "Artes & Cultura",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765812599/livro02_hawwht.webp",
+            "estado": "Pendente",
+            "extra": "recente",
+            "label": "Aguardando disponibilidade",
+            "isbn": 56791110092827,
+            "nlivro": 7
+        },
+
+          {
+            "id": 2,
+            "titulo": "Ciência Tecnologia, Inovação no Futuro de São Carlos",
+            "autor": "São Carlos",
+            "categoria": "Tecnologia",
+            "descricao": "Uma análise profunda do impacto da ciência e da inovação no desenvolvimento global, explorando tendências que moldarão o futuro.",
+            "sumario":[
+                "O papel da ciência moderna",
+                "Inovações que mudaram o mundo",
+                "Tecnologias emergentes",
+                "Transformação digital global",
+                "Impactos sociais da inovação",
+                "O futuro da ciência e tecnologia"
+            ],
+            "n_paginas": 256,
+            "data_publicacao": "2024",
+            "editora": "FuturaTech",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765812599/livro02_hawwht.webp",
+            "estado": "Disponível",
+            "extra": "recente",
+            "label": "Este livro está disponível para reserva",
+            "isbn": 56791110092827,
+            "nlivro":10
+        },
+
+         {
+            "id": 3,
+            "titulo": "Inteligência Artificial na Sala de Aula",
+            "autor": "Mariana Sousa Pinto",
+            "categoria": "Tecnologia",
+            "descricao": "Um guia acessível que demonstra como a inteligência artificial pode apoiar educaadores, personalizar o aprendizado e melhorar a experiência do estudante.",
+            "sumario":[
+                "O que é a Inteligência Artificial ?",
+                "Aplicações da IA na educação",
+                "Personalização do aprendizado",
+                "Assistentes educacionais inteligentes",
+                "Ética e Responsablidades",
+                "O futuro da IA na sala de aula"
+            ],
+            "n_paginas": 175,
+            "data_publicacao": "2025",
+            "editora": "SmartLearn",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765812599/livro02_hawwht.webp",
+            "estado": "Reservado",
+            "extra": "recente",
+            "label": "Este livro possui uma reserva pendente",
+            "isbn": 908543244223569,
+            "nlivro":9
+        },
+
+        {
+            "id": 4,
+            "titulo": "Transformação Digital uma Jornada Possível",
+            "autor": "Ricardo Alves Monteiro",
+            "categoria": "Tecnologia",
+            "descricao": "Um livro prático que mostra como organizações de qualquer porte podem iniciar e evoluir em processos de transformação digital de forma estratégica.",
+            "sumario":[
+                "Fundamentos da transformação digital ",
+                "Mudanças culturais e organizacionais",
+                "Digitalização de processos",
+                "Novos modelos de negócio",
+                "Ferramentas indispensáveis",
+                "Construindo uma jornada sustentável"
+            ],
+            "n_paginas": 220,
+            "data_publicacao": "2022",
+            "editora": "Digital Path",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765706369/livro_ye5lep.webp",
+            "estado": "Disponível",
+            "extra": "popular",
+            "label": "Este livro está disponível para reserva",
+            "isbn": 56791110092827,
+            "nlivro":15
+        },
+        
+        {
+            "id": 5,
+            "titulo": "Tecnologia da Informação e Comunicação",
+            "autor": "João Pedro Fernandes",
+            "categoria": "Tecnologia",
+            "descricao": "Uma introdução clara e moderna aos principais conceitos de Tecnologia da Informação e Comunicação, com aplicações no mundo real.",
+            "sumario":[
+                "Fundamentos das TICs ",
+                "Infraestruturas tecnológicas",
+                "Sistemas de comunicação",
+                "Redes e conectividade",
+                "TIC na sociedade moderna",
+                "Tendências futuras em tecnologia"
+            ],
+            "n_paginas": 240,
+            "data_publicacao": "2023",
+            "editora": "InfoTech Books",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765706369/livro_ye5lep.webp",
+            "estado": "Emprestado",
+            "extra": "popular",
+            "label": "Este livro está atualmente emprestado",
+            "isbn": 56791110092827,
+            "nlivro":17
+        },
+        
+        {
+            "id": 6,
+            "titulo": "Cultura: A Nossa História das Pinturas Rupestres",
+            "autor": "Helena M. Santos",
+            "categoria": "Cultura e História",
+            "descricao": "Uma viagem artísticas da humanidade, explorando pinturas rupestres e seus significados culturais ao longo dos séculos.",
+            "sumario":[
+                "Introdução às artes pré-históricas ",
+                "As primeiras expressões humanas",
+                "Cenários arqueológicos importantes",
+                "Interpretações e significados simbólicos",
+                "A preservação da arte rupestre",
+                "Conexões culturais contemporâneas"
+            ],
+            "n_paginas": 190,
+            "data_publicacao": "2023",
+            "editora": "Cultura Raiz",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765706369/livro_ye5lep.webp",
+            "estado": "Disponível",
+            "extra": "popular",
+            "label": "Este livro está disponível para reserva",
+            "isbn": 56791110092827,
+            "nlivro":22
+        },
+
+        {
+            "id": 8,
+            "titulo": "História e Cultura dos Povos Indígenas",
+            "autor": "Mateus Araújo",
+            "categoria": "Cultura e História",
+            "descricao": "Um estudo profundo sobre as tradições, crenças, história e sabedoria dos povos indígenas, destacando sua riqueza cultural.",
+            "sumario":[
+                "Origens dos povos indígenas",
+                "Crenças e espiritualidade",
+                "Tradições e costumes",
+                "Arte e simbolismo indígenas",
+                "Luta e preservação cultural",
+                "O futuro das culturas originárias"
+            ],
+            "n_paginas": 260,
+            "data_publicacao": "2022",
+            "editora": "Luciana Ribeiro",
+            "capa": "https://res.cloudinary.com/degsmhalt/image/upload/v1765706369/livro_ye5lep.webp",
+            "estado": "Pendente",
+            "extra": "popular",
+            "label": "Aguardando disponibilidade",
+            "isbn": 56791110092827,
+            "nlivro":20
+        }
+    ],
+    "eventos": [
+        {
+            "id": 1,
+            "titulo": "Livro de Artes Plásticas",
+            "categoria": "Arte",
+            "extra": "destaque_master",
+            "estado": "Em destaque",
+            "label": "Novos livros",
+            "descricao": "Explore os lançamentos mais recentes sobre Artes Plásticas e Modernas.",
+            "data": "06 de Junho de 2026",
+            "capa":"/image/destaque.jpg",
+            "local": "Sala 82 - 2º andar"
+        }, 
+          
+        {
+            "id": 2,
+            "titulo": "Semana Louca: Desafios e Exercícios",
+            "categoria": "",
+            "descricao": "Semana de desafios e exercícios com prémios e certificações",
+            "capa": "/image/evento.jpg",
+            "estado": "Evento",
+            "extra": "destaque",
+            "label": "",
+            "data": "21 de Junho de 2026",
+            "local":"Sala 72 - 2º andar"
+        },
+        
+        {
+            "id": 3,
+            "titulo": "Livros em destque: Ciência",
+            "categoria": "Ciência",
+            "descricao": "Seleção especial de livros de química, física, matemática, informática",
+            "capa": "/image/destaque1.jpg",
+            "estado": "Destaque",
+            "extra": "destaque",
+            "label": "",
+            "data": "29 de Junho de 2026",
+            "local":"Sala 79 - 2º andar"
+        }
+
+    ],
+    "emprestimos": [
+        {
+            "id": 1,
+            "livro": "Cultura e Elegância",
+            "estudante": "Celso Huma",
+            "data_emprestimo": "12/04/2026",
+            "data_vencimento": "24/04/2026",
+            "estado": "Atrasado",
+            "accoes": "Devolvido"
+        },
+        {
+            "id": 2,
+            "livro": "Tecnologia Digitais na Educação",
+            "estudante": "Gabriel Daniel Tacanho",
+            "data_emprestimo": "10/03/2026",
+            "data_vencimento": "20/03/2026",
+            "estado": "Atrasado",
+            "accoes": "Pendente"
+        },
+        {
+            "id": 3,
+            "livro": "Amores Indígenas",
+            "estudante": "Martine Ruth Carvalho",
+            "data_emprestimo": "10/04/2026",
+            "data_vencimento": "20/04/2026",
+            "estado": "Ativo",
+            "accoes": "Em posse"
+        },
+        {
+            "id": 4,
+            "livro": "Coleção Cultural",
+            "estudante": "Dumilde João Manuel",
+            "data_emprestimo": "01/05/2026",
+            "data_vencimento": "14/05/2026",
+            "estado": "Ativo",
+            "accoes": "Devolvido"
+        },
+        {
+            "id": 5,
+            "livro": "Tecnologia da Informação e Comunicação",
+            "estudante": "Alfredo Martins",
+            "data_emprestimo": "10/05/2026",
+            "data_vencimento": "24/05/2026",
+            "estado": "Ativo",
+            "accoes": "Em posse"
+        }
+    ],
+    "alunos": [
+        {
+            "id": 1,
+            "estudante": "Cristiano Carvalho",
+            "n_proc": 71286,
+            "email": "cristianocarvalh207£gmail.com",
+            "curso": "Gestão de Sistemas Informáticos",
+            "classe": 13,
+            "estado": "Ativo",
+            "emprestimos": 1,
+            "reservas": 2,
+            "extra": "Ativo"
+        },
+        {
+            "id": 2,
+            "estudante": "Celso Huma",
+            "n_proc": 71284,
+            "email": "celsocundiath@gmail.com",
+            "curso": "Gestão de Sistemas Informáticos",
+            "classe": 13,
+            "estado": "Ativo",
+            "emprestimos": 2,
+            "reservas": 1,
+            "extra": "Ativo"
+        },
+        {
+            "id": 3,
+            "estudante": "Alfredo Martins",
+            "n_proc": 71279,
+            "email": "alfredohsmartins@gmail.com",
+            "curso": "Gestão de Sistemas Informáticos",
+            "classe": 12,
+            "estado": "Ativo",
+            "emprestimos": 0,
+            "reservas": 1,
+            "extra": "Ativo"
+        },
+        {
+            "id": 4,
+            "estudante": "Álvaro Paulo Francisco de Carvalho",
+            "n_proc": 71280,
+            "email": "alvarocarvalho57@gmail.com",
+            "curso": "Electrônica",
+            "classe": 13,
+            "estado": "Ativo",
+            "emprestimos": 4,
+            "reservas": 5,
+            "extra": "Pendente"
+        },
+        {
+            "id": 5,
+            "estudante": "Martine Ruth Carvalho",
+            "n_proc": 71281,
+            "email": "martinecarvalho2002@gmail.com",
+            "curso": "Telecomunicações",
+            "classe": 13,
+            "estado": "Ativo",
+            "emprestimos": 6,
+            "reservas": 1,
+            "extra": "Pendente"
+        },
+        {
+            "id": 6,
+            "estudante": "Florência Pascoal",
+            "n_proc": 71289,
+            "email": "florenciopascoal@gmail.com",
+            "curso": "Gestão de Sistemas Informáticos",
+            "classe": 11,
+            "estado": "Suspenso",
+            "emprestimos": 2,
+            "reservas": 1,
+            "extra": "Suspenso"
+        },
+        {
+            "id": 7,
+            "estudante": "Gabriel Daniel Tacanho",
+            "n_proc": 71286,
+            "email": "danieltacanho20@gmail.com",
+            "curso": "Gestão de Sistemas Informáticos",
+            "classe": 12,
+            "estado": "Ativo",
+            "emprestimos": 1,
+            "reservas": 1,
+            "extra": "Pendente"
+        },
+        {
+            "id": 8,
+            "estudante": "Dumilde João Manuel",
+            "n_proc": 71285,
+            "email": "dumildemanuel7@gmail.com",
+            "curso": "Gestão de Sistemas Informáticos",
+            "classe": 11,
+            "estado": "Suspenso",
+            "emprestimos": 2,
+            "reservas": 0,
+            "extra": "Suspenso"
+        }
+    ],
+    "autores": [
+        {
+            "id": 1,
+            "autor": "Ana Beatriz Andrades",
+            "nacionalidade": "Português",
+            "n_livros": 1
+        },
+        {
+            "id": 2,
+            "autor": "São Carlos",
+            "nacionalidade": "Português",
+            "n_livros": 1
+        },
+        {
+            "id": 3,
+            "autor": "Mariana Sousa Pinto",
+            "nacionalidade": "Brasileira",
+            "n_livros": 2
+        },
+        {
+            "id": 4,
+            "autor": "Luciana Ribeiro",
+            "nacionalidade": "Angolana",
+            "n_livros": 2
+        },
+        {
+            "id": 5,
+            "autor": "Eduardo Lima",
+            "nacionalidade": "Angolano",
+            "n_livros": 2
+        }
+    ],
+    "categorias" : [
+        {
+            "id": 1,
+            "categoria": "Tecnologia",
+            "descricao": "Livros sobre tecnologia, evoluição e modernização",
+            "n_livros": 5
+        },
+        {
+            "id": 2,
+            "categoria": "Cultura e História",
+            "descricao": "Livros sobre Origens e naturalismo, hábitos, e costumes",
+            "n_livros": 3
+        },
+        {
+            "id": 3,
+            "categoria": "Cultura e Romance",
+            "descricao": "Livros que tratam sobre vantagens de acasalamento cultural, hábitos e costumes iguais atraem",
+            "n_livros": 1
+        },
+        {
+            "id": 4,
+            "categoria": "Cultura e Elegância",
+            "descricao": "Livros que tratam da beleza cultural, explicando os valores de cada costume de um certo povo",
+            "n_livros": 1
+        },
+        {
+            "id": 5,
+            "categoria": "Cultura",
+            "descricao": "Livros que relatam sobre cultura num âmbito geral",
+            "n_livros": 1
+        }
+    ],
+    "admins": [
+        {
+            "id": 1,
+            "nome": "Cristiano Carvalho",
+            "funcao": "Super Admin",
+            "nif": "2023/71286",
+            "estado": "Ativo"
+        },
+        {
+            "id": 2,
+            "nome": "Celso Paulo Cundiati Huma",
+            "nif": "2023/71284",
+            "funcao": "Super Admin",
+            "estado": "Ativo"
+        },
+        {
+            "id": 3,
+            "nome": "Martine Ruth De Carvalho",
+            "nif": "2023/01286",
+            "funcao": "Admin",
+            "estado": "Ativo"
+        },
+        {
+            "id": 4,
+            "nome": "Lucas Pazito",
+            "nif": "2003/01286",
+            "funcao": "Super Admin",
+            "estado": "Ativo"
+        }
+    ],
+    "multas": [
+        {
+            "id": 1,
+            "estudante": "Alfredo Martins",
+            "motivo": "Atrasado",
+            "descricao": "Atrasso na devolução",
+            "valor": "500 kz",
+            "data": "04/02/2026",
+            "estado": "Pago"
+        },
+        {
+            "id": 2,
+            "estudante": "Gabriel Daniel Tacanho",
+            "motivo": "Danos",
+            "descricao": "Danos no produto",
+            "valor": "3500",
+            "data": "01/02/2026",
+            "estado": "Pendente"
+        },
+        {
+            "id": 3,
+            "estudante": "Dumilde João Manuel",
+            "motivo": "Atraso",
+            "descricao": "Atrasso na devolução",
+            "valor": "1500",
+            "data": "03/02/2026",
+            "estado": "Pendente"
+        },
+        {
+            "id": 4,
+            "estudante": "Celso Huma",
+            "motivo": "Atraso",
+            "descricao": "Atrasso na devolução",
+            "valor": "2000",
+            "data": "04/02/2026",
+            "estado": "Dispensado"
+        },
+        {
+            "id": 5,
+            "estudante": "Florência Pascoal",
+            "motivo": "Atraso",
+            "descricao": "Atrasso na devolução",
+            "valor": "2000",
+            "data": "04/02/2026",
+            "estado": "Dispensado"
+        }
+    ]
+}

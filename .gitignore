@@ -1,0 +1,21 @@
+# Frontend (Node / Vite / React)
+node_modules/
+dist/
+.vite/
+
+# Backend (Python / Django)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+
+# Django
+db.sqlite3
+media/
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
