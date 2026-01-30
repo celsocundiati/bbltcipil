@@ -2,12 +2,11 @@ import { motion } from "framer-motion";
 import {MdPersonOutline} from "react-icons/md";
 import {IoCalendarClearOutline} from "react-icons/io5";
 import Estado from "../../estiloEstado/estado";
-//import {livros} from "../../../dados/db.json";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-function CardLivro({props}){
+function CardLivro(){
 
     const [livros, setLivros] = useState([]);
 
@@ -32,7 +31,7 @@ function CardLivro({props}){
               loading="lazy"
             />
             
-            <Estado estado={livro.estado}/>
+            <Estado estado={livro.estado_atual}/>
             
             <section className="p-3">
               <p className="font-medium text-sm">{livro.titulo}</p>
@@ -40,7 +39,7 @@ function CardLivro({props}){
                 <MdPersonOutline size={20} /> {livro.autor}
               </p>
               <p className="flex gap-2 mt-2 items-center text-gray-700">
-                <IoCalendarClearOutline size={20} /> {livro.data_publicacao} • {livro.categoria}
+                <IoCalendarClearOutline size={20} /> {livro.publicado_em} • {livro.categoria}
               </p>
               <Link
                 to={`/detalhes/${livro.id}`}

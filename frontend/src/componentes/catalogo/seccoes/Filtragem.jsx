@@ -12,7 +12,7 @@ function Filtragem(){
             <section className="py-10 px-5 bg-white rounded-xl border border-[#000000]/15">  
                 <div className="mb-5">
                     <form action="">
-                        <InputGroup type="text" placeholder="Busca por título, autor ou categória" />
+                        <InputGroup type="text" placeholder="Busca por título, isbn e..." />
                     </form>
                 </div>
 

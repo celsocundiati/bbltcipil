@@ -1,6 +1,5 @@
 import {useParams} from "react-router-dom";
 import { Link } from "react-router-dom";
-import {livros} from "../../../../dados/db.json";
 import { FiArrowLeft } from "react-icons/fi";
 import {AiOutlineFileText, AiOutlineBook} from "react-icons/ai";
 import {MdPersonOutline} from "react-icons/md";
@@ -9,10 +8,21 @@ import {HiOutlineHashtag} from "react-icons/hi";
 import {IoCalendarClearOutline} from "react-icons/io5";
 import EstadoDetalhes from "./estadoDetalhes/estado";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 function Detalhes(){
 
     const {id} = useParams();
+
+    const [livros, setLivros ] = useState([])
+
+    useEffect(() => {
+      axios.get('http://localhost:8000/api/livros/')
+      .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
+      .catch(err => console.error('Erro ao capturar livros', err))
+    }, []);
+    
     const livro = livros.find((livro) => livro.id === Number(id));
     if(!livro) return <p>Nenhum livro encontrado</p>
 
@@ -43,13 +53,13 @@ function Detalhes(){
                 whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
                 viewport={{ once: true }}             // anima apenas uma vez
                 transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo 
-                    className="bg-white overflow-hidden rounded-2xl max-h-150 min-w-109 sm:max-w-109 border border-black/10">
+                    className="bg-white overflow-hidden rounded-2xl max-h-150 sm:max-w-100 border border-black/10">
                     <img src={livro.capa} alt="" className="h-96 w-full"/>
                     <div className="p-5 w-full flex flex-col gap-5 my-3">
-                        <EstadoDetalhes estado={livro.estado} label={livro.label}/>
-                        <button className={btnEstilo(livro.estado)}>
-                            {livro.estado === "Disponível" ? "Reservar Livro" : livro.estado === "Emprestado" ? "Indisponível"
-                               : livro.estado === "Pendente" ? "Aguardando Disponiblidade" : livro.estado === "Reservado" ? "Indisponível" :""                    
+                        <EstadoDetalhes estado={livro.estado_atual} label={livro.informacao_atual}/>
+                        <button className={btnEstilo(livro.estado_atual)}>
+                            {livro.estado_atual === "Disponível" ? "Reservar Livro" : livro.estado_atual === "Emprestado" ? "Indisponível"
+                               : livro.estado_atual === "Pendente" ? "Aguardando Disponiblidade" : livro.estado_atual === "Reservado" ? "Indisponível" :""                    
                             }
                         </button>
                     </div>
@@ -90,7 +100,7 @@ function Detalhes(){
                                     <IoCalendarClearOutline size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1"/>
                                     <span>
                                         <p className="text-base text-black/70">Ano de publicação</p>
-                                        <p> {livro.data_publicacao} </p>
+                                        <p> {livro.publicado_em} </p>
                                     </span>
                                 </label>
                                 <label className="flex items-center gap-3">

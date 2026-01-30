@@ -1,12 +1,23 @@
-import livros from "../../../dados/db.json"
+// import livros from "../../../dados/db.json"
 import {LuClock} from "react-icons/lu"
 import {IoCalendarClearOutline} from "react-icons/io5"
 import EstadoCard from "./estado/estado";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-function CardReservas()
-{
-    const livrosReservado = livros.livros.filter(
+function CardReservas({props}){
+
+
+    const [livros, setLivros] = useState([]);
+    
+    useEffect(() => {
+      axios.get('http://localhost:8000/api/reservas/')
+      .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
+      .catch(err => console.error('Erro ao capturar livros', err))
+    }, []);
+
+    const livrosReservado = livros.filter(
             livro => livro.estado === "Reservado" || livro.estado === "Pendente"
         );
 

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 
 class Categoria(models.Model):
@@ -22,12 +23,11 @@ class Autor(models.Model):
         return self.nome
 
 
+
 class Livro(models.Model):
     ESTADOS = [
         ('disponivel', 'Disponível'),
-        ('reservado', 'Reservado'),
-        ('emprestado', 'Emprestado'),
-        ('pendente', 'Pendente'),
+        ('indisponivel', 'Indisponível'),
     ]
 
     titulo = models.CharField(max_length=120)
@@ -35,16 +35,54 @@ class Livro(models.Model):
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="livros")
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="livros")
     publicado_em = models.DateField()
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='disponivel')
-    informacao = models.CharField(max_length=30, default="Reservar Livro")
+    descricao = models.TextField(
+            blank=True,
+            null=True,
+            help_text="Descrição detalhada do livro"
+        )
     sumario = models.TextField()
     editora = models.CharField(max_length=45)
     n_paginas = models.PositiveIntegerField(default=1)
     quantidade = models.PositiveIntegerField(default=1)
     data = models.DateTimeField(auto_now_add=True)
+    capa = models.URLField(max_length=500)  # URL da Cloudinary
 
     def __str__(self):
-        return f"{self.titulo} ({self.get_estado_display()})"
+        return f"{self.titulo}"
+
+    # ✅ Propriedade dinâmica do estado
+    @property
+    def estado_atual(self):
+        # from livros.models import Reserva, Emprestimo
+
+        # Verifica se existe empréstimo ativo ou atrasado
+        if self.emprestimos.filter(acoes='devolvido').exists():
+            return 'Disponível'
+        
+        if self.emprestimos.filter(acoes__in=['ativo', 'atrasado']).exists():
+            return 'Emprestado'
+
+        # Verifica se existe reserva
+        if self.reservas.filter(estado='reservado').exists():
+            return 'Reservado'
+        
+        if self.reservas.filter(estado='pendente').exists():
+            return 'Pendente'
+
+        # Caso contrário, está disponível
+        return 'Disponível'
+
+    # ✅ Informação baseada no estado dinâmico
+    @property
+    def informacao_atual(self):
+        info_map = {
+            'Disponível': "Este livro está disponível para reserva",
+            'Reservado': "Este livro possui uma reserva pendente",
+            'Emprestado': "Livro emprestado atualmente",
+            'Pendente': "Aguardando disponibilidade",
+        }
+        return info_map.get(self.estado_atual, "")
+
 
 
 class Aluno(models.Model):
@@ -60,7 +98,7 @@ class Aluno(models.Model):
     n_emprestimos = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.nome} ({self.n_processo})"
+        return f"{self.nome} - {self.n_processo}"
 
     def save(self, *args, **kwargs):
         # hash da senha se ainda não estiver
@@ -82,9 +120,7 @@ class Aluno(models.Model):
 
 class Reserva(models.Model):
     ESTADOS = [
-        ('disponivel', 'Disponível'),
         ('reservado', 'Reservado'),
-        ('emprestado', 'Emprestado'),
         ('pendente', 'Pendente'),
     ]
 
@@ -92,6 +128,7 @@ class Reserva(models.Model):
     livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="reservas")
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="reservas")
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendente')
+
     data_reserva = models.DateField(auto_now_add=True)
 
     def __str__(self):
@@ -99,6 +136,12 @@ class Reserva(models.Model):
 
 
 class Emprestimo(models.Model):
+    ACOES = [
+        ('ativo', 'Ativo'),
+        ('atrasado', 'Atrasado'),
+        ('devolvido', 'Devolvido'),
+    ]
+
     reserva = models.OneToOneField(
         Reserva,
         on_delete=models.CASCADE,
@@ -107,26 +150,33 @@ class Emprestimo(models.Model):
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="emprestimos")
     livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="emprestimos")
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="emprestimos")
-    estado = models.CharField(max_length=20, choices=Reserva.ESTADOS, default='emprestado')
+    acoes = models.CharField(max_length=20, choices=ACOES, default='ativo')
     data_emprestimo = models.DateField(auto_now_add=True)
     data_devolucao = models.DateField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Só permite criar empréstimo se a reserva estiver "reservado"
-        if self.reserva.estado != 'reservado':
+        if not self.pk and self.reserva.estado != 'reservado':
             raise ValueError(
                 "Só é possível criar empréstimo a partir de uma reserva com estado 'reservado'."
             )
 
-        # Preenche automaticamente aluno, livro e autor
+        # Preenche automaticamente aluno, livro e autor a partir da reserva
         self.aluno = self.reserva.aluno
         self.livro = self.reserva.livro
         self.autor = self.reserva.autor
 
+        # Atualiza automaticamente "Atrasado" se ultrapassar a data de devolução
+        if self.acoes == 'ativo' and self.data_devolucao and self.data_devolucao < timezone.now().date():
+            self.acoes = 'atrasado'
+
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.livro.titulo} emprestado por {self.aluno.nome} ({self.estado})"
+        return f"{self.livro.titulo} emprestado por {self.aluno.nome} - {self.acoes}"
+
+
+
 
 
 # Signals para atualizar contadores automaticamente
