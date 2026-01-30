@@ -22,11 +22,27 @@ class CategoriaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ReservaSerializer(serializers.ModelSerializer):
+    capa = serializers.ReadOnlyField()
+    livro = serializers.StringRelatedField()
+    autor = serializers.StringRelatedField()
+    aluno = serializers.StringRelatedField()
+    estado_label = serializers.CharField(
+        source="get_estado_display",
+        read_only=True
+    )
+    informacao = serializers.ReadOnlyField()
+
+
     class Meta:
         model = Reserva
         fields = '__all__'
 
 class EmprestimoSerializer(serializers.ModelSerializer):
+    capa = serializers.ReadOnlyField()
+    livro = serializers.StringRelatedField()
+    autor = serializers.StringRelatedField()
+    aluno = serializers.StringRelatedField()
+
     class Meta:
         model = Emprestimo
         fields = '__all__'

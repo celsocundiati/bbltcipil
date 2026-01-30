@@ -15,7 +15,7 @@ function Reservas(){
                     whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
                     viewport={{ once: true }}             // anima apenas uma vez
                 className=" px-5">
-                <p className="flex items-center gap-2 text-xl">Reservas Ativas <div className="bg-green-400 w-3 h-3 rounded-full"></div></p>
+                <p className="flex items-center gap-2 text-xl">Reservas Ativas <span className="bg-green-400 w-3 h-3 rounded-full"></span></p>
             </motion.div>
             <CardReservas/>
             <Footer/>

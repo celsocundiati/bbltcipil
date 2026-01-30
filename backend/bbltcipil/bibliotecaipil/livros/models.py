@@ -56,8 +56,6 @@ class Livro(models.Model):
         # from livros.models import Reserva, Emprestimo
 
         # Verifica se existe empréstimo ativo ou atrasado
-        if self.emprestimos.filter(acoes='devolvido').exists():
-            return 'Disponível'
         
         if self.emprestimos.filter(acoes__in=['ativo', 'atrasado']).exists():
             return 'Emprestado'
@@ -122,18 +120,37 @@ class Reserva(models.Model):
     ESTADOS = [
         ('reservado', 'Reservado'),
         ('pendente', 'Pendente'),
+        ('emprestado', 'Emprestado'),
     ]
 
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="reservas")
     livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="reservas")
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="reservas")
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendente')
-
     data_reserva = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.livro.titulo} reservado por {self.aluno.nome} ({self.estado})"
 
+    def save(self, *args, **kwargs):
+        # preenche capa automaticamente
+        if self.livro and not self.capa:
+            self.capa = self.livro.capa
+        super().save(*args, **kwargs)
+
+    
+    @property
+    def capa(self):
+        return self.livro.capa  # pega direto do livro
+
+    @property
+    def informacao(self):
+        info_map = {
+            'reservado': "Pronta para empréstimo",
+            'pendente': "Aguardando disponibilidade",
+            'emprestado': "Livro emprestado atualmente",
+        }
+        return info_map.get(self.estado, "")
 
 class Emprestimo(models.Model):
     ACOES = [
@@ -152,30 +169,47 @@ class Emprestimo(models.Model):
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="emprestimos")
     acoes = models.CharField(max_length=20, choices=ACOES, default='ativo')
     data_emprestimo = models.DateField(auto_now_add=True)
-    data_devolucao = models.DateField(blank=True, null=True)
+    data_devolucao = models.DateField()
+
+    @property
+    def capa(self):
+        # pega automaticamente do livro
+        return self.livro.capa
 
     def save(self, *args, **kwargs):
-        # Só permite criar empréstimo se a reserva estiver "reservado"
-        if not self.pk and self.reserva.estado != 'reservado':
+        criando = self.pk is None
+
+        # ❗ validação forte
+        if criando and self.reserva.estado != 'reservado':
             raise ValueError(
-                "Só é possível criar empréstimo a partir de uma reserva com estado 'reservado'."
+                "Só é possível criar empréstimo a partir de uma reserva 'reservado'."
             )
 
-        # Preenche automaticamente aluno, livro e autor a partir da reserva
+        # herda dados da reserva
         self.aluno = self.reserva.aluno
         self.livro = self.reserva.livro
         self.autor = self.reserva.autor
 
-        # Atualiza automaticamente "Atrasado" se ultrapassar a data de devolução
-        if self.acoes == 'ativo' and self.data_devolucao and self.data_devolucao < timezone.now().date():
+        if self.livro and not self.capa:
+            self.capa = self.livro.capa
+
+        # atraso automático
+        if (
+            self.acoes == 'ativo'
+            and self.data_devolucao
+            and self.data_devolucao < timezone.now().date()
+        ):
             self.acoes = 'atrasado'
 
         super().save(*args, **kwargs)
 
+        # 🔥 atualiza estado da reserva APÓS criar empréstimo
+        if criando:
+            self.reserva.estado = 'emprestado'
+            self.reserva.save(update_fields=['estado'])
+
     def __str__(self):
-        return f"{self.livro.titulo} emprestado por {self.aluno.nome} - {self.acoes}"
-
-
+        return f"{self.livro.titulo} — {self.aluno.nome} ({self.acoes})"
 
 
 
