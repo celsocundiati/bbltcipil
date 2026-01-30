@@ -10,6 +10,8 @@ function EstadoDetalhes({estado, label}){
 
         if (status.includes("emprestado")) {
             return `${base} bg-red-100 text-[#EF4444] border-[#EF4444]/30`;
+        } else if (status.includes("indisponível")) {
+            return `${base} bg-red-200 text-[#EF4455] border-[#EF4444]/30`;
         } else if (status.includes("pendente")) {
             return `${base} bg-[#f97b27]/10 text-[#F97B17] border-[#F97B17]/30`;
         } else if (status.includes("reservado")) {
@@ -26,6 +28,8 @@ function EstadoDetalhes({estado, label}){
                 ) : estado === "Pendente" ? (
                     <LuClock size={25}/>
                 ) : estado === "Emprestado" ? (
+                    <FiXCircle size={25}/>
+                ) : estado === "Indisponível" ? (
                     <FiXCircle size={25}/>
                 ) : estado === "Disponível" ? (
                     <FiCheckCircle size={25}/>

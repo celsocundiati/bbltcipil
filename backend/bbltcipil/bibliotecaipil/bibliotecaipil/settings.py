@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
 
     # Local apps 
-    'livros',
+    'livros.apps.LivrosConfig',
 ]
 
 MIDDLEWARE = [

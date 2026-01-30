@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
-from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -21,7 +20,6 @@ class Autor(models.Model):
 
     def __str__(self):
         return self.nome
-
 
 
 class Livro(models.Model):
@@ -53,7 +51,9 @@ class Livro(models.Model):
     # ✅ Propriedade dinâmica do estado
     @property
     def estado_atual(self):
-        # from livros.models import Reserva, Emprestimo
+        
+        if self.quantidade == 0:
+            return 'Indisponível'
 
         # Verifica se existe empréstimo ativo ou atrasado
         
@@ -82,7 +82,6 @@ class Livro(models.Model):
         return info_map.get(self.estado_atual, "")
 
 
-
 class Aluno(models.Model):
     nome = models.CharField(max_length=120)
     n_processo = models.IntegerField(primary_key=True)
@@ -94,6 +93,21 @@ class Aluno(models.Model):
     telefone = models.CharField(max_length=20, blank=True)
     n_reservas = models.IntegerField(default=0)
     n_emprestimos = models.IntegerField(default=0)
+
+    def atualizar_contadores(self):
+        # Contar reservas não finalizadas
+        n_reservas_ativas = self.reservas.filter(
+            estado__in=['reservado', 'pendente']
+        ).count()
+        self.n_reservas = n_reservas_ativas
+
+        # Contar empréstimos não devolvidos
+        n_emprestimos_ativos = self.emprestimos.exclude(
+            acoes='devolvido'
+        ).count()
+        self.n_emprestimos = n_emprestimos_ativos
+
+        self.save(update_fields=['n_reservas', 'n_emprestimos'])
 
     def __str__(self):
         return f"{self.nome} - {self.n_processo}"
@@ -133,16 +147,23 @@ class Reserva(models.Model):
         return f"{self.livro.titulo} reservado por {self.aluno.nome} ({self.estado})"
 
     def save(self, *args, **kwargs):
-        # preenche capa automaticamente
-        if self.livro and not self.capa:
-            self.capa = self.livro.capa
+        # 1️⃣ Bloquear reserva se não houver quantidade
+        if self.livro.quantidade <= 0:
+            raise ValueError(f"Não é possível criar reserva: '{self.livro.titulo}' está indisponível no stock.")
+
+        # 2️⃣ Evitar reserva duplicada pelo mesmo aluno para o mesmo livro
+        if not self.pk:  # só checar se for nova reserva
+            if Reserva.objects.filter(aluno=self.aluno, livro=self.livro, estado__in=['reservado', 'pendente']).exists():
+                raise ValueError(f"Você já possui uma reserva para '{self.livro.titulo}'.")
+
         super().save(*args, **kwargs)
 
-    
+    # 3️⃣ Pegar capa direto do livro
     @property
     def capa(self):
-        return self.livro.capa  # pega direto do livro
+        return self.livro.capa
 
+    # 4️⃣ Informações baseadas no estado
     @property
     def informacao(self):
         info_map = {
@@ -151,6 +172,7 @@ class Reserva(models.Model):
             'emprestado': "Livro emprestado atualmente",
         }
         return info_map.get(self.estado, "")
+
 
 class Emprestimo(models.Model):
     ACOES = [
@@ -207,20 +229,12 @@ class Emprestimo(models.Model):
         if criando:
             self.reserva.estado = 'emprestado'
             self.reserva.save(update_fields=['estado'])
+        else:
+            # se o empréstimo foi devolvido, libera a reserva
+            if self.acoes == 'devolvido':
+                self.reserva.estado = 'disponivel'  # ou o valor que representa "livre"
+                self.reserva.save(update_fields=['estado'])
 
     def __str__(self):
         return f"{self.livro.titulo} — {self.aluno.nome} ({self.acoes})"
 
-
-
-# Signals para atualizar contadores automaticamente
-@receiver(post_save, sender=Reserva)
-def atualizar_contador_reservas(sender, instance, created, **kwargs):
-    if created:
-        instance.aluno.incrementar_reservas()
-
-
-@receiver(post_save, sender=Emprestimo)
-def atualizar_contador_emprestimos(sender, instance, created, **kwargs):
-    if created:
-        instance.aluno.incrementar_emprestimos()

@@ -28,6 +28,10 @@ function CardReservas({props}){
         reserva => reserva.estado_label === "Reservado" || reserva.estado_label === "Pendente"
     );
 
+    const livrosEmprestimo = emprestimos.filter(
+        emprestimo => emprestimo.acoes === "ativo" || emprestimo.acoes === "atrasado"
+    );
+
 
     return(
         
@@ -36,7 +40,7 @@ function CardReservas({props}){
                 viewport={{ once: true }}             // anima apenas uma vez
                 transition={{ duration: 0.8 }}
             className="grid sm:1 lg:1 space-y-6 py-2 lg:py-20 px-5">
-            {emprestimos.map(emprestimo =>(
+            {livrosEmprestimo.map(emprestimo =>(
                 <div key={emprestimo.id} className="bg-white flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-10 hover:shadow rounded-lg cursor-pointer">
                     <div>
                         <img src={emprestimo.capa} alt="Imagem" className="rounded-t-lg lg:rounded-md w-full h-72 lg:w-36 lg:h-52" loading="lazy" />

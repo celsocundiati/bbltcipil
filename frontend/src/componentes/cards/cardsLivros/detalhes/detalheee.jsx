@@ -30,7 +30,7 @@ function Detalhes(){
         const status = texto.toLowerCase();
 
         const base="h-14 rounded-xl"
-        if (status.includes("disponível")) {
+        if (status  === "disponível") {
             return `${base} bg-[#F86417] rounded-sm p-1.5 text-white cursor-pointer`;
         } else {
             return `${base} bg-black/15 text-black/57`; // default estiloEstado(livro.estado) [auto_1fr]
@@ -59,7 +59,7 @@ function Detalhes(){
                         <EstadoDetalhes estado={livro.estado_atual} label={livro.informacao_atual}/>
                         <button className={btnEstilo(livro.estado_atual)}>
                             {livro.estado_atual === "Disponível" ? "Reservar Livro" : livro.estado_atual === "Emprestado" ? "Indisponível"
-                               : livro.estado_atual === "Pendente" ? "Aguardando Disponiblidade" : livro.estado_atual === "Reservado" ? "Indisponível" :""                    
+                               : livro.estado_atual === "Pendente" ? "Aguardando Disponiblidade" : livro.estado_atual === "Indisponível" ? "Livro Indisponível" : livro.estado_atual === "Reservado" ? "Indisponível" :""                    
                             }
                         </button>
                     </div>
