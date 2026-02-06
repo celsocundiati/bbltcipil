@@ -39,10 +39,9 @@ class ReservaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class EmprestimoSerializer(serializers.ModelSerializer):
+    livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
+    aluno_nome = serializers.CharField(source="aluno.nome", read_only=True)
     capa = serializers.ReadOnlyField()
-    livro = serializers.StringRelatedField()
-    autor = serializers.StringRelatedField()
-    aluno = serializers.StringRelatedField()
 
     class Meta:
         model = Emprestimo

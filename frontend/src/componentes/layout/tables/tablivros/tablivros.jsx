@@ -49,20 +49,24 @@ function TabelaLivros(){
                     <table className="w-full table-fixed border-collapse bg-white shadow-md rounded-xl overflow-hidden">
                         <thead className="bg-black/5">
                             <tr>
-                                <th className="w-[35%] px-5 py-3 text-left">Livro</th>
-                                <th className="w-[15%] px-5 py-3 text-left">Autor</th>
-                                <th className="w-[15%] px-5 py-3 text-left">Categoria</th>
-                                <th className="w-[5%] px-5 py-3 text-left">Nº</th>
-                                <th className="w-[10%] px-10 py-3 text-left">Ano</th>
-                                <th className="w-[10%] px-5 py-3 text-left">Estado</th>
-                                <th className="w-[15%] px-5 py-3 text-left">Ações</th>
+                                <th className="w-[35%] px-5 py-3 text-center">Livro</th>
+                                <th className="w-[15%] px-5 py-3 text-center">Autor</th>
+                                <th className="w-[15%] px-5 py-3 text-center">Categoria</th>
+                                <th className="w-[14%] px-5 py-3 text-center">Nº Páginas</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Ano</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Quantidade</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Editora</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Descrição</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Sumário</th>
+                                <th className="w-[15%] px-5 py-3 text-center">Estado</th>
+                                <th className="w-[15%] px-5 py-3 text-center">Ações</th>
                             </tr>
                         </thead>
 
                         <tbody className="divide-y divide-black/10">
                             {livros.map(livro => (
                                 <tr key={livro.id} className="hover:bg-black/3 transition">
-                                    <td className="px-5 py-4">
+                                    <td className="px-5 py-4 truncate text-black/85">
                                         <div className="flex items-center gap-3">
                                             <img 
                                                 src={livro.capa} 
@@ -80,12 +84,16 @@ function TabelaLivros(){
                                         </div>
                                     </td>
 
-                                    <td className="px-5 py-4 truncate text-black/85">{livro.autor}</td>
-                                    <td className="px-5 py-4 truncate text-black/85">{livro.categoria}</td>
-                                    <td className="px-5 py-4 truncate text-black/85">{livro.n_paginas}</td>
-                                    <td className="px-5 py-4 truncate text-black/85">{livro.publicado_em}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.autor_nome}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.categoria_nome}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.n_paginas}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.publicado_em}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.quantidade}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.editora}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.descricao}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro.sumario}</td>
 
-                                    <td className="px-5 py-4">
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">
                                         <span className={`px-3 py-1 rounded-full text-sm font-medium 
                                             ${livro.estado === "disponivel" 
                                                 ? "bg-green-100 text-green-700" 
@@ -95,16 +103,16 @@ function TabelaLivros(){
                                         </span>
                                     </td>
 
-                                    <td className="px-5 py-4">
-                                        <div className="flex gap-3">
-                                            <button className="hover:text-[#f97b17] transition">
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">
+                                        <div className="flex gap-3 justify-center">
+                                            {/* <button className="hover:text-[#f97b17] transition">
                                                 <FiEye size={20}/>
+                                            </button> */}
+                                            <button onClick={() => openModal("update", livro)} className="hover:text-black/70 cursor-pointer transition">
+                                                <LuFilePen size={25}/>
                                             </button>
-                                            <button onClick={() => openModal("update", livro)} className="hover:text-[#f97b17] transition">
-                                                <LuFilePen size={20}/>
-                                            </button>
-                                            <button onClick={() => openModal("delete", livro)} className="text-red-700 hover:text-red-900 transition">
-                                                <FiTrash2 size={20}/>
+                                            <button onClick={() => openModal("delete", livro)} className="text-red-500 hover:text-red-700 cursor-pointer transition">
+                                                <FiTrash2 size={25}/>
                                             </button>
                                         </div>
                                     </td>

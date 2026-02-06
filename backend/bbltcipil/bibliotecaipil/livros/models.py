@@ -84,6 +84,10 @@ class Livro(models.Model):
 
 
 class Aluno(models.Model):
+    ESTADOS = [
+        ('Ativo', 'Ativo'),
+        ('Suspenso', 'Suspenso'),
+    ]
     nome = models.CharField(max_length=120)
     n_processo = models.IntegerField(primary_key=True)
     email = models.EmailField(unique=True)
@@ -92,6 +96,7 @@ class Aluno(models.Model):
     classe = models.CharField(max_length=20, blank=True)  # ex: 12ºA
     data_nascimento = models.DateField(blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='Ativo')
     n_reservas = models.IntegerField(default=0)
     n_emprestimos = models.IntegerField(default=0)
 
@@ -189,7 +194,6 @@ class Emprestimo(models.Model):
     )
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="emprestimos")
     livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="emprestimos")
-    autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="emprestimos")
     acoes = models.CharField(max_length=20, choices=ACOES, default='ativo')
     data_emprestimo = models.DateField(auto_now_add=True)
     data_devolucao = models.DateField()

@@ -2,7 +2,7 @@ import HeaderOutle from "../../layout/outle/headerholte";
 import RotulosOutle from "../../layout/outle/rotulosotles";
 import InputAdmin from "../../layout/admInput/input";
 import Select from "../../tags/selects/selects";
-import Table from "../../layout/tables/Table";
+import TabAluno from "../../layout/tables/tabaluno/tabaluno";
 
 function Estudantes()
 {
@@ -20,7 +20,7 @@ function Estudantes()
                 <Select tipo="cursos" />
             </section>
             <section>
-                <Table tipo="estudantes" />
+                <TabAluno />
             </section>
         </main>
     );

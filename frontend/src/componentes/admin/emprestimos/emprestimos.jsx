@@ -3,6 +3,7 @@ import RotulosOutle from "../../layout/outle/rotulosotles";
 import InputAdmin from "../../layout/admInput/input";
 import Select from "../../tags/selects/selects";
 import Table from "../../layout/tables/Table";
+import TabelaEmprestimos from "../../layout/tables/tabemprestimos/tabemprestimos";
 
 function Emprestimos()
 {
@@ -20,7 +21,7 @@ function Emprestimos()
                 {/* <Select tipo="cursos" /> */}
             </section>
             <section>
-                <Table tipo="emprestimos"/>
+                <TabelaEmprestimos/>
             </section>
         </main>
     );
