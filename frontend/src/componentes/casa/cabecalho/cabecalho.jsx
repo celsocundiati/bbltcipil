@@ -13,18 +13,15 @@ function Cabecalho() {
     
     {/* header */}
 
-    // const paginas = ["Casa", "Catálogo", "Reservas", "Exposições", "Perfil"]
-
-    // Array de itens do menu
     const paginas = [
-    { path: "/", label: "Página Inicial", icon: MdOutlineHome },
-    { path: "/catalogo", label: "Catálogo", icon: RiBookShelfLine },
-    { path: "/reservas", label: "Reservas", icon: LuBookOpen },
-    { path: "/exposicao", label: "Exposições", icon: IoCalendarClearOutline },
-    { path: "/institucional", label: "Institucional", icon: GiGreekTemple },
-    { path: "/perfil", label: "Meu Perfil", icon: MdPersonOutline },
-    { path: "/admin", label: "Admin", icon: MdAdminPanelSettings },
-    ];
+        { path: "/", label: "Página Inicial", icon: MdOutlineHome },
+        { path: "/catalogo", label: "Catálogo", icon: RiBookShelfLine },
+        { path: "/reservas", label: "Reservas", icon: LuBookOpen },
+        { path: "/exposicao", label: "Exposições", icon: IoCalendarClearOutline },
+        { path: "/institucional", label: "Institucional", icon: GiGreekTemple },
+        { path: "/perfil", label: "Meu Perfil", icon: MdPersonOutline },
+        { path: "/admin", label: "Admin", icon: MdAdminPanelSettings },
+        ];
 
 
     // const est_base = "flex items-center gap-1 py-0.5 px-2.5 rounded-lg transition-all sm:text-sm";

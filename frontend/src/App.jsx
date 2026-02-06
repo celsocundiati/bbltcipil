@@ -8,6 +8,7 @@ import Perfil from './componentes/perfil/perfil';
 import Detalhes from './componentes/cards/cardsLivros/detalhes/detalheee';
 import Dashboard from './componentes/admin/dashboard/dashboardadm';
 import GestaoLivros from './componentes/admin/gestao/gestaolivros';
+import AddLivro from './componentes/admin/addlivro/AddLivro';
 import Emprestimos from './componentes/admin/emprestimos/emprestimos';
 import Acervo from './componentes/admin/acervo/Acervo';
 import CategoriasAutores from './componentes/admin/categorias_autores/catautores';
@@ -18,6 +19,7 @@ import Sair from './componentes/sair/sair';
 import Admin from './componentes/admin/administrador';
 import Multas from './componentes/admin/multas/multa';
 import Estudantes from './componentes/admin/estudantes/estudantess';
+import EditarLivro from './componentes/admin/editarlivro/editarlivro';
 
 function App() {
 
@@ -37,6 +39,8 @@ function App() {
                 <Route index element={<Dashboard />}/>
                 <Route path='dashboard' element={<Dashboard />}/>
                 <Route path='gestao' element={<GestaoLivros />}/>
+                <Route path='addlivro' element={<AddLivro />}/>
+                <Route path='livros/:id' element={<EditarLivro />}/>
                 <Route path='estudantes' element={<Estudantes />}/>
                 <Route path='emprestimos' element={<Emprestimos />}/>
                 <Route path='multas' element={<Multas />}/>

@@ -1,10 +1,11 @@
 import {MdPersonOutline} from "react-icons/md";
 import { FiCheckCircle } from "react-icons/fi";
 import {HiOutlineArrowDownTray, HiOutlineCog6Tooth} from "react-icons/hi2";
-import { FiDownload } from "react-icons/fi";
 import { useState } from "react";
 import Modal from "../modais/modal";
 import ModalLivro from "../modais/modallivro";
+import ModalAluno from "../modais/ModalAluno";
+import {Link} from "react-router-dom";
 
 
 function HeaderOutle({page}){
@@ -13,6 +14,7 @@ function HeaderOutle({page}){
     
     const [showModal, setShowModal] = useState(false);
     const [showModalEmprest, setShowModalEmprest] = useState(false);
+    const [showModalReserva, setShowModalReserva] = useState(false);
     const [showModalEstudante, setShowModalEstudante] = useState(false);
     const [showModalDevol, setShowModalDevol] = useState(false);
     const [showModalAdmin, setShowModalAdmin] = useState(false);
@@ -38,6 +40,9 @@ function HeaderOutle({page}){
     function handleClick6(){
         setShowModalMulta(true);
     }
+    function handleClick7(){
+        setShowModalReserva(true);
+    }
 
     return(
         <main>
@@ -47,7 +52,7 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Livros</h1>
                         <p className="text-black/70 text-lg">Gerir catálogo completo da biblioteca</p>
                     </article>
-                    <button onClick={handleClick} className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</button>
+                    <Link to="/admin/addlivro" className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</Link>
                 </section>
             ) : page === "estudantes" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
@@ -71,6 +76,19 @@ function HeaderOutle({page}){
                         </button>
                         <button onClick={handleClick2} className="bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg cursor-pointer">
                             + Novo Empréstimo
+                        </button>
+                    </article>
+                </section>  
+            ) : page === "reservas" ?(
+                <section className="flex relative flex-wrap justify-between items-center mt-30">
+                    <article className="space-y-2">
+                        <h1 className="text-2xl font-medium">Gestão de Reservas</h1>
+                        <p className="text-black/70 text-lg">Gerir e acompanhar reservas de livros</p>
+                    </article>
+                    
+                    <article className="flex gap-5">
+                        <button onClick={handleClick7} className="bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg cursor-pointer">
+                            + Nova Reserva
                         </button>
                     </article>
                 </section>  
@@ -128,7 +146,8 @@ function HeaderOutle({page}){
             
             {showModal && <ModalLivro onClose={() => setShowModal(false)}/> }
             {showModalEmprest && <Modal tipo="emprestimo" onClose={() => setShowModalEmprest(false)}/> }
-            {showModalEstudante && <Modal tipo="estudante" onClose={() => setShowModalEstudante(false)}/> }
+            {showModalReserva && <Modal tipo="reserva" onClose={() => setShowModalReserva(false)}/> }
+            {showModalEstudante && <ModalAluno  onClose={() => setShowModalEstudante(false)}/> }
             {showModalDevol && <Modal tipo="devoluicao" onClose={() => setShowModalDevol(false)}/> }
             {showModalAdmin && <Modal tipo="admins" onClose={() => setShowModalAdmin(false)}/> }
             {showModalMulta && <Modal tipo="multas" onClose={() => setShowModalMulta(false)}/> }

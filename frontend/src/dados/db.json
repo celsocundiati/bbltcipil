@@ -289,6 +289,53 @@
             "accoes": "Em posse"
         }
     ],
+    "reservas": [
+        {
+            "id": 101,
+            "livro": "Fundamentos de Programação Moderna",
+            "estudante": "Ana Paula Monteiro",
+            "data_reserva": "03/01/2026",
+            "data_vencimento": "10/01/2026",
+            "estado": "Pendente",
+            "accoes": "Aprovar"
+        },
+        {
+            "id": 102,
+            "livro": "Gestão Estratégica de Sistemas",
+            "estudante": "Lucas Fernando Pacheco",
+            "data_reserva": "05/01/2026",
+            "data_vencimento": "12/01/2026",
+            "estado": "Pendente",
+            "accoes": "Aprovar"
+        },
+        {
+            "id": 103,
+            "livro": "Introdução à Inteligência Artificial",
+            "estudante": "Mariana Lopes Ferreira",
+            "data_reserva": "08/01/2026",
+            "data_vencimento": "15/01/2026",
+            "estado": "Pendente",
+            "accoes": "Aprovar"
+        },
+        {
+            "id": 104,
+            "livro": "Arquitetura de Software Escalável",
+            "estudante": "João Miguel Andrade",
+            "data_reserva": "10/01/2026",
+            "data_vencimento": "18/01/2026",
+            "estado": "Pendente",
+            "accoes": "Aprovar"
+        },
+        {
+            "id": 105,
+            "livro": "Marketing Digital Orientado a Dados",
+            "estudante": "Beatriz Sofia Almeida",
+            "data_reserva": "12/01/2026",
+            "data_vencimento": "20/01/2026",
+            "estado": "Pendente",
+            "accoes": "Aprovar"
+        }
+    ],
     "alunos": [
         {
             "id": 1,

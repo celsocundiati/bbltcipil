@@ -4,8 +4,9 @@ from .models import Livro, Autor, Categoria, Reserva, Emprestimo, Aluno
 class LivroSerializer(serializers.ModelSerializer):
     estado_atual = serializers.ReadOnlyField()
     informacao_atual = serializers.ReadOnlyField()
-    autor = serializers.StringRelatedField()
-    categoria = serializers.StringRelatedField()
+    autor_nome = serializers.CharField(source="autor.nome", read_only=True)
+    categoria_nome = serializers.CharField(source="categoria.nome", read_only=True)
+
 
     class Meta:
         model = Livro

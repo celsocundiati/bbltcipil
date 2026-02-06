@@ -1,0 +1,133 @@
+import { useState } from "react";
+import axios from "axios";
+import {HiOutlineXMark} from "react-icons/hi2";
+
+function ModalAluno({onClose})
+{
+
+    const [form, setForm] = useState({
+       n_processo: 1,
+        nome: "",
+        email: "",
+        password: "",
+        classe: 10,
+        curso: "",
+    });
+        
+        const [modal, setModal] = useState({
+            open: false,
+        });
+        const [loading, setLoading] = useState(false);
+        const [erro, setErro] = useState(null);
+
+        const handleChange = (e) => {
+        setForm({
+        ...form,
+        [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setErro(null);
+
+        try {
+        await axios.post("http://127.0.0.1:8000/api/alunos/", form);
+        setModal({open: true});
+        
+        setForm({
+            n_processo: 1,
+            nome: "",
+            email: "",
+            password: "",
+            classe: 10,
+            curso: "",
+        });
+        } catch (err) {
+        alert("Erro ao registrar aluno");
+        setErro("Erro ao registrar aluno");
+        console.error(err);
+        } finally {
+        setLoading(false);
+        }
+    };
+
+        function closeModal(){
+            setModal({open:false});
+            onClose()
+        }
+
+
+    return(
+        <main>
+            <dialog className="fixed inset-0 z-50 shadow bg-black/20 h-full flex flex-col w-full  rounded-xl border border-black/10">
+                <div className="w-1/2 bg-white shadow-md rounded-xl p-6 relative top-1/9 left-1/4">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black">
+                        <HiOutlineXMark size={35}/>
+                    </button>
+                    <article className="py-4">
+                        <h2 className="text-xl font-medium">
+                            Registar Estudante
+                        </h2>
+                        <p className="text-lg">
+                            Cadastrar estudantes para o banco de dados do acervo escolar
+                        </p>
+                    </article>
+                    <form className="space-y-4" onSubmit={handleSubmit}>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Nome:</label>
+                                <input type="text" required pe="text" name="nome" value={form.nome} onChange={handleChange}  placeholder="Celso Cristiano Gabriel Domilde" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Nº Proc:</label>
+                                <input type="number" required name="n_processo" id="n_processo" value={form.n_processo} onChange={handleChange} placeholder="100123" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Email:</label>
+                                <input type="email" required name="email" id="email" value={form.email} onChange={handleChange} placeholder="celso@gmail.com" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Classe:</label>
+                                <input type="text" required name="classe" id="classe" value={form.classe} onChange={handleChange} placeholder="13ª Classe" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Curso:</label>
+                                <input type="text" required name="curso" id="curso" value={form.curso} onChange={handleChange} placeholder="Gestão de Sistemas Informáticos" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Password:</label>
+                                <input type="text" required name="password" id="password" value={form.password} onChange={handleChange} placeholder="Ativo, Suspenso, Inativo" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2 py-4">
+                            <button onClick={onClose} type="submit" className="bg-white text-black/70 px-8 py-2 rounded-lg border border-black/10 cursor-pointer hover:text-white hover:bg-red-500 transition-all duration-200">
+                                Cancelar
+                            </button>
+                            <button type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-lg cursor-pointer hover:bg-green-600 transition-all duration-200">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </dialog>
+
+            {modal.open && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center text-left z-50">
+                <div className="bg-branco-100 rounded-lg p-6 w-full max-w-sm">
+                    <h3 className="text-lg  font-semibold mb-2">
+                        Sucesso
+                    </h3>
+                    <p>Aluno registrado com sucesso!</p>
+                    <div className="flex justify-end gap-3 mt-2">
+                        <button onClick={closeModal} className="px-3 py-2 bg-blue-700 text-white rounded-lg hover:bg-laranja-500">Confirmado</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        </main>
+    );
+}
+export default ModalAluno;

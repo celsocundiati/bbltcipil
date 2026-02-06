@@ -2,6 +2,7 @@ import HeaderOutle from "../../layout/outle/headerholte";
 import InputAdmin from "../../layout/admInput/input";
 import Select from "../../tags/selects/selects";
 import Table from "../../layout/tables/Table";
+import TabelaLivros from "../../layout/tables/tablivros/tablivros";
 
 function GestaoLivros(){
 
@@ -17,7 +18,7 @@ function GestaoLivros(){
                 <Select tipo="estado" />
             </section>
 
-            <Table tipo="gestaolivro"/>
+            <TabelaLivros/>
         </main>
         </section>
     );

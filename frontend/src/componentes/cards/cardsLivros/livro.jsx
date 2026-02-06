@@ -36,10 +36,10 @@ function CardLivro(){
             <section className="p-3">
               <p className="font-medium text-sm">{livro.titulo}</p>
               <p className="flex gap-2 mt-2 items-center text-gray-700">
-                <MdPersonOutline size={20} /> {livro.autor}
+                <MdPersonOutline size={20} /> {livro.autor_nome}
               </p>
               <p className="flex gap-2 mt-2 items-center text-gray-700">
-                <IoCalendarClearOutline size={20} /> {livro.publicado_em} • {livro.categoria}
+                <IoCalendarClearOutline size={20} /> {livro.publicado_em} • {livro.categoria_nome}
               </p>
               <Link
                 to={`/detalhes/${livro.id}`}

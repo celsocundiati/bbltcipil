@@ -32,6 +32,7 @@ class Livro(models.Model):
     isbn = models.CharField(max_length=13, unique=True)
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="livros")
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="livros")
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='disponivel')
     publicado_em = models.DateField()
     descricao = models.TextField(
             blank=True,

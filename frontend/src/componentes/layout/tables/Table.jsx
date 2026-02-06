@@ -1,4 +1,4 @@
-import {livros, alunos, emprestimos, categorias, autores, admins, multas} from "../../../dados/db.json";
+import {livros, alunos, emprestimos, categorias, autores, admins, multas, reservas} from "../../../dados/db.json";
 import { obterIniciais } from "./utilitarios/Utils";
 import { LuFilePen } from "react-icons/lu";
 import { FiEye, FiTrash2 } from "react-icons/fi";
@@ -12,7 +12,7 @@ import { rowsTableEstrato } from "./utilitarios/Utils";
 
 
 
-function Table({tipo, pesquisa, estSelecionado}){
+function Table({tipo}){
 
     const totalAlunos = alunos.length;
     const alunosAtivos = alunos.filter(aluno => aluno.extra === "Ativo");
@@ -23,27 +23,12 @@ function Table({tipo, pesquisa, estSelecionado}){
     const qtdAlunosSuspensos = alunosSuspensos.length;
 
 
-    const emprestimosFiltrados = pesquisa ? emprestimos.filter(emprest => emprest.livro.toLowerCase().includes(pesquisa.toLowerCase())
-                        || emprest.estudante.toLowerCase().includes(pesquisa.toLowerCase()) || 
-                        emprest.data_emprestimo.toLowerCase().includes(pesquisa.toLowerCase()) 
-                        || emprest.data_vencimento.toLowerCase().includes(pesquisa.toLowerCase())) 
-                        : estSelecionado ? emprestimos.filter(emprest => emprest.estado === estSelecionado ) : emprestimos;
-
     const emprestAtivos = emprestimos.filter(emprest => emprest.estado === "Ativo");
     const qtdemprestAtivo = emprestAtivos.length;
     const emprestAtrasados = emprestimos.filter(emprest => emprest.estado === "Atrasado");
     const qtdemprestAtrasado = emprestAtrasados.length;
     let devolucoes = 0;
     let vencimentoProximo = 0;
-
-    // const livrosFiltrados = pesquisa ? livros.filter(livro => livro.titulo.toLowerCase().includes(pesquisa.toLowerCase())
-    //     || livro.autor.toLowerCase().includes(pesquisa.toLowerCase()) || 
-    //     livro.categoria.toLowerCase().includes(pesquisa.toLowerCase()))
-    //     : catSelecionado && estSelecionado ? livros.filter(livro => livro.categoria === catSelecionado &&  livro.estado === estSelecionado)
-    //     : catSelecionado ? livros.filter(livro => livro.categoria === catSelecionado )
-    //     : estSelecionado ? livros.filter(livro => livro.estado === estSelecionado )
-    //     : livros;
-
     
     const totalM = multas.length;
         
@@ -209,59 +194,125 @@ function Table({tipo, pesquisa, estSelecionado}){
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
                 <section className="py-5 flex flex-col">
                     <label className="text-xl">Lista de Empréstimos</label>
-                    <label className="text-black/70">Exibindo {emprestimosFiltrados.length} de {emprestimosFiltrados.length}</label>
+                    <label className="text-black/70">Exibindo {emprestimos.length} de {emprestimos.length}</label>
                 </section>
                 <section className="w-full rounded-xl overflow-hidden">
-                <table className="table-auto w-full text-left bg-white shadow-md border border-black/10 rounded-xl">
-                    <thead className="bg-black/5 text-cinza-900">
-                        <tr>
-                            <th className="py-2 px-5">Livro</th>
-                            <th className="py-2 px-5">Estudante</th>
-                            <th className="py-2 px-5">Data Empréstimo</th>
-                            <th className="py-2 px-5">Data Vencimento</th>
-                            <th className="py-2 px-5">Estado</th>
-                            {/* <th className="py-2 px-5">Ações</th>
-                            <th className="py-2 px-5">Ações</th> */}
-                        </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-black/10">
-                        {emprestimosFiltrados.length === 0 ? (
+                    <table className="table-auto w-full text-left bg-white shadow-md border border-black/10 rounded-xl">
+                        <thead className="bg-black/5 text-cinza-900">
                             <tr>
-                                <td colSpan={6} className="text-center py-4 text-red-700">
-                                    Nenhum empréstimo encontrado.
-                                </td>
+                                <th className="py-2 px-5">Livro</th>
+                                <th className="py-2 px-5">Estudante</th>
+                                <th className="py-2 px-5">Data Empréstimo</th>
+                                <th className="py-2 px-5">Data Vencimento</th>
+                                <th className="py-2 px-5">Estado</th>
+                                {/* <th className="py-2 px-5">Ações</th>
+                                <th className="py-2 px-5">Ações</th> */}
                             </tr>
-                        ) : (
-                            emprestimosFiltrados.map((emprest, index) => (
-                                <tr 
-                                    key={emprest.id || index} 
-                                    className="hover:bg-black/3 transition-colors"
-                                >
-                                    <td className="px-5 py-5">{emprest.livro}</td>
-                                    <td className="px-5 py-5">{emprest.estudante}</td>
-                                    <td className="px-5 py-5">{emprest.data_emprestimo}</td>
-                                    <td className="px-5 py-5">{emprest.data_vencimento}</td>
-                                    <td className="px-5 py-5">
-                                        <span className={`px-3 py-1 rounded-full text-sm font-medium
-                                            ${emprest.estado === "Ativo" 
-                                                ? "bg-green-100 text-green-700" 
-                                                : "bg-red-100 text-red-700"}`}>
-                                            {emprest.estado}
-                                        </span>
+                        </thead>
+
+                        <tbody className="divide-y divide-black/10">
+                            {emprestimos.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="text-center py-4 text-red-700">
+                                        Nenhum empréstimo encontrado.
                                     </td>
-                                   {/* <td className="px-5 py-5">  
-                                       <button className={`px-4 py-2 rounded-lg w-full ${emprest.estado === "Ativo" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" }`}>
-                                           {emprest.estado}
-                                       </button>
-                                   </td> */}
-                                   {/* <td className="px-5 py-5"> {emprest.accoes} </td> */}
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : (
+                                emprestimos.map((emprest, index) => (
+                                    <tr 
+                                        key={emprest.id || index} 
+                                        className="hover:bg-black/3 transition-colors"
+                                    >
+                                        <td className="px-5 py-5">{emprest.livro}</td>
+                                        <td className="px-5 py-5">{emprest.estudante}</td>
+                                        <td className="px-5 py-5">{emprest.data_emprestimo}</td>
+                                        <td className="px-5 py-5">{emprest.data_vencimento}</td>
+                                        <td className="px-5 py-5">
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium
+                                                ${emprest.estado === "Ativo" 
+                                                    ? "bg-green-100 text-green-700" 
+                                                    : "bg-red-100 text-red-700"}`}>
+                                                {emprest.estado}
+                                            </span>
+                                        </td>
+                                    {/* <td className="px-5 py-5">  
+                                        <button className={`px-4 py-2 rounded-lg w-full ${emprest.estado === "Ativo" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" }`}>
+                                            {emprest.estado}
+                                        </button>
+                                    </td> */}
+                                    {/* <td className="px-5 py-5"> {emprest.accoes} </td> */}
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </section>
+
             </section>
+            ) : tipo === "reservas" ?(
+ 
+            <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
+                <section className="py-5 flex flex-col">
+                    <label className="text-xl">Lista de Reservas</label>
+                    <label className="text-black/70">Exibindo {reservas.length} de {reservas.length}</label>
+                </section>
+                <section className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table className="w-full table-fixed border-collapse">
+                        <thead className="bg-black/5">
+                            <tr>
+                                <th className="w-[25%] px-5 py-3 text-center">Livro</th>
+                                <th className="w-[25%] px-5 py-3 text-center">Estudante</th>
+                                <th className="w-[15%] px-5 py-3 text-center">Data Reserva</th>
+                                <th className="w-[15%] px-5 py-3 text-center">Data Vencimento</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Estado</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-black/10">
+                            {reservas.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="text-center py-4 text-red-700">
+                                        Nenhum empréstimo encontrado.
+                                    </td>
+                                </tr>
+                            ) : (
+                                reservas.map((reserva, index) => (
+                                    <tr 
+                                        key={reserva.id || index} 
+                                        className="hover:bg-black/3 transition-colors"
+                                    >
+                                        <td className="px-5 py-4 truncate text-center">{reserva.livro}</td>
+                                        <td className="px-5 py-4 truncate text-center">{reserva.estudante}</td>
+                                        <td className="px-5 py-4 truncate text-center">{reserva.data_reserva}</td>
+                                        <td className="px-5 py-4 truncate text-center">{reserva.data_vencimento}</td>
+                                        <td className="px-5 py-4 truncate text-center">
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium
+                                                ${reserva.estado === "Ativo" 
+                                                    ? "bg-green-100 text-green-700" 
+                                                    : "bg-yellow-100 text-yellow-700"}`}>
+                                                {reserva.estado}
+                                            </span>
+                                        </td>
+                                    {/* <td className="px-5 py-5">  
+                                        <button className={`px-4 py-2 rounded-lg w-full ${emprest.estado === "Ativo" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" }`}>
+                                            {emprest.estado}
+                                        </button>
+                                    </td> */}
+                                    <td className="px-5 py-4 truncate text-center">
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+                                                ${reserva.estado === "Ativo" 
+                                                    ? "bg-green-100 text-green-700" 
+                                                    : "bg-red-100 text-red-700"}`}>
+                                                {reserva.accoes}
+                                            </span>
+                                    </td>
+                                </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </section>
 
             </section>
 
