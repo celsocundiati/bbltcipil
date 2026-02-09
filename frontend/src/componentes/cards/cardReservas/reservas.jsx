@@ -83,8 +83,8 @@ function CardReservas({props}){
                     </div>
     
                     <div className="flex flex-col gap-2 lg:gap-3">
-                        <p className="text-lg "> {reserva.livro} </p>
-                        <p className="text-black/57"> {reserva.autor} </p>
+                        <p className="text-lg "> {reserva.livro_nome} </p>
+                        {/* <p className="text-black/57"> {reserva.autor_nome} </p> */}
                         
 
                         <EstadoCard estado={reserva.estado_label} label={reserva.informacao}/>

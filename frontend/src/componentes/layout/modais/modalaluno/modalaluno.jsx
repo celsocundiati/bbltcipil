@@ -10,6 +10,8 @@ function ModalAluno({onClose})
         nome: "",
         email: "",
         password: "",
+        telefone: "",
+        data_nascimento: "",
         classe: 10,
         curso: "",
     });
@@ -33,17 +35,19 @@ function ModalAluno({onClose})
         setErro(null);
 
         try {
-        await axios.post("http://127.0.0.1:8000/api/alunos/", form);
-        setModal({open: true});
-        
-        setForm({
-            n_processo: 1,
-            nome: "",
-            email: "",
-            password: "",
-            classe: 10,
-            curso: "",
-        });
+            await axios.post("http://127.0.0.1:8000/api/alunos/", form);
+            setModal({open: true});
+            
+            setForm({
+                n_processo: 1,
+                nome: "",
+                email: "",
+                password: "",
+                telefone: "",
+                data_nascimento: "",
+                classe: 10,
+                curso: "",
+            });
         } catch (err) {
         alert("Erro ao registrar aluno");
         setErro("Erro ao registrar aluno");
@@ -82,7 +86,7 @@ function ModalAluno({onClose})
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Nº Proc:</label>
-                                <input type="number" required name="n_processo" id="n_processo" value={form.n_processo} onChange={handleChange} placeholder="100123" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input type="number" required max={6} name="n_processo" id="n_processo" value={form.n_processo} onChange={handleChange} placeholder="100123" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Email:</label>
@@ -95,6 +99,14 @@ function ModalAluno({onClose})
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Curso:</label>
                                 <input type="text" required name="curso" id="curso" value={form.curso} onChange={handleChange} placeholder="Gestão de Sistemas Informáticos" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Telefone:</label>
+                                <input type="number" min={9} required name="telefone" id="telefone" value={form.telefone} onChange={handleChange} placeholder="955671426" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                                <label className="text-black/75 text-lg">Data de Nascimento:</label>
+                                <input type="date" required name="data_nascimento" id="data_nascimento" value={form.data_nascimento} onChange={handleChange} placeholder="22/03/2007" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Password:</label>

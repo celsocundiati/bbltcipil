@@ -3,8 +3,8 @@ import { FiCheckCircle } from "react-icons/fi";
 import {HiOutlineArrowDownTray, HiOutlineCog6Tooth} from "react-icons/hi2";
 import { useState } from "react";
 import Modal from "../modais/modal";
-import ModalLivro from "../modais/modallivro";
-import ModalAluno from "../modais/ModalAluno";
+import ModalLivro from "../modais/modalgestao/modallivro";
+import ModalAluno from "../modais/modalaluno/modalaluno";
 import {Link} from "react-router-dom";
 
 

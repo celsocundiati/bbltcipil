@@ -77,14 +77,14 @@ function Detalhes(){
                                     <MdPersonOutline size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1"/>
                                     <span>
                                         <p className="text-base text-black/70">Autor</p>
-                                        <p> {livro.autor} </p>
+                                        <p> {livro.autor_nome} </p>
                                     </span>
                                 </label>
                                 <label className="flex items-center gap-3">
                                     <LuBookOpen size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1"/>
                                     <span>
                                         <p className="text-base text-black/70">Categória</p>
-                                        <p> {livro.categoria} </p>
+                                        <p> {livro.categoria_nome} </p>
                                     </span>
                                 </label>
                                 <label className="flex items-center gap-3">

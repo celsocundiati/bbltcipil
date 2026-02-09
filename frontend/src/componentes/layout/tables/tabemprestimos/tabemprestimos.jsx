@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { LuFilePen } from "react-icons/lu";
 import { FiTrash2 } from "react-icons/fi";
+import ModalEmprestimo from "../../modais/modalemprestimo/modalemprestimo";
 
 function TabelaEmprestimos(){
     
     const [emprestimos, setEmprestimos] = useState([]);
+    const [emprestimoSelecionado, setEmprestimoSelecionado] = useState(null);
     const [modal, setModal] = useState({
         open: false,
         type: null,
-        livro: null,
+        emprestimo: null,
     });
 
     useEffect(() => {
@@ -18,21 +20,18 @@ function TabelaEmprestimos(){
         .catch(err => console.error("Erro na captura de Empréstimos", err));
     }, []);
 
-    function openModal(type, livro){
-        setModal({open: true, type, livro});
+    function openModal(type, emprestimo){
+            setModal({open: true, type, emprestimo});
     }
     function closeModal(){
-        setModal({open:false, type: null, livro: null});
+        setModal({open:false, type: null, emprestimo: null});
     }
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/emprestimos/${modal.livro.id}/`);
-            setEmprestimos(prev => prev.filter(item => item.id !== modal.livro.id));
+            await axios.delete(`http://127.0.0.1:8000/api/emprestimos/${modal.emprestimos.id}/`);
+            setEmprestimos(prev => prev.filter(item => item.id !== modal.emprestimos.id));
+            closeModal();
         }
-        if(modal.type === "update"){
-            window.location.href = `emprestimos/${modal.livro.id}`;
-        }
-        closeModal();
     }
     
 
@@ -46,6 +45,7 @@ function TabelaEmprestimos(){
                 <table className="table-auto w-full text-left bg-white shadow-md border border-black/10 rounded-xl">
                     <thead className="bg-black/5 text-cinza-900">
                         <tr>
+                            <th className="py-2 px-5 text-center">ID</th>
                             <th className="py-2 px-5 text-center">Livro</th>
                             <th className="py-2 px-5 text-center">Estudante</th>
                             <th className="py-2 px-5 text-center">ID Reserva</th>
@@ -69,6 +69,7 @@ function TabelaEmprestimos(){
                                     key={emprest.id} 
                                     className="hover:bg-black/3 transition-colors"
                                 >
+                                    <td className="px-5 py-5 truncate text-center">{emprest.id}</td>
                                     <td className="px-5 py-5 truncate text-center">{emprest.livro_nome}</td>
                                     <td className="px-5 py-5 truncate text-center">{emprest.aluno_nome}</td>
                                     <td className="px-5 py-5 truncate text-center">{emprest.reserva}</td>
@@ -93,10 +94,10 @@ function TabelaEmprestimos(){
                                             {/* <button className="hover:text-[#f97b17] transition">
                                                 <FiEye size={20}/>
                                             </button> */}
-                                            <button onClick={() => openModal("update", livro)} className="hover:text-black/70 cursor-pointer transition">
+                                            <button onClick={() => setEmprestimoSelecionado(emprest)} className="hover:text-black/70 cursor-pointer transition">
                                                 <LuFilePen size={25}/>
                                             </button>
-                                            <button onClick={() => openModal("delete", livro)} className="text-red-500 hover:text-red-700 cursor-pointer transition">
+                                            <button onClick={() => openModal("delete", emprest)} className="text-red-500 hover:text-red-700 cursor-pointer transition">
                                                 <FiTrash2 size={25}/>
                                             </button>
                                         </div>
@@ -108,6 +109,32 @@ function TabelaEmprestimos(){
                 </table>
             </section>
 
+            {modal.open && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold mb-2">
+                            {modal.type === "delete" ? "Excluir livro" : "Editar livro"}
+                        </h3>
+                        <p>Tem certeza que deseja{""}
+                            {modal.type === "delete" ? "excluir" : "editar"} este livro ?
+                        </p>
+                        <div className="flex justify-end gap-3 mt-5">
+                            <button onClick={closeModal} className="px-3 py-2 bg-cinza-700 rounded-lg hover:bg-red-700 hover:text-white">Cancelar</button>
+                            <button onClick={handleConfirm} className="px-3 py-2 bg-blue-700 text-white rounded-lg hover:bg-laranja-500">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {emprestimoSelecionado && <ModalEmprestimo onClose={() => setEmprestimoSelecionado(false)}
+                emprestimo={emprestimoSelecionado}
+                onSave={(emprestimoAtualizado) => {
+                    setEmprestimos(prev =>
+                    prev.map(e => e.id === emprestimoAtualizado.id ? emprestimoAtualizado : e)
+                );
+                    setEmprestimoSelecionado(null);
+                }}
+        /> }
         </section>
     )
 }

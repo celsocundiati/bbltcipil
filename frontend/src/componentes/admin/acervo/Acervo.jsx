@@ -3,6 +3,7 @@ import RotulosOutle from "../../layout/outle/rotulosotles";
 import InputAdmin from "../../layout/admInput/input";
 import Select from "../../tags/selects/selects";
 import Table from "../../layout/tables/Table";
+import TabelaReservas from "../../layout/tables/tabreservas/tabreservas";
 
 function Acervo()
 {
@@ -20,7 +21,8 @@ function Acervo()
                 {/* <Select tipo="cursos" /> */}
             </section>
             <section>
-                <Table tipo="reservas"/>
+                {/* <Table tipo="reservas"/> */}
+                <TabelaReservas/>
             </section>
         </main>
     );

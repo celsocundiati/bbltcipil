@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.hashers import make_password, check_password
 from django.dispatch import receiver
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class Categoria(models.Model):
@@ -145,7 +146,7 @@ class Reserva(models.Model):
 
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="reservas")
     livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="reservas")
-    autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="reservas")
+    # autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="emprestimos")
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendente')
     data_reserva = models.DateField(auto_now_add=True)
 
@@ -192,54 +193,74 @@ class Emprestimo(models.Model):
         on_delete=models.CASCADE,
         related_name="emprestimo"
     )
-    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="emprestimos")
-    livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="emprestimos")
-    acoes = models.CharField(max_length=20, choices=ACOES, default='ativo')
+    aluno = models.ForeignKey(
+        Aluno,
+        on_delete=models.CASCADE,
+        related_name="emprestimos"
+    )
+    livro = models.ForeignKey(
+        Livro,
+        on_delete=models.CASCADE,
+        related_name="emprestimos"
+    )
+    acoes = models.CharField(
+        max_length=20,
+        choices=ACOES,
+        default='ativo'
+    )
     data_emprestimo = models.DateField(auto_now_add=True)
     data_devolucao = models.DateField()
 
     @property
     def capa(self):
-        # pega automaticamente do livro
         return self.livro.capa
 
     def save(self, *args, **kwargs):
         criando = self.pk is None
 
-        # ❗ validação forte
-        if criando and self.reserva.estado != 'reservado':
-            raise ValueError(
-                "Só é possível criar empréstimo a partir de uma reserva 'reservado'."
-            )
+        with transaction.atomic():
 
-        # herda dados da reserva
-        self.aluno = self.reserva.aluno
-        self.livro = self.reserva.livro
-        self.autor = self.reserva.autor
+            # 🔒 Validação forte na criação
+            if criando:
+                if self.reserva.estado != 'reservado':
+                    raise ValidationError(
+                        "Só é possível criar empréstimo a partir de uma reserva no estado 'reservado'."
+                    )
 
-        if self.livro and not self.capa:
-            self.capa = self.livro.capa
+                if self.reserva.livro.quantidade < 1:
+                    raise ValidationError(
+                        "Livro indisponível no stock para empréstimo."
+                    )
 
-        # atraso automático
-        if (
-            self.acoes == 'ativo'
-            and self.data_devolucao
-            and self.data_devolucao < timezone.now().date()
-        ):
-            self.acoes = 'atrasado'
+                # herda dados da reserva
+                self.aluno = self.reserva.aluno
+                self.livro = self.reserva.livro
 
-        super().save(*args, **kwargs)
+                # 🔻 decrementa stock
+                self.livro.quantidade -= 1
+                self.livro.save(update_fields=["quantidade"])
 
-        # 🔥 atualiza estado da reserva APÓS criar empréstimo
-        if criando:
-            self.reserva.estado = 'emprestado'
-            self.reserva.save(update_fields=['estado'])
-        else:
-            # se o empréstimo foi devolvido, libera a reserva
-            if self.acoes == 'devolvido':
-                self.reserva.estado = 'disponivel'  # ou o valor que representa "livre"
-                self.reserva.save(update_fields=['estado'])
+                # atualiza estado da reserva
+                self.reserva.estado = 'emprestado'
+                self.reserva.save(update_fields=["estado"])
+
+            # ⏰ atraso automático
+            if (
+                self.acoes == 'ativo'
+                and self.data_devolucao
+                and self.data_devolucao < timezone.now().date()
+            ):
+                self.acoes = 'atrasado'
+
+            super().save(*args, **kwargs)
+
+            # 🔺 devolução
+            if not criando and self.acoes == 'devolvido':
+                self.livro.quantidade += 1
+                self.livro.save(update_fields=["quantidade"])
+
+                self.reserva.estado = 'finalizada'
+                self.reserva.save(update_fields=["estado"])
 
     def __str__(self):
         return f"{self.livro.titulo} — {self.aluno.nome} ({self.acoes})"
-
