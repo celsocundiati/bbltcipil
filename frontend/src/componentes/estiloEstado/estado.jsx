@@ -4,7 +4,7 @@ import { LuClock } from "react-icons/lu";
 function Estado({estado}){
     
     function estiloEstado(texto) {
-        const status = texto.toLowerCase();
+        const status = (texto).toLowerCase();
 
         const base = "absolute top-2 right-2 text-sm px-2 py-1 flex gap-1 items-center justify-center rounded-2xl shadow";
 
@@ -17,7 +17,7 @@ function Estado({estado}){
         } else if (status.includes("indisponível")) {
             return `${base} bg-red-200 text-[#EF4455]`;
         } else {
-            return `${base} bg-green-100 text-[#22C55E]`; // default estiloEstado(livro.estado)
+            return `${base} bg-green-100 text-[#22C55E]`; // default estiloEstado(livro.estado)  || ""
         }
     }
 

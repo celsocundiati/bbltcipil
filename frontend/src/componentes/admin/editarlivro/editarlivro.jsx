@@ -165,7 +165,7 @@ function EditarLivro()
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="nPaginas">Nº de páginas*</label>
-                                <input type="number" name="n_paginas" required placeholder="05" value={livro.n_paginas} onChange={handleChange}
+                                <input type="number" min={0} name="n_paginas" required placeholder="05" value={livro.n_paginas} onChange={handleChange}
                                     className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col">

@@ -2,8 +2,16 @@ import { useState } from "react";
 import axios from "axios";
 import {HiOutlineXMark} from "react-icons/hi2";
 
-function ModalAluno({onClose})
-{
+function ModalAluno({onClose}){
+
+    const hoje = new Date();
+    const idadeMinima = 14;
+
+    const dataMaximaPermitida = new Date(
+        hoje.getFullYear() - idadeMinima,
+        hoje.getMonth(),
+        hoje.getDate()
+    ).toISOString().split("T")[0];
 
     const [form, setForm] = useState({
        n_processo: 1,
@@ -49,9 +57,19 @@ function ModalAluno({onClose})
                 curso: "",
             });
         } catch (err) {
-        alert("Erro ao registrar aluno");
-        setErro("Erro ao registrar aluno");
-        console.error(err);
+                if (err.response?.data) {
+                    const erros = Object.values(err.response.data)
+                        .flat()
+                        .join("\n");
+
+                    alert(erros);
+                    setErro(erros);
+                } else {
+                    alert("Erro ao comunicar com o servidor");
+                }
+
+                console.error(err);
+
         } finally {
         setLoading(false);
         }
@@ -86,27 +104,82 @@ function ModalAluno({onClose})
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Nº Proc:</label>
-                                <input type="number" required max={6} name="n_processo" id="n_processo" value={form.n_processo} onChange={handleChange} placeholder="100123" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input
+                                    type="text"
+                                    name="n_processo"
+                                    id="n_processo"
+                                    value={form.n_processo}
+                                    required
+                                    placeholder="100123"
+                                    minLength={4}
+                                    maxLength={6}
+                                    inputMode="numeric"
+                                    pattern="[0-9]{4,6}"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^\d*$/.test(value) && value.length <= 6) {
+                                            handleChange(e);
+                                        }
+                                    }}
+                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
+
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Email:</label>
                                 <input type="email" required name="email" id="email" value={form.email} onChange={handleChange} placeholder="celso@gmail.com" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Classe:</label>
-                                <input type="text" required name="classe" id="classe" value={form.classe} onChange={handleChange} placeholder="13ª Classe" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <select
+                                    name="classe"
+                                    id="classe"
+                                    value={form.classe}
+                                    onChange={handleChange}
+                                    required
+                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                >
+                                    <option value="">Selecionar classe</option>
+                                    <option value="10">10ª Classe</option>
+                                    <option value="11">11ª Classe</option>
+                                    <option value="12">12ª Classe</option>
+                                    <option value="13">13ª Classe</option>
+                                </select>
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Curso:</label>
-                                <input type="text" required name="curso" id="curso" value={form.curso} onChange={handleChange} placeholder="Gestão de Sistemas Informáticos" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input type="text" required name="curso" id="curso" value={form.curso} onChange={handleChange} placeholder="Gestão de Sistemas Informáticos" 
+                                className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500 cursor-pointer"/>
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Telefone:</label>
-                                <input type="number" min={9} required name="telefone" id="telefone" value={form.telefone} onChange={handleChange} placeholder="955671426" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input type="tel" 
+
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // aceita apenas números
+                                    if (/^\d*$/.test(value) && value.length <= 15) {
+                                        handleChange(e);
+                                    }
+                                }}
+                                minLength={9}
+                                maxLength={15}
+                                required
+                                placeholder="994268736"
+                                name="telefone" id="telefone" value={form.telefone} className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Data de Nascimento:</label>
-                                <input type="date" required name="data_nascimento" id="data_nascimento" value={form.data_nascimento} onChange={handleChange} placeholder="22/03/2007" className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input
+                                    type="date"
+                                    name="data_nascimento"
+                                    id="data_nascimento"
+                                    value={form.data_nascimento}
+                                    onChange={handleChange}
+                                    required
+                                    max={dataMaximaPermitida}
+                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
                             <div className="flex flex-col space-y-1">
                                 <label className="text-black/75 text-lg">Password:</label>

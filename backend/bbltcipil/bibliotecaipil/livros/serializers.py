@@ -29,6 +29,7 @@ class LivroSerializer(serializers.ModelSerializer):
         model = Livro
         fields = '__all__'
 
+
 class AutorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Autor
@@ -42,21 +43,23 @@ class CategoriaSerializer(serializers.ModelSerializer):
 class ReservaSerializer(serializers.ModelSerializer):
     capa = serializers.ReadOnlyField()
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
-    aluno_nome = serializers.StringRelatedField(source="aluno.nome", read_only=True)
+    aluno_nome = serializers.CharField(source="aluno.nome", read_only=True)
     estado_label = serializers.CharField(
         source="get_estado_display",
         read_only=True
     )
     informacao = serializers.ReadOnlyField()
+    autor_nome = serializers.CharField(source='livro.autor.nome', read_only=True)
 
     class Meta:
         model = Reserva
         fields = '__all__'
 
 class EmprestimoSerializer(serializers.ModelSerializer):
-    livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
-    aluno_nome = serializers.CharField(source="aluno.nome", read_only=True)
+    livro_nome = serializers.CharField(source="reserva.livro.titulo", read_only=True)
+    aluno_nome = serializers.CharField(source="reserva.aluno.nome", read_only=True)
     capa = serializers.ReadOnlyField()
+    autor_nome = serializers.CharField(source='reserva.livro.autor.nome', read_only=True)
 
     
     def validate_data_devolucao(self, value):
@@ -74,6 +77,17 @@ class EmprestimoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AlunoSerializer(serializers.ModelSerializer):
+
+    def validate_data_nascimento(self, value):
+        hoje = timezone.now().date()
+
+        if value > hoje:
+            raise serializers.ValidationError(
+                "A data de nascimento não pode ser superior à data atual."
+            )
+
+        return value
+
     class Meta:
         model = Aluno
         fields = '__all__'

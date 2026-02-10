@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-function CardReservas({props}){
+function CardReservas(){
 
 
     const [reservas, setReservas] = useState([]);
@@ -47,9 +47,8 @@ function CardReservas({props}){
                     </div>
     
                     <div className="flex flex-col gap-2 lg:gap-3">
-                        <p className="text-lg "> {emprestimo.livro} </p>
-                        <p className="text-black/57"> {emprestimo.autor} </p>
-                        
+                        <p className="text-lg "> {emprestimo.livro_nome} </p>
+                        <p className="text-black/57"> {emprestimo.autor_nome} </p>
 
                         <EstadoCard estado="Emprestado" label="Livro emprestado atualmente"/>
 
@@ -84,7 +83,7 @@ function CardReservas({props}){
     
                     <div className="flex flex-col gap-2 lg:gap-3">
                         <p className="text-lg "> {reserva.livro_nome} </p>
-                        {/* <p className="text-black/57"> {reserva.autor_nome} </p> */}
+                        <p className="text-black/57"> {reserva.autor_nome} </p>
                         
 
                         <EstadoCard estado={reserva.estado_label} label={reserva.informacao}/>

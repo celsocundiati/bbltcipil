@@ -90,10 +90,6 @@ function AddLivro(){
                 quantidade: 1,
             });
         } catch (err) {
-            // alert("Erro ao registar Livro!");
-            // setErro("Erro ao registar livro");
-            // console.error(err);
-
                 if (err.response?.data) {
                     const erros = Object.values(err.response.data)
                         .flat()

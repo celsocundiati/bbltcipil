@@ -4,26 +4,21 @@ import axios from "axios";
 
 function ModalEmprestimo({ emprestimo, onClose, onSave }) {
 
+  // Apenas o que pode ser alterado
   const [formData, setFormData] = useState({
-    aluno: "",
-    livro: "",
-    data_emprestimo: "",
     data_devolucao: ""
   });
 
-  // Preenche os campos quando a modal abre em modo edição
+  // Preenche o formulário ao abrir a modal
   useEffect(() => {
     if (!emprestimo) return;
 
     setFormData({
-      aluno: emprestimo.aluno ?? "",
-      livro: emprestimo.livro ?? "",
-      data_emprestimo: emprestimo.data_emprestimo ?? "",
       data_devolucao: emprestimo.data_devolucao ?? ""
     });
   }, [emprestimo]);
 
-  // Handler universal
+  // Handler controlado
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -36,16 +31,37 @@ function ModalEmprestimo({ emprestimo, onClose, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Regra básica: devolução não pode ser antes do empréstimo
+    if (formData.data_devolucao < emprestimo.data_emprestimo) {
+      alert("A data de devolução não pode ser anterior à data de empréstimo.");
+      return;
+    }
+
     try {
       const res = await axios.put(
         `http://localhost:8000/api/emprestimos/${emprestimo.id}/`,
-        formData
+        {
+          data_devolucao: formData.data_devolucao
+        }
       );
 
       onSave(res.data);
+      onClose();
     } catch (error) {
-      console.error("Erro ao atualizar empréstimo:", error);
-    }
+          if (error.response?.data) {
+          const erros = Object.values(error.response.data)
+              .flat()
+              .join("\n");
+
+          alert(erros);
+          setErro(erros);
+        } else {
+            alert("Erro ao comunicar com o servidor");
+        }
+
+        console.error(err);
+
+      } 
   };
 
   return (
@@ -67,62 +83,55 @@ function ModalEmprestimo({ emprestimo, onClose, onSave }) {
               Editar Empréstimo
             </h2>
             <p className="text-black/70">
-              Atualize os dados do empréstimo selecionado
+              Atualize apenas os dados permitidos do empréstimo
             </p>
           </article>
 
           {/* Formulário */}
-          <form className="space-y-4" method="post" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="flex flex-col space-y-4">
 
-              {/* Estudante */}
+              {/* Estudante (read-only) */}
               <div className="flex flex-col space-y-1">
                 <label className="text-black/75 text-lg">Estudante</label>
                 <input
                   type="text"
-                  name="aluno"
-                  value={formData.aluno}
-                  // onChange={handleChange}
-                  required
-                  placeholder="ID ou nome do estudante"
-                  className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                  value={emprestimo?.aluno_nome || ""}
+                  readOnly
+                  className="bg-black/5 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
                 />
               </div>
 
-              {/* Livro */}
+              {/* Livro (read-only) */}
               <div className="flex flex-col space-y-1">
                 <label className="text-black/75 text-lg">Livro</label>
                 <input
                   type="text"
-                  name="livro"
-                  value={formData.livro}
-                  // onChange={handleChange}
-                  required
-                  placeholder="ISBN ou título do livro"
-                  className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                  value={emprestimo?.livro_nome || ""}
+                  readOnly
+                  className="bg-black/5 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
                 />
               </div>
 
-              {/* Data Empréstimo */}
+              {/* Data de Empréstimo (read-only) */}
               <div className="flex flex-col space-y-1">
                 <label className="text-black/75 text-lg">Data de Empréstimo</label>
                 <input
                   type="date"
-                  name="data_emprestimo"
-                  value={formData.data_emprestimo}
-                  // onChange={handleChange}
-                  required
-                  className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                  value={emprestimo?.data_emprestimo || ""}
+                  readOnly
+                  className="bg-black/5 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
                 />
               </div>
 
-              {/* Data Devolução */}
+              {/* Data de Devolução (editável) */}
               <div className="flex flex-col space-y-1">
                 <label className="text-black/75 text-lg">Data de Devolução</label>
                 <input
                   type="date"
                   name="data_devolucao"
                   value={formData.data_devolucao}
+                  min={emprestimo?.data_emprestimo}
                   onChange={handleChange}
                   required
                   className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"

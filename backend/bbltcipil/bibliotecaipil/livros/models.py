@@ -53,13 +53,11 @@ class Livro(models.Model):
     # ✅ Propriedade dinâmica do estado
     @property
     def estado_atual(self):
-        
         if self.quantidade == 0:
             return 'Indisponível'
 
-        # Verifica se existe empréstimo ativo ou atrasado
-        
-        if self.emprestimos.filter(acoes__in=['ativo', 'atrasado']).exists():
+        # Verifica se existe algum empréstimo ativo ou atrasado através das reservas
+        if Emprestimo.objects.filter(reserva__livro=self, acoes__in=['ativo', 'atrasado']).exists():
             return 'Emprestado'
 
         # Verifica se existe reserva
@@ -68,9 +66,13 @@ class Livro(models.Model):
         
         if self.reservas.filter(estado='pendente').exists():
             return 'Pendente'
+        
+        if self.reservas.filter(estado='finalizada').exists():
+            return 'Disponível'
 
-        # Caso contrário, está disponível
+        # Caso contrário
         return 'Disponível'
+
 
     # ✅ Informação baseada no estado dinâmico
     @property
@@ -139,44 +141,65 @@ class Aluno(models.Model):
 
 class Reserva(models.Model):
     ESTADOS = [
-        ('reservado', 'Reservado'),
         ('pendente', 'Pendente'),
+        ('reservado', 'Reservado'),
         ('emprestado', 'Emprestado'),
+        ('finalizada', 'Finalizada'),
     ]
 
-    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="reservas")
-    livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="reservas")
-    # autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="emprestimos")
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendente')
+    aluno = models.ForeignKey(
+        Aluno,
+        on_delete=models.CASCADE,
+        related_name="reservas"
+    )
+    livro = models.ForeignKey(
+        Livro,
+        on_delete=models.CASCADE,
+        related_name="reservas"
+    )
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='pendente'
+    )
     data_reserva = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.livro.titulo} reservado por {self.aluno.nome} ({self.estado})"
 
     def save(self, *args, **kwargs):
-        # 1️⃣ Bloquear reserva se não houver quantidade
-        if self.livro.quantidade <= 0:
-            raise ValueError(f"Não é possível criar reserva: '{self.livro.titulo}' está indisponível no stock.")
+        # 🔒 1️⃣ Validar stock APENAS na criação
+        if not self.pk:
+            if self.livro.quantidade <= 0:
+                raise ValidationError(
+                    f"Não é possível criar reserva: '{self.livro.titulo}' está indisponível no stock."
+                )
 
-        # 2️⃣ Evitar reserva duplicada pelo mesmo aluno para o mesmo livro
-        if not self.pk:  # só checar se for nova reserva
-            if Reserva.objects.filter(aluno=self.aluno, livro=self.livro, estado__in=['reservado', 'pendente']).exists():
-                raise ValueError(f"Você já possui uma reserva para '{self.livro.titulo}'.")
+            # 🔒 2️⃣ Evitar reserva duplicada ativa
+            if Reserva.objects.filter(
+                aluno=self.aluno,
+                livro=self.livro,
+                estado__in=['pendente', 'reservado']
+            ).exists():
+                raise ValidationError(
+                    f"Você já possui uma reserva ativa para '{self.livro.titulo}'."
+                )
 
         super().save(*args, **kwargs)
 
-    # 3️⃣ Pegar capa direto do livro
+    # 📘 Capa do livro
     @property
     def capa(self):
         return self.livro.capa
 
-    # 4️⃣ Informações baseadas no estado
+    # ℹ️ Informação contextual do estado
     @property
     def informacao(self):
         info_map = {
+            'pendente': "Aguardando aprovação ou disponibilidade",
             'reservado': "Pronta para empréstimo",
-            'pendente': "Aguardando disponibilidade",
             'emprestado': "Livro emprestado atualmente",
+            'finalizada': "Reserva concluída",
         }
         return info_map.get(self.estado, "")
 
@@ -193,58 +216,44 @@ class Emprestimo(models.Model):
         on_delete=models.CASCADE,
         related_name="emprestimo"
     )
-    aluno = models.ForeignKey(
-        Aluno,
-        on_delete=models.CASCADE,
-        related_name="emprestimos"
-    )
-    livro = models.ForeignKey(
-        Livro,
-        on_delete=models.CASCADE,
-        related_name="emprestimos"
-    )
-    acoes = models.CharField(
-        max_length=20,
-        choices=ACOES,
-        default='ativo'
-    )
+    acoes = models.CharField(max_length=20, choices=ACOES, default='ativo')
     data_emprestimo = models.DateField(auto_now_add=True)
     data_devolucao = models.DateField()
 
     @property
+    def livro(self):
+        return self.reserva.livro
+
+    @property
+    def aluno(self):
+        return self.reserva.aluno
+
+    @property
     def capa(self):
-        return self.livro.capa
+        return self.reserva.livro.capa
 
     def save(self, *args, **kwargs):
         criando = self.pk is None
 
         with transaction.atomic():
 
-            # 🔒 Validação forte na criação
             if criando:
                 if self.reserva.estado != 'reservado':
                     raise ValidationError(
                         "Só é possível criar empréstimo a partir de uma reserva no estado 'reservado'."
                     )
 
-                if self.reserva.livro.quantidade < 1:
-                    raise ValidationError(
-                        "Livro indisponível no stock para empréstimo."
-                    )
+                livro = self.reserva.livro
 
-                # herda dados da reserva
-                self.aluno = self.reserva.aluno
-                self.livro = self.reserva.livro
+                if livro.quantidade < 1:
+                    raise ValidationError("Livro indisponível no stock.")
 
-                # 🔻 decrementa stock
-                self.livro.quantidade -= 1
-                self.livro.save(update_fields=["quantidade"])
+                livro.quantidade -= 1
+                livro.save(update_fields=["quantidade"])
 
-                # atualiza estado da reserva
                 self.reserva.estado = 'emprestado'
                 self.reserva.save(update_fields=["estado"])
 
-            # ⏰ atraso automático
             if (
                 self.acoes == 'ativo'
                 and self.data_devolucao
@@ -254,10 +263,10 @@ class Emprestimo(models.Model):
 
             super().save(*args, **kwargs)
 
-            # 🔺 devolução
             if not criando and self.acoes == 'devolvido':
-                self.livro.quantidade += 1
-                self.livro.save(update_fields=["quantidade"])
+                livro = self.reserva.livro
+                livro.quantidade += 1
+                livro.save(update_fields=["quantidade"])
 
                 self.reserva.estado = 'finalizada'
                 self.reserva.save(update_fields=["estado"])

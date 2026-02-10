@@ -125,16 +125,16 @@ function TabelaLivros(){
 
             {modal.open && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-branco-100 rounded-lg p-6 w-full max-w-md">
-                        <h3 className="text-lg font-semibold mb-2">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir livro" : "Editar livro"}
                         </h3>
-                        <p>Tem certeza que deseja{""}
+                        <p className="text-lg">Tem certeza que deseja{" "}
                             {modal.type === "delete" ? "excluir" : "editar"} este livro ?
                         </p>
                         <div className="flex justify-end gap-3 mt-5">
-                            <button onClick={closeModal} className="px-3 py-2 bg-cinza-700 rounded-lg hover:bg-red-700 hover:text-white">Cancelar</button>
-                            <button onClick={handleConfirm} className="px-3 py-2 bg-blue-700 text-white rounded-lg hover:bg-laranja-500">Confirmar</button>
+                            <button onClick={closeModal} className="px-3 py-2 bg-black/10 rounded-lg hover:bg-red-500 hover:text-white cursor-pointer">Cancelar</button>
+                            <button onClick={handleConfirm} className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 cursor-pointer">Confirmar</button>
                         </div>
                     </div>
                 </div>
