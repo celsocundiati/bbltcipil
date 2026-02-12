@@ -64,7 +64,9 @@ function TabelaEmprestimos(){
                                 </td>
                             </tr>
                         ) : (
-                            emprestimos.map((emprest, index) => (
+                            [...emprestimos]
+                                .sort((a, b) => (b.id) - new Date(a.id)) // ordem decrescente
+                                .map((emprest, index) => (
                                 <tr 
                                     key={emprest.id} 
                                     className="hover:bg-black/3 transition-colors"
@@ -83,11 +85,6 @@ function TabelaEmprestimos(){
                                             {emprest.acoes}
                                         </span>
                                     </td>
-                                    {/* <td className="px-5 py-5 truncate text-center">  
-                                        <button className={`px-4 py-2 rounded-lg w-full ${emprest.estado === "Ativo" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700" }`}>
-                                            {emprest.estado}
-                                        </button>
-                                    </td> */}
 
                                     <td className="px-5 py-4 truncate text-black/85 text-center">
                                         <div className="flex gap-3 justify-center">
