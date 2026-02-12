@@ -6,7 +6,6 @@ import ModalReserva from "../../modais/modalreserva/modalreserva";
 
 
 function TabelaReservas(){
-
     
     const [reservas, setReservas] = useState([]);
     const [reservaSelecionada, setReservaSelecionada] = useState(null);
@@ -36,6 +35,45 @@ function TabelaReservas(){
         }
     }
     
+    // Aprovar reserva
+    const handleAprovar = async (reserva) => {
+        if (reserva.estado === "reservado") return; // já aprovado
+        try {
+            const res = await axios.patch(`http://127.0.0.1:8000/api/reservas/${reserva.id}/`, {
+                estado: "reservado"
+            });
+            setReservas(prev =>
+                prev.map(item => item.id === reserva.id ? { ...item, estado: "reservado" } : item)
+            );
+        } catch (err) {
+            console.error("Erro ao aprovar reserva", err);
+            alert("Erro ao aprovar reserva. Tente novamente.");
+        }
+    };
+
+    const handleCancelar = async (reserva) => {
+        if (reserva.estado === "pendente") return; // já aprovado
+        try {
+            const res = await axios.patch(`http://127.0.0.1:8000/api/reservas/${reserva.id}/`, {
+                estado: "pendente"
+            });
+            setReservas(prev =>
+                prev.map(item => item.id === reserva.id ? { ...item, estado: "pendente" } : item)
+            );
+        } catch (err) {
+            console.error("Erro ao cancelar reserva", err);
+            alert("Erro ao cancelar reserva. Tente novamente.");
+        }
+    };
+
+    // Emprestar reserva
+    const handleEmprestar = (reserva) => {
+        if (reserva.estado !== "reservado") {
+            alert("A reserva precisa ser aprovada antes de emprestar.");
+            return;
+        }
+        setReservaSelecionada(reserva); // abre a modal de empréstimo
+    };
 
     return(
         <main>
@@ -51,9 +89,10 @@ function TabelaReservas(){
                                 <th className="w-[5%] px-5 py-3 text-center">ID</th>
                                 <th className="w-[20%] px-5 py-3 text-center">Livro</th>
                                 <th className="w-[20%] px-5 py-3 text-center">Estudante</th>
-                                <th className="w-[15%] px-5 py-3 text-center">Data Reserva</th>
+                                <th className="w-[13%] px-5 py-3 text-center">Data Reserva</th>
                                 <th className="w-[10%] px-5 py-3 text-center">Estado</th>
-                                <th className="w-[10%] px-5 py-3 text-center">Ações</th>
+                                <th className="w-[8%] px-5 py-3 text-center">Ação 1</th>
+                                <th className="w-[8%] px-5 py-3 text-center">Ação 2</th>
                             </tr>
                         </thead>
 
@@ -76,24 +115,39 @@ function TabelaReservas(){
                                         <td className="px-5 py-4 truncate text-center">{reserva.data_reserva}</td>
                                         <td className="px-5 py-4 truncate text-center">
                                             <span className={`px-3 py-1 rounded-full text-sm font-medium
-                                                ${reserva.estado === "Ativo" 
-                                                    ? "bg-green-100 text-green-700" 
+                                                ${reserva.estado === "aprovada" 
+                                                    ? "bg-green-100 text-green-500" 
+                                                    : reserva.estado === "reservado" 
+                                                    ? "bg-orange-100 text-orange-500" 
                                                     : "bg-yellow-100 text-yellow-700"}`}>
                                                 {reserva.estado}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-4 truncate text-center">
-                                            <span className="flex gap-2">
-                                                <button className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                                                    bg-green-100 text-green-700`}>
-                                                    Aprovar
-                                                </button>
 
-                                                <button className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                                                    bg-red-100 text-red-700`}>
-                                                    Reprovar
+                                        {reserva.estado === "pendente" ?
+                                            <td className="px-5 py-4 truncate text-center">
+                                                    <button onClick={() => handleAprovar(reserva)} className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+                                                        bg-blue-100 text-blue-700`}>
+                                                        Aprovar
+                                                    </button>
+                                            </td>
+                                            : reserva.estado === "reservado" ?
+                                            <td className="px-5 py-4 truncate text-center">
+                                                    <button onClick={() => handleCancelar(reserva)} className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+                                                        bg-red-100 text-red-500`}>
+                                                        Cancelar
+                                                    </button>
+                                            </td>
+                                            :
+                                            <td className="px-5 py-4 truncate text-center">
+                                                <p>A. Finalizada</p>
+                                            </td>
+                                        }
+                                        <td className="px-5 py-4 truncate text-center">
+                                                <button onClick={() => handleEmprestar(reserva)} className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+                                                    bg-green-100 text-green-700`}>
+                                                    Emprestar
                                                 </button>
-                                            </span>
                                         </td>
                                     </tr>
                                 ))

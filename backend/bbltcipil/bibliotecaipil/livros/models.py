@@ -165,7 +165,7 @@ class Reserva(models.Model):
     ESTADOS = [
         ('pendente', 'Pendente'),
         ('reservado', 'Reservado'),
-        ('emprestado', 'Emprestado'),
+        ('aprovada', 'Aprovada'),
         ('finalizada', 'Finalizada'),
     ]
 
@@ -273,7 +273,7 @@ class Emprestimo(models.Model):
                 livro.quantidade -= 1
                 livro.save(update_fields=["quantidade"])
 
-                self.reserva.estado = 'emprestado'
+                self.reserva.estado = 'aprovada'
                 self.reserva.save(update_fields=["estado"])
 
             if (
