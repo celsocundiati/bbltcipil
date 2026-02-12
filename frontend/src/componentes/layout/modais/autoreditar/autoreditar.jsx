@@ -10,6 +10,8 @@ function ModalEditarAutor({ onClose, form, setForm }){
     });
     const [modal, setModal] = useState({
         open: false,
+        type: "success", // "success" ou "error"
+        message: "",
     });
 
     const [loading, setLoading] = useState(false);
@@ -35,7 +37,11 @@ function ModalEditarAutor({ onClose, form, setForm }){
         
         try {
             await axios.put(`http://127.0.0.1:8000/api/autores/${form?.id}/`, form);
-            setModal({open: true});
+            setModal({
+                open: true,
+                type: "success",
+                message: "Autor atualizado com sucesso!",
+            });
         
             setForm({
                 nome: "",
@@ -47,7 +53,11 @@ function ModalEditarAutor({ onClose, form, setForm }){
                 .flat()
                 .join("\n");
 
-            alert(erros);
+                setModal({
+                    open: true,
+                    type: "error",
+                    message: erros,
+                });
             setErro(erros);
             }
         } finally {
@@ -102,11 +112,26 @@ function ModalEditarAutor({ onClose, form, setForm }){
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center text-left z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-sm">
                         <h3 className="text-lg  font-semibold mb-2">
-                            Sucesso
+                            {modal.type === "success" ? "Sucesso" : "Erro"}
                         </h3>
-                        <p>Autor registrado com sucesso!</p>
+                        <p>{modal.message}</p>
                         <div className="flex justify-end gap-3 mt-2">
-                            <button onClick={closeModal} className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Confirmado</button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (modal.type === "success") {
+                                        setModal({ open: false });
+                                        onClose()
+                                    } else {
+                                        setModal({ ...modal, open: false }); // apenas fecha no erro
+                                    }
+                                }}
+                                className={`cursor-pointer px-6 py-2 rounded-lg border border-black/10 text-white transition ${
+                                    modal.type === "success" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                                }`}
+                            >
+                                {modal.type === "success" ? "Confirmado" : "Tente novamente"}
+                            </button>
                         </div>
                     </div>
                 </div>

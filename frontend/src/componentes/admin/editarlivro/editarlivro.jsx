@@ -14,6 +14,8 @@ function EditarLivro(){
     const [erro, setErro] = useState(null);
     const [modal, setModal] = useState({
         open: false,
+        type: "success", // "success" ou "error"
+        message: "",
     });
 
     
@@ -72,7 +74,11 @@ function EditarLivro(){
 
         try {
             await axios.put(`http://127.0.0.1:8000/api/livros/${id}/`, livro);
-            setModal({open: true});
+            setModal({
+                open: true,
+                type: "success",
+                message: "Livro atualizado com sucesso!",
+            });
 
             setLivro({
                 isbn: "",
@@ -93,7 +99,11 @@ function EditarLivro(){
                     .flat()
                     .join("\n");
 
-                alert(erros);
+                    setModal({
+                        open: true,
+                        type: "error",
+                        message: erros,
+                    });
                 setErro(erros);
             } else {
                 alert("Erro ao comunicar com o servidor");
@@ -146,12 +156,12 @@ function EditarLivro(){
                                     required
                                     placeholder="530"
                                     minLength={1}
-                                    maxLength={5}
+                                    maxLength={13}
                                     inputMode="numeric"
                                     pattern="[0-9]{1,10000}"
                                     onChange={(e) => {
                                         const value = e.target.value;
-                                        if (/^\d*$/.test(value) && value.length <= 5) {
+                                        if (/^\d*$/.test(value) && value.length <= 13) {
                                             handleChange(e);
                                         }
                                     }}
@@ -259,14 +269,25 @@ function EditarLivro(){
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <div className="bg-white rounded-lg p-6 w-full max-w-sm">
                     <h3 className="text-lg font-semibold mb-2">
-                        Sucesso
+                        {modal.type === "success" ? "Sucesso" : "Erro"}
                     </h3>
-                    <p>Livro registrado com sucesso
-                    </p>
+                    <p>{modal.message}</p>
                     <div className="flex justify-end gap-3 mt-2">
-                        <button type="button" onClick={closeModal} 
-                            className="cursor-pointer px-6 py-2 rounded-lg border border-black/10 bg-green-500 text-white hover:bg-green-600 transition"
-                            >Confirmado</button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (modal.type === "success") {
+                                    navigate("/admin/gestao");
+                                } else {
+                                    setModal({ ...modal, open: false }); // apenas fecha no erro
+                                }
+                            }}
+                            className={`cursor-pointer px-6 py-2 rounded-lg border border-black/10 text-white transition ${
+                                modal.type === "success" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                            }`}
+                        >
+                            {modal.type === "success" ? "Confirmado" : "Tente novamente"}
+                        </button>
                     </div>
                 </div>
             </div>
