@@ -1,12 +1,14 @@
 import Tabs from "../../layout/tables/tabs/tabs";
 import Table from "../../layout/tables/Table";
+import TabCategorias from "../../layout/tables/tabcategorias/tabcategorias";
 import HeaderOutle from "../../layout/outle/headerholte";
+import TabAutores from "../../layout/tables/tabautores/tabautores";
 
 function CategoriasAutores()
 {
     const tabs = [
-        {label: "Categórias", content: <Table tipo="categorias" />},
-        {label: "Autores", content: <Table tipo="autores" />}
+        {label: "Categórias", content: <TabCategorias />},
+        {label: "Autores", content: <TabAutores />}
     ]
     return(
         <main className="mt-12 space-y-10">

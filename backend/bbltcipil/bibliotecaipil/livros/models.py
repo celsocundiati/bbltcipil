@@ -3,6 +3,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.dispatch import receiver
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.apps import apps
 
 
 class Categoria(models.Model):
@@ -103,20 +104,41 @@ class Aluno(models.Model):
     n_reservas = models.IntegerField(default=0)
     n_emprestimos = models.IntegerField(default=0)
 
+    # def atualizar_contadores(self):
+    #     # Contar reservas não finalizadas
+    #     n_reservas_ativas = self.reservas.filter(
+    #         estado__in=['reservado', 'pendente']
+    #     ).count()
+    #     self.n_reservas = n_reservas_ativas
+
+    #     # Contar empréstimos não devolvidos
+    #     n_emprestimos_ativos = self.emprestimos.exclude(
+    #         acoes='devolvido'
+    #     ).count()
+    #     self.n_emprestimos = n_emprestimos_ativos
+
+    #     self.save(update_fields=['n_reservas', 'n_emprestimos'])
+
     def atualizar_contadores(self):
-        # Contar reservas não finalizadas
+        Emprestimo = apps.get_model('livros', 'Emprestimo')
+
+        # Reservas ativas
         n_reservas_ativas = self.reservas.filter(
             estado__in=['reservado', 'pendente']
         ).count()
         self.n_reservas = n_reservas_ativas
 
-        # Contar empréstimos não devolvidos
-        n_emprestimos_ativos = self.emprestimos.exclude(
+        # Empréstimos ativos (via reserva)
+        n_emprestimos_ativos = Emprestimo.objects.filter(
+            reserva__aluno=self
+        ).exclude(
             acoes='devolvido'
         ).count()
+
         self.n_emprestimos = n_emprestimos_ativos
 
         self.save(update_fields=['n_reservas', 'n_emprestimos'])
+
 
     def __str__(self):
         return f"{self.nome} - {self.n_processo}"

@@ -1,6 +1,7 @@
+import axios from "axios";
 
-function Select({tipo, value, onChange, lbl})
-{
+function Select({tipo, value, onChange, lbl}){
+
     return(
         <section>
         {tipo === "categoria" ? (

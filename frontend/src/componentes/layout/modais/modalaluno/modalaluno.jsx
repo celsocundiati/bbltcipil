@@ -71,7 +71,7 @@ function ModalAluno({onClose}){
                 console.error(err);
 
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     };
 
@@ -200,13 +200,13 @@ function ModalAluno({onClose}){
 
             {modal.open && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center text-left z-50">
-                <div className="bg-branco-100 rounded-lg p-6 w-full max-w-sm">
-                    <h3 className="text-lg  font-semibold mb-2">
+                <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+                    <h3 className="text-xl  font-semibold mb-2">
                         Sucesso
                     </h3>
-                    <p>Aluno registrado com sucesso!</p>
+                    <p className="text-lg">Aluno registrado com sucesso!</p>
                     <div className="flex justify-end gap-3 mt-2">
-                        <button onClick={closeModal} className="px-3 py-2 bg-blue-700 text-white rounded-lg hover:bg-laranja-500">Confirmado</button>
+                        <button onClick={closeModal} className="cursor-pointer px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Confirmado</button>
                     </div>
                 </div>
             </div>

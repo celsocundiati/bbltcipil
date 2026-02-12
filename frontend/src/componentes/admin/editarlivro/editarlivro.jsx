@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import {FaBook} from "react-icons/fa";
 
-function EditarLivro()
-{
+function EditarLivro(){
+
     const navigate = useNavigate();
     const {id} = useParams();
     const [livro, setLivro] = useState(null);
@@ -15,6 +15,15 @@ function EditarLivro()
     const [modal, setModal] = useState({
         open: false,
     });
+
+    
+    const hoje = new Date();
+
+    const dataMaximaPermitida = new Date(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        hoje.getDate()
+    ).toISOString().split("T")[0];
 
     useEffect(() => {
         axios.get(`http://127.0.0.1:8000/api/livros/${id}/`)
@@ -42,32 +51,9 @@ function EditarLivro()
     };
 
     const cancel = async (e) => {
-    setLivro({
-        isbn: "",
-        capa: "",
-        titulo: "",
-        autor: "",
-        categoria: "",
-        sumario: "",
-        editora: "",
-        nPaginas: 1,
-        data_publicacao: "",
-        quantidade: 1,
-      });
-    }
-
-    const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErro(null);
-
-    try {
-      await axios.put(`http://127.0.0.1:8000/api/livros/${id}/`, livro);
-      setModal({open: true});
-
         setLivro({
             isbn: "",
-            imagem: "",
+            capa: "",
             titulo: "",
             autor: "",
             categoria: "",
@@ -77,33 +63,53 @@ function EditarLivro()
             data_publicacao: "",
             quantidade: 1,
         });
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setErro(null);
+
+        try {
+            await axios.put(`http://127.0.0.1:8000/api/livros/${id}/`, livro);
+            setModal({open: true});
+
+            setLivro({
+                isbn: "",
+                imagem: "",
+                titulo: "",
+                autor: "",
+                categoria: "",
+                sumario: "",
+                editora: "",
+                nPaginas: 1,
+                data_publicacao: "",
+                quantidade: 1,
+            });
         } catch (err) {
-            // alert("Erro ao atualizar o Livro!");
-            // setErro("Erro ao atualizar o livro");
-            // console.error(err);
 
-                if (err.response?.data) {
-                    const erros = Object.values(err.response.data)
-                        .flat()
-                        .join("\n");
+            if (err.response?.data) {
+                const erros = Object.values(err.response.data)
+                    .flat()
+                    .join("\n");
 
-                    alert(erros);
-                    setErro(erros);
-                } else {
-                    alert("Erro ao comunicar com o servidor");
-                }
+                alert(erros);
+                setErro(erros);
+            } else {
+                alert("Erro ao comunicar com o servidor");
+            }
 
-                console.error(err);
+            console.error(err);
 
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     };
 
     function closeModal(){
         setModal({open:false});
         navigate("/admin/gestao");
-   }
+    }
 
     if(!livro) return <p>Carregando...</p>
 
@@ -132,8 +138,25 @@ function EditarLivro()
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="isbn">ISBN*</label>
-                                <input type="text" name="isbn" required placeholder="978-0-00-00000-0" value={livro.isbn} onChange={handleChange}
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input
+                                    type="text"
+                                    name="isbn"
+                                    id="isbn"
+                                    value={livro.isbn}
+                                    required
+                                    placeholder="530"
+                                    minLength={1}
+                                    maxLength={5}
+                                    inputMode="numeric"
+                                    pattern="[0-9]{1,10000}"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^\d*$/.test(value) && value.length <= 5) {
+                                            handleChange(e);
+                                        }
+                                    }}
+                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg">Autor*</label>
@@ -146,7 +169,8 @@ function EditarLivro()
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="publicado_em">Ano de publicação*</label>
-                                <input type="date" name="publicado_em" required placeholder="2000-01-01" value={livro.publicado_em} onChange={handleChange} 
+                                <input type="date" name="publicado_em" required 
+                                max={dataMaximaPermitida} placeholder="2000-01-01" value={livro.publicado_em} onChange={handleChange} 
                                     className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col">
@@ -165,12 +189,35 @@ function EditarLivro()
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="nPaginas">Nº de páginas*</label>
-                                <input type="number" min={0} name="n_paginas" required placeholder="05" value={livro.n_paginas} onChange={handleChange}
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input
+                                    type="text"
+                                    name="n_paginas"
+                                    id="n_paginas"
+                                    value={livro.n_paginas}
+                                    required
+                                    placeholder="530"
+                                    minLength={1}
+                                    maxLength={5}
+                                    inputMode="numeric"
+                                    pattern="[0-9]{1,10000}"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^\d*$/.test(value) && value.length <= 5) {
+                                            handleChange(e);
+                                        }
+                                    }}
+                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="quantidade">Quantidade*</label>
-                                <input type="number" name="quantidade" required placeholder="05" value={livro.quantidade} onChange={handleChange}
+                                <input type="number" name="quantidade" min={1} required placeholder="22" value={livro.quantidade} 
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value >= 1) {
+                                            handleChange(e);
+                                        }
+                                    }}
                                     className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                         </div>

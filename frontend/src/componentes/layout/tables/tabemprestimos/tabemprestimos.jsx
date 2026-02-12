@@ -28,8 +28,8 @@ function TabelaEmprestimos(){
     }
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/emprestimos/${modal.emprestimos.id}/`);
-            setEmprestimos(prev => prev.filter(item => item.id !== modal.emprestimos.id));
+            await axios.delete(`http://127.0.0.1:8000/api/emprestimos/${modal.emprestimo.id}/`);
+            setEmprestimos(prev => prev.filter(item => item.id !== modal.emprestimo.id));
             closeModal();
         }
     }
@@ -115,7 +115,7 @@ function TabelaEmprestimos(){
                         <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir livro" : "Editar livro"}
                         </h3>
-                        <p>Tem certeza que deseja{""}
+                        <p>Tem certeza que deseja{" "}
                             {modal.type === "delete" ? "excluir" : "editar"} este livro ?
                         </p>
                         <div className="flex justify-end gap-3 mt-5">

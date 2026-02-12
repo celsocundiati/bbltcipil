@@ -8,6 +8,14 @@ function AddLivro(){
     const navigate = useNavigate();
     const [autores, setAutores] = useState([]);
     const [categorias, setCategorias] = useState([]);
+    
+    const hoje = new Date();
+
+    const dataMaximaPermitida = new Date(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        hoje.getDate()
+    ).toISOString().split("T")[0];
 
     const [form, setForm] = useState({
     isbn: "",
@@ -139,8 +147,25 @@ function AddLivro(){
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="isbn">ISBN*</label>
-                                <input type="text" name="isbn" required placeholder="978-0-00-00000-0" value={form.isbn} onChange={handleChange}
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input
+                                    type="text"
+                                    name="isbn"
+                                    id="isbn"
+                                    value={form.isbn}
+                                    required
+                                    placeholder="623043741349"
+                                    minLength={10}
+                                    maxLength={13}
+                                    inputMode="numeric"
+                                    pattern="[0-9]{10,13}"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^\d*$/.test(value) && value.length <= 13) {
+                                            handleChange(e);
+                                        }
+                                    }}
+                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg">Autor*</label>
@@ -153,7 +178,9 @@ function AddLivro(){
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="publicado_em">Ano de publicação*</label>
-                                <input type="date" name="publicado_em" required placeholder="2000-01-01" value={form.publicado_em} onChange={handleChange} 
+                                <input type="date" name="publicado_em"
+                                    max={dataMaximaPermitida} required placeholder="2000-01-01"
+                                    value={form.publicado_em} onChange={handleChange} 
                                     className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col">
@@ -172,12 +199,35 @@ function AddLivro(){
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="nPaginas">Nº de páginas*</label>
-                                <input type="number" name="n_paginas" required placeholder="05" value={form.n_paginas} onChange={handleChange}
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <input
+                                    type="text"
+                                    name="n_paginas"
+                                    id="n_paginas"
+                                    value={form.n_paginas}
+                                    required
+                                    placeholder="530"
+                                    minLength={1}
+                                    maxLength={5}
+                                    inputMode="numeric"
+                                    pattern="[0-9]{1,10000}"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^\d*$/.test(value) && value.length <= 5) {
+                                            handleChange(e);
+                                        }
+                                    }}
+                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="quantidade">Quantidade*</label>
-                                <input type="number" name="quantidade" required placeholder="05" value={form.quantidade} onChange={handleChange}
+                                <input type="number" min={1} name="quantidade" required placeholder="05" value={form.quantidade}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value >= 1) {
+                                            handleChange(e);
+                                        }
+                                    }}
                                     className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                         </div>
@@ -197,7 +247,7 @@ function AddLivro(){
                         </div>
                         <div className="flex flex-col">
                             <label className="text-black/75 text-lg" htmlFor="capa">URL da capa</label>
-                            <input type="text" name="capa" required placeholder="htpps://..." value={form.capa} onChange={handleChange}
+                            <input type="text" name="capa" required placeholder="htpps://google.com/image.jpeg" value={form.capa} onChange={handleChange}
                                 className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                         </div>
                         
