@@ -79,7 +79,7 @@ function ModalAddCategoria({onClose}){
                                 Cancelar
                             </button>
                             <button type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-lg cursor-pointer hover:bg-green-600 transition-all duration-200">
-                                Adicionar Livro
+                                Adicionar Categória
                             </button>
                         </div>
                     </form>
@@ -92,7 +92,7 @@ function ModalAddCategoria({onClose}){
                         <h3 className="text-lg  font-semibold mb-2">
                             Sucesso
                         </h3>
-                        <p>Categoria criada com sucesso!</p>
+                        <p>Categoria adicionada com sucesso!</p>
                         <div className="flex justify-end gap-3 mt-2">
                             <button onClick={closeModal} className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Confirmado</button>
                         </div>

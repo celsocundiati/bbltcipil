@@ -61,7 +61,7 @@ function ModalAddAutor({onClose}){
                             Adicionar Autor
                         </h2>
                         <p className="text-lg">
-                            Cadastrar novao autor
+                            Cadastrar novo autor
                         </p>
                     </article>
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,7 +80,7 @@ function ModalAddAutor({onClose}){
                                 Cancelar
                             </button>
                             <button type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-lg cursor-pointer hover:bg-green-600 transition-all duration-200">
-                                Adicionar Livro
+                                Adicionar Autor
                             </button>
                         </div>
                     </form>
