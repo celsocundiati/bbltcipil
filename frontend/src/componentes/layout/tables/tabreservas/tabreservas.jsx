@@ -1,8 +1,32 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import ModalAprovarEmprestimo from "../../modais/modalaprovaremprestimo/modalaprovaremprestimo";
+import { useLocation } from "react-router-dom";
 
 function TabelaReservas() {
+
+    const { hash } = useLocation();
+    const [idDestacado, setIdDestacado] = useState(null);
+
+    useEffect(() => {
+        if (hash) {
+        const id = hash.replace('#reserva-', '');
+        setIdDestacado(id);
+
+        // 1. Rolar até o elemento
+        const elemento = document.getElementById(`reserva-${id}`);
+        if (elemento) {
+            elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // 2. Timer para remover o destaque após 1 minuto (60000ms)
+        const timer = setTimeout(() => {
+            setIdDestacado(null);
+        }, 60000);
+
+        return () => clearTimeout(timer); // Limpa o timer se o componente desmontar
+        }
+    }, [hash]);
 
     const statusConf = {
         aprovada: {
@@ -132,9 +156,9 @@ function TabelaReservas() {
                         <tbody className="divide-y divide-black/10">
                             {reservas.length === 0 ? (
                                 <tr>
-                                <td colSpan={7} className="text-center py-6 text-gray-500">
-                                    Nenhuma reserva encontrada.
-                                </td>
+                                    <td colSpan={7} className="text-center py-4 text-red-700">
+                                        Nenhum reserva encontrada.
+                                    </td>
                                 </tr>
                             ) : (
                                 [...reservas]
@@ -146,11 +170,16 @@ function TabelaReservas() {
                                     };
 
                                 return (
-                                    <tr key={`reserva-${reserva.id}`} className="hover:bg-black/5 transition-colors">
+                                    <tr key={`reserva-${reserva.id}`} id={`reserva-${reserva.id}`}
+                                     className={`hover:bg-black/5 transition-colors ${
+                                        idDestacado === String(reserva.id) 
+                                            ? 'bg-[#f97b17]/25 text-black font-medium' 
+                                            : 'hover:bg-gray-100'
+                                        }`} onClick={() => setIdDestacado(null)}>
                                         <td className="px-5 py-4 text-center">{reserva.id}</td>
                                         <td className="px-5 py-4 text-center">{reserva.livro_nome}</td>
                                         <td className="px-5 py-4 text-center">{reserva.aluno_nome}</td>
-                                        <td className="px-5 py-4 text-center">{reserva.data_reserva}</td>
+                                        <td className="px-5 py-4 text-center">{reserva.data_formatada}</td>
 
                                         <td className="px-5 py-4 text-center">
                                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config.style}`}>

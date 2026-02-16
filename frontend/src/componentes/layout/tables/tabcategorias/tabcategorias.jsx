@@ -30,9 +30,6 @@ function TabCategorias(){
         setCategoriaSelecionada(null);
     }
 
-
-
-
     useEffect(() => {
         axios.get("http://localhost:8000/api/categorias/")
         .then(res => setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data))
@@ -85,7 +82,7 @@ function TabCategorias(){
                     <tbody className="divide-y divide-black/10">
                         {Array.isArray(categorias) && categorias.length === 0 ?(
                             <tr>
-                                <td colSpan="7" className="text-center py-4 text-red-700">
+                                <td colSpan={4} className="text-center py-4 text-red-700">
                                     Nenhuma categoria encontrada.
                                 </td>
                             </tr>

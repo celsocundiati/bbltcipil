@@ -40,7 +40,7 @@ function TabAluno(){
                             <tbody className="divide-y divide-black/10">
                             {Array.isArray(alunos) && alunos.length === 0 ?(
                                 <tr>
-                                    <td colSpan="7" className="text-center py-4 text-red-700">
+                                    <td colSpan={9} className="text-center py-4 text-red-700">
                                         Nenhum aluno encontrado.
                                     </td>
                                 </tr>
@@ -50,12 +50,12 @@ function TabAluno(){
                                         <td className="px-5 py-4 truncate">
                                             <div className="flex items-center justify-left gap-3">
                                                 <div className="w-12 h-12 rounded-full bg-[#f97b17] text-white flex items-center justify-center font-bold shrink-0">
-                                                    {obterIniciais(aluno.nome)}
+                                                    {obterIniciais(aluno.username)}
                                                 </div>
 
                                                 <div className="overflow-hidden">
                                                     <p className="font-medium truncate">
-                                                        {aluno.nome}
+                                                        {aluno.username}
                                                     </p>
                                                     <p className="text-sm text-cinza-900 truncate">
                                                         {aluno.email}

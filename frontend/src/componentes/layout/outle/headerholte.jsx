@@ -52,7 +52,7 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Livros</h1>
                         <p className="text-black/70 text-lg">Gerir catálogo completo da biblioteca</p>
                     </article>
-                    <Link to="/admin/addlivro" className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</Link>
+                    {/* <Link to="/admin/addlivro" className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</Link> */}
                 </section>
             ) : page === "estudantes" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
@@ -70,14 +70,14 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Empréstimos</h1>
                         <p className="text-black/70 text-lg">Gerir e acompanhar empréstimos de livros</p>
                     </article>
-                    <article className="flex gap-5">
+                    {/* <article className="flex gap-5">
                         <button onClick={handleClick4} className="flex gap-2 items-center bg-white border border-black/15 cursor-pointer px-4 py-1.5 text-lg rounded-lg">
                             <FiCheckCircle size={25}/> Registar Devolução
                         </button>
                         <button onClick={handleClick2} className="bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg cursor-pointer">
                             + Novo Empréstimo
                         </button>
-                    </article>
+                    </article> */}
                 </section>  
             ) : page === "reservas" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
@@ -86,11 +86,11 @@ function HeaderOutle({page}){
                         <p className="text-black/70 text-lg">Gerir e acompanhar reservas de livros</p>
                     </article>
                     
-                    <article className="flex gap-5">
+                    {/* <article className="flex gap-5">
                         <button onClick={handleClick7} className="bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg cursor-pointer">
                             + Nova Reserva
                         </button>
-                    </article>
+                    </article> */}
                 </section>  
             ) : page === "categoriasautores" ?(
                 <section className="space-y-2 mt-30 flex-wrap">

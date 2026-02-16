@@ -1,4 +1,5 @@
 import InputGroup from "../../tags/inputs/InputGroup";
+import { Link } from "react-router-dom";
 import { HiOutlineBell, HiOutlineQuestionMarkCircle } from "react-icons/hi2";
 
 function AdminNav(){
@@ -10,8 +11,8 @@ function AdminNav(){
             </div>
             <section className="flex justify-center gap-7">
                 <div className="flex items-center justify-center gap-7">
-                    <HiOutlineBell size={30}/>
-                    <HiOutlineQuestionMarkCircle size={30}/>
+                    <Link to="/admin/notificacoes"> <HiOutlineBell size={30} className="hover:text-[#F97B17]"/> </Link>
+                    <HiOutlineQuestionMarkCircle size={30} className="hover:text-[#F97B17] cursor-pointer"/>
                 </div>
                 <div className="flex justify-center items-center gap-4">
                     <div className="flex justify-center items-center rounded-full w-12 h-12 bg-[#f97b17] text-white text-center text-xl">

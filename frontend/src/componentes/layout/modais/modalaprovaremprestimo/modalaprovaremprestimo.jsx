@@ -104,7 +104,7 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
                 min={dataMínimaPermitida}
                 onChange={(e) => setDataDevolucao(e.target.value)}
                 required
-                className="outline-none py-2 px-3 rounded-lg border border-black/10 focus:ring-2 focus:ring-green-500"
+                className="outline-none py-2 px-3 rounded-lg bg-gray-100 focus:ring-2 focus:ring-green-500"
               />
             </div>
 
@@ -113,14 +113,14 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 rounded-lg border hover:bg-red-500 hover:text-white transition"
+                className="px-6 py-2 rounded-lg border border-black/10 cursor-pointer hover:bg-red-500 hover:text-white transition"
               >
                 Cancelar
               </button>
 
               <button
                 type="submit"
-                className="px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition"
+                className="px-6 py-2 rounded-lg border border-black/10 cursor-pointer bg-green-500 text-white hover:bg-green-600 transition"
               >
                 Confirmar Empréstimo
               </button>

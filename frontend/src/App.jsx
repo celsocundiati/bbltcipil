@@ -20,6 +20,7 @@ import Admin from './componentes/admin/administrador';
 import Multas from './componentes/admin/multas/multa';
 import Estudantes from './componentes/admin/estudantes/estudantess';
 import EditarLivro from './componentes/admin/editarlivro/editarlivro';
+import Notificacoes from './componentes/layout/notificacoes/notificacoes';
 
 function App() {
 
@@ -49,6 +50,7 @@ function App() {
                 <Route path='relatorios' element={<Relatorios />}/>
                 <Route path='configuracoesadmin' element={<Configuracoesadmin />}/>
                 <Route path='admins' element={<Admins />}/>
+                <Route path='notificacoes' element={<Notificacoes />}/>
                 <Route path='' element={<Sair />}/>
               </Route>
 

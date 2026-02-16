@@ -5,7 +5,8 @@ import { FiTrash2 } from "react-icons/fi";
 import ModalEmprestimo from "../../modais/modalemprestimo/modalemprestimo";
 
 function TabelaEmprestimos(){
-    
+
+
     const [emprestimos, setEmprestimos] = useState([]);
     const [emprestimoSelecionado, setEmprestimoSelecionado] = useState(null);
     const [modal, setModal] = useState({
@@ -13,6 +14,27 @@ function TabelaEmprestimos(){
         type: null,
         emprestimo: null,
     });
+
+        
+    const atualizarDevolucao = async (emprest, novoEstado) => {
+        try {
+            await axios.patch(
+                `http://127.0.0.1:8000/api/emprestimos/${emprest.id}/`,
+                { acoes: novoEstado }
+            );
+
+            setEmprestimos(prev =>
+                prev.map(r =>
+                    r.id === emprest.id
+                        ? { ...r, acoes: novoEstado }
+                        : r
+                )
+            );
+        } catch (error) {
+            console.error("Erro ao atualizar estado", error);
+            alert("Erro ao atualizar estado.");
+        }
+    };
 
     useEffect(() => {
         axios.get("http://localhost:8000/api/emprestimos/")
@@ -53,13 +75,14 @@ function TabelaEmprestimos(){
                             <th className="py-2 px-5 text-center">Data Vencimento</th>
                             <th className="py-2 px-5 text-center">Estado</th>
                             <th className="py-2 px-5 text-center">Ações</th>
+                            <th className="py-2 px-5 text-center">R. Devolução</th>
                         </tr>
                     </thead>
 
                     <tbody className="divide-y divide-black/10">
                         {emprestimos.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="text-center py-4 text-red-700">
+                                <td colSpan={8} className="text-center py-4 text-red-700">
                                     Nenhum empréstimo encontrado.
                                 </td>
                             </tr>
@@ -81,6 +104,8 @@ function TabelaEmprestimos(){
                                         <span className={`px-3 py-1 rounded-full text-sm font-medium
                                             ${emprest.acoes === "ativo" 
                                                 ? "bg-green-100 text-green-700" 
+                                                : emprest.acoes === "devolvido"
+                                                ? "bg-gray-100 text-gray-700 border-gray-200" 
                                                 : "bg-red-100 text-red-700"}`}>
                                             {emprest.acoes}
                                         </span>
@@ -88,9 +113,6 @@ function TabelaEmprestimos(){
 
                                     <td className="px-5 py-4 truncate text-black/85 text-center">
                                         <div className="flex gap-3 justify-center">
-                                            {/* <button className="hover:text-[#f97b17] transition">
-                                                <FiEye size={20}/>
-                                            </button> */}
                                             <button onClick={() => setEmprestimoSelecionado(emprest)} className="hover:text-black/70 cursor-pointer transition">
                                                 <LuFilePen size={25}/>
                                             </button>
@@ -98,6 +120,12 @@ function TabelaEmprestimos(){
                                                 <FiTrash2 size={25}/>
                                             </button>
                                         </div>
+                                    </td>
+
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">
+                                        <button onClick={() => atualizarDevolucao(emprest, "devolvido")} className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${emprest.acoes !== "devolvido" ? 'bg-green-100 text-green-600 border-green-200' : 'text-gray-500'}`}>
+                                            {emprest.acoes === "devolvido" ? " — " : "Devolver"}
+                                        </button>
                                     </td>
                                 </tr>
                             ))

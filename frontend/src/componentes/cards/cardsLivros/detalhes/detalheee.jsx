@@ -29,7 +29,7 @@ function Detalhes() {
   // Captura o aluno (atual: hardcoded id=1, depois trocar para logado)
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/alunos/72249")
+      .get("http://localhost:8000/api/alunos/72284")
       .then((res) => setAluno(res.data))
       .catch((err) => console.error("Erro ao capturar aluno", err));
   }, []);
@@ -47,8 +47,8 @@ function Detalhes() {
   // Define estilo do botão
   function btnEstilo(texto) {
     const status = texto.toLowerCase();
-    const base = "h-14 rounded-xl p-1.5 text-white font-semibold";
-    return status === "disponível" ? `${base} bg-[#F86417] cursor-pointer` : `${base} bg-black/10 text-black cursor-not-allowed`;
+    const base = "h-14 rounded-xl p-1.5 font-medium";
+    return status === "disponível" ? `${base} bg-[#F86417] cursor-pointer text-white` : `${base} bg-black/13 text-black/30 cursor-not-allowed`;
   }
 
   // Label do botão

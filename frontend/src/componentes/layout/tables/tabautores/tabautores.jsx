@@ -73,7 +73,7 @@ function TabAutores(){
                     <tbody className="divide-y divide-black/10">
                         {Array.isArray(autores) && autores.length === 0 ?(
                             <tr>
-                                <td colSpan="7" className="text-center py-4 text-red-700">
+                                <td colSpan={4} className="text-center py-4 text-red-700">
                                     Nenhum autor encontrado.
                                 </td>
                             </tr>

@@ -64,7 +64,14 @@ function TabelaLivros(){
                         </thead>
 
                         <tbody className="divide-y divide-black/10">
-                            {livros.map(livro => (
+                        
+                            {livros.length === 0 ? (
+                                <tr>
+                                    <td colSpan={11} className="text-center py-4 text-red-700">
+                                        Nenhum livro encontrado.
+                                    </td>
+                                </tr>
+                            ) : (livros.map(livro => (
                                 <tr key={livro.id} className="hover:bg-black/3 transition">
                                     <td className="px-5 py-4 truncate text-black/85">
                                         <div className="flex items-center gap-3">
@@ -117,7 +124,8 @@ function TabelaLivros(){
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </section>

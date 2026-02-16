@@ -6,7 +6,7 @@ function ModalAddCategoria({onClose}){
 
     const [categoria, setCategoria] = useState({
         nome: "",
-        decsricao: "",
+        descricao: "",
     });
     const [modal, setModal] = useState({
         open: false,
@@ -110,7 +110,7 @@ function ModalAddCategoria({onClose}){
                         <p>{modal.message}</p>
                         <div className="flex justify-end gap-3 mt-2">
                             <button
-                                type="button"
+                                type="submit"
                                 onClick={() => {
                                     if (modal.type === "success") {
                                         setModal({ open: false });

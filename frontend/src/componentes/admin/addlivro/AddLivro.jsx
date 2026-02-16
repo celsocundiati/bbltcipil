@@ -232,12 +232,7 @@ function AddLivro(){
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="quantidade">Quantidade*</label>
                                 <input type="number" min={0} name="quantidade" required placeholder="05" value={form.quantidade}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (value >= 1) {
-                                            handleChange(e);
-                                        }
-                                    }}
+                                    onChange={handleChange}
                                     className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                         </div>

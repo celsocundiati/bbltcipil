@@ -1,4 +1,4 @@
-// import livros from "../../../dados/db.json"
+import { Link } from "react-router-dom";
 import {LuClock} from "react-icons/lu"
 import {IoCalendarClearOutline} from "react-icons/io5"
 import EstadoCard from "./estado/estado";
@@ -31,6 +31,23 @@ function CardReservas(){
     const livrosEmprestimo = emprestimos.filter(
         emprestimo => emprestimo.acoes === "ativo" || emprestimo.acoes === "atrasado"
     );
+
+    
+    const handleDeletarReserva = async (reserva) => {
+        try {
+            await axios.delete(
+                `http://127.0.0.1:8000/api/reservas/${reserva.id}/`
+            );
+        } catch (error) {
+            if (error.response) {
+                console.error("Erro do backend:", error.response.data);
+                alert("Erro: " + JSON.stringify(error.response.data));
+            } else {
+                console.error("Erro desconhecido:", error);
+                alert("Erro ao cancelar a reserva.");
+        }
+        }
+    };
 
 
     return(
@@ -66,8 +83,11 @@ function CardReservas(){
                         </div>
 
                         <div className="flex gap-2 flex-col lg:flex-row lg:gap-10">
-                            <button className="bg-[#F86417] text-[white] px-4 py-2 rounded-lg cursor-pointer">Ver Detalhes</button>
-                            <button className="py-2 px-5 text-black/70 border border-black/17 rounded-lg cursor-pointer">Cancelar Reserva</button>
+                            <Link to={`/detalhes/${emprestimo.id}`} className="bg-[#F86417] text-[white] px-4 py-2 rounded-lg cursor-pointer">Ver Detalhes</Link>
+                            {/* <button
+                                className="py-2 px-5 text-black/70 border border-black/17 rounded-lg cursor-pointer">
+                                Cancelar Reserva
+                            </button> */}
                         </div>
                 
                     </div>
@@ -103,7 +123,11 @@ function CardReservas(){
 
                         <div className="flex gap-2 flex-col lg:flex-row lg:gap-10">
                             <button className="bg-[#F86417] text-[white] px-4 py-2 rounded-lg cursor-pointer">Ver Detalhes</button>
-                            <button className="py-2 px-5 text-black/70 border border-black/17 rounded-lg cursor-pointer">Cancelar Reserva</button>
+                            <button
+                                onClick={() => handleDeletarReserva(reserva)}
+                                className="py-2 px-5 text-black/70 border border-black/17 rounded-lg cursor-pointer">
+                                Cancelar Reserva
+                            </button>
                         </div>
                 
                     </div>
