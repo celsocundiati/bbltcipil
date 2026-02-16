@@ -45,7 +45,7 @@ function ModalAddAutor({onClose}){
             if (err.response?.data) {
                 const erros = Object.values(err.response.data)
                     .flat()
-                    .join("\n");
+                    .join(" ");
 
                 setModal({
                     open: true,

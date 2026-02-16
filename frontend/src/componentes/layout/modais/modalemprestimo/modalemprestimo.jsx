@@ -38,7 +38,7 @@ function ModalEmprestimo({ emprestimo, onClose, onSave }) {
     }
 
     try {
-      const res = await axios.put(
+      const res = await axios.patch(
         `http://localhost:8000/api/emprestimos/${emprestimo.id}/`,
         {
           data_devolucao: formData.data_devolucao
@@ -143,14 +143,14 @@ function ModalEmprestimo({ emprestimo, onClose, onSave }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2 rounded-lg border border-black/10 hover:bg-red-500 hover:text-white transition"
+                  className="px-6 py-2 rounded-lg border border-black/10 hover:bg-red-500 hover:text-white transition cursor-pointer"
                 >
                   Cancelar
                 </button>
 
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition"
+                  className="px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition cursor-pointer"
                 >
                   Salvar Alterações
                 </button>

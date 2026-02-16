@@ -101,7 +101,8 @@ class Aluno(models.Model):
         self.save(update_fields=['n_reservas', 'n_emprestimos'])
 
     def atualizar_estado(self):
-        atrasados = self.emprestimos.filter(acoes='atrasado').count()
+        Emprestimo = apps.get_model('livros', 'Emprestimo')
+        atrasados = Emprestimo.objects.filter(reserva__aluno=self, acoes='atrasado').count()
         self.estado = 'Suspenso' if atrasados > 3 else 'Ativo'
         self.save(update_fields=['estado'])
 

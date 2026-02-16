@@ -19,7 +19,7 @@ function TabAluno(){
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
                 <section className="py-5 flex flex-col">
                     <label className="text-xl">Lista de Estudantes</label>
-                    <label className="text-black/70">Exibindo {totalAlunos} de {totalAlunos}</label>
+                    <label className="text-black/70">Exibindo {totalAlunos}</label>
                 </section>
                     <section className="bg-white rounded-lg shadow-md overflow-hidden">
                         <table className="w-full table-fixed border-collapse">

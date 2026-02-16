@@ -29,7 +29,7 @@ function Detalhes() {
   // Captura o aluno (atual: hardcoded id=1, depois trocar para logado)
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/alunos/72284")
+      .get("http://localhost:8000/api/alunos/71284")
       .then((res) => setAluno(res.data))
       .catch((err) => console.error("Erro ao capturar aluno", err));
   }, []);
