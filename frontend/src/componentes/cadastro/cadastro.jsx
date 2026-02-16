@@ -41,8 +41,18 @@ function CadastroAluno() {
         telefone: "",
       });
     } catch (err) {
-      console.error(err.response?.data || err);
-      setErro("Erro ao realizar cadastro. Verifique os dados informados.");
+      const data = err.response.data;
+      
+      if (data.email) {
+        setErro(`Email inválido ou já cadastrado: ${data.email[0]}`);
+      } else if (data.username) {
+        setErro(`Nome de usuário inválido ou já cadastrado: ${data.username[0]}`);
+      } else if (data.n_processo) {
+        setErro(`Número de processo inválido: ${data.n_processo[0]}`);
+      } else {
+        // fallback genérico caso não haja campos específicos
+        setErro("Erro ao realizar cadastro. Verifique os dados informados.");
+      }
     } finally {
       setLoading(false);
     }

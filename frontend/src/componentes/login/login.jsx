@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 
 function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
 
@@ -12,7 +12,7 @@ function LoginPage() {
 
     try {
       const response = await axios.post("http://localhost:8000/api/token/", {
-        username,
+        email,
         password,
       });
 
@@ -41,9 +41,9 @@ function LoginPage() {
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input
             type="text"
-            placeholder="Nome de usuário"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
             required
           />

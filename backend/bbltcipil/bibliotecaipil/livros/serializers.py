@@ -12,6 +12,17 @@ class RegistarAlunoSerializer(serializers.ModelSerializer):
         model = Aluno
         fields = ['username', 'email', 'password', 'n_processo', 'curso', 'classe', 'data_nascimento', 'telefone']
 
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Este nome de usuário já está em uso.")
+        return value
+
+    def validate_email(self, value):
+        """Verifica se o email já está cadastrado"""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Já existe uma conta com este email.")
+        return value
+
     def create(self, validated_data):
         username = validated_data.pop('username')
         password = validated_data.pop('password')
@@ -28,7 +39,7 @@ class RegistarAlunoSerializer(serializers.ModelSerializer):
         aluno = Aluno.objects.create(user=user, **validated_data)
 
         return aluno
-
+    
 
 class LivroSerializer(serializers.ModelSerializer):
     estado_atual = serializers.ReadOnlyField()
