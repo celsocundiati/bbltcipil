@@ -21,6 +21,8 @@ import Multas from './componentes/admin/multas/multa';
 import Estudantes from './componentes/admin/estudantes/estudantess';
 import EditarLivro from './componentes/admin/editarlivro/editarlivro';
 import Notificacoes from './componentes/layout/notificacoes/notificacoes';
+import CadastroAluno from './componentes/cadastro/cadastro';
+import LoginPage from './componentes/login/login';
 
 function App() {
 
@@ -28,7 +30,10 @@ function App() {
     <AnimatePresence mode="wait">
           <Router>
             <Routes>
+
               <Route path='/' element={<Casa />}/>
+              <Route path='/cadastro' element={<CadastroAluno />}/>
+              <Route path='/login' element={<LoginPage />}/>
               <Route path='/catalogo' element={<Catalogo />}/>
               <Route path='/reservas' element={<Reservas />}/>
               <Route path='/exposicao' element={<Exposicao />}/>
