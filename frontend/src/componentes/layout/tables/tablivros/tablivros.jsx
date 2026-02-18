@@ -13,11 +13,17 @@ function TabelaLivros(){
         type: null,
         livro: null,
     });
-
+    
     useEffect(() => {
-        axios.get("http://localhost:8000/api/livros/")
-        .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de livros", err));
+    const token = sessionStorage.getItem("access_token");
+
+    axios.get("http://localhost:8000/api/livros/", {
+        headers: {
+        Authorization: `Bearer ${token}`,
+        },
+    })
+    .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
+    .catch(err => console.error("Erro na captura de livros", err));
     }, []);
 
     function openModal(type, livro){

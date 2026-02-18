@@ -17,18 +17,68 @@ function CadastroAluno() {
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Validação instantânea
+  const validarCampo = (name, value) => {
+    switch (name) {
+      case "username":
+        return value.length >= 3 ? "" : "O username deve ter pelo menos 3 caracteres";
+      case "email":
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+          ? ""
+          : "Email inválido";
+      case "password":
+        return value.length >= 6 ? "" : "Senha deve ter pelo menos 6 caracteres";
+      case "n_processo":
+        return /^[0-9]+$/.test(value) ? "" : "Número de processo deve conter apenas números";
+      case "telefone":
+        return /^\d{9,15}$/.test(value.replace(/\D/g, ""))
+          ? ""
+          : "Telefone inválido";
+      default:
+        return "";
+    }
+  };
+
+  const [errosCampos, setErrosCampos] = useState({});
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Máscara simples para telefone
+    let valor = value;
+    if (name === "telefone") {
+      valor = value.replace(/\D/g, "");
+    }
+
+    setForm({ ...form, [name]: valor });
+
+    const erroCampo = validarCampo(name, valor);
+    setErrosCampos({ ...errosCampos, [name]: erroCampo });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setErro("");
     setMensagem("");
 
+    // Verifica se há erros antes de enviar
+    const errosExistentes = Object.values(errosCampos).filter((e) => e);
+    if (errosExistentes.length > 0) {
+      setErro(errosExistentes.join(" | "));
+      return;
+    }
+
+    // Campos obrigatórios
+    if (!form.username || !form.email || !form.password || !form.n_processo) {
+      setErro("Preencha todos os campos obrigatórios!");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await axios.post("http://localhost:8000/api/cadastros/", form);
+      await axios.post("http://localhost:8000/api/accounts/registar-aluno/", form);
+
       setMensagem("Cadastro realizado com sucesso! Você já pode fazer login.");
       setForm({
         username: "",
@@ -40,18 +90,13 @@ function CadastroAluno() {
         data_nascimento: "",
         telefone: "",
       });
+      setErrosCampos({});
     } catch (err) {
-      const data = err.response.data;
-      
-      if (data.email) {
-        setErro(`Email inválido ou já cadastrado: ${data.email[0]}`);
-      } else if (data.username) {
-        setErro(`Nome de usuário inválido ou já cadastrado: ${data.username[0]}`);
-      } else if (data.n_processo) {
-        setErro(`Número de processo inválido: ${data.n_processo[0]}`);
+      if (err.response?.data) {
+        const errors = Object.values(err.response.data).flat();
+        setErro(errors.join(" | "));
       } else {
-        // fallback genérico caso não haja campos específicos
-        setErro("Erro ao realizar cadastro. Verifique os dados informados.");
+        setErro("Erro ao realizar cadastro. Verifique os dados.");
       }
     } finally {
       setLoading(false);
@@ -72,39 +117,47 @@ function CadastroAluno() {
         <input
           type="text"
           name="username"
-          placeholder="Username"
+          placeholder="Username *"
           value={form.username}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className={`border p-2 rounded w-full ${errosCampos.username && "border-red-500"}`}
           required
         />
+        {errosCampos.username && <p className="text-red-500 text-sm">{errosCampos.username}</p>}
+
         <input
           type="email"
           name="email"
-          placeholder="Email"
+          placeholder="Email *"
           value={form.email}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className={`border p-2 rounded w-full ${errosCampos.email && "border-red-500"}`}
           required
         />
+        {errosCampos.email && <p className="text-red-500 text-sm">{errosCampos.email}</p>}
+
         <input
           type="password"
           name="password"
-          placeholder="Senha"
+          placeholder="Senha *"
           value={form.password}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className={`border p-2 rounded w-full ${errosCampos.password && "border-red-500"}`}
           required
         />
+        {errosCampos.password && <p className="text-red-500 text-sm">{errosCampos.password}</p>}
+
         <input
-          type="number"
+          type="text"
           name="n_processo"
-          placeholder="Número de Processo"
+          placeholder="Número de Processo *"
           value={form.n_processo}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className={`border p-2 rounded w-full ${errosCampos.n_processo && "border-red-500"}`}
           required
         />
+        {errosCampos.n_processo && <p className="text-red-500 text-sm">{errosCampos.n_processo}</p>}
+
         <input
           type="text"
           name="curso"
@@ -130,17 +183,18 @@ function CadastroAluno() {
           className="border p-2 rounded w-full"
         />
         <input
-          type="text"
+          type="tel"
           name="telefone"
           placeholder="Telefone"
           value={form.telefone}
           onChange={handleChange}
-          className="border p-2 rounded w-full"
+          className={`border p-2 rounded w-full ${errosCampos.telefone && "border-red-500"}`}
         />
+        {errosCampos.telefone && <p className="text-red-500 text-sm">{errosCampos.telefone}</p>}
 
         <button
           type="submit"
-          className="bg-blue-600 text-white py-2 px-4 rounded w-full hover:bg-blue-700"
+          className="bg-blue-600 text-white py-2 px-4 rounded w-full hover:bg-blue-700 disabled:opacity-50"
           disabled={loading}
         >
           {loading ? "Cadastrando..." : "Cadastrar"}

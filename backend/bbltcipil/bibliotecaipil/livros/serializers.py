@@ -1,45 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone
 from .models import Livro, Autor, Categoria, Reserva, Emprestimo, Aluno
-from django.contrib.auth.models import User, Group
 
-class RegistarAlunoSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
-    email = serializers.EmailField(write_only=True)
-
-    class Meta:
-        model = Aluno
-        fields = ['username', 'email', 'password', 'n_processo', 'curso', 'classe', 'data_nascimento', 'telefone']
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Este nome de usuário já está em uso.")
-        return value
-
-    def validate_email(self, value):
-        """Verifica se o email já está cadastrado"""
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Já existe uma conta com este email.")
-        return value
-
-    def create(self, validated_data):
-        username = validated_data.pop('username')
-        password = validated_data.pop('password')
-        email = validated_data.pop('email')
-
-        # Cria User usando create_user (senha já criptografada)
-        user = User.objects.create_user(username=username, email=email, password=password)
-
-        # Adiciona ao grupo "Aluno"
-        grupo_aluno, created = Group.objects.get_or_create(name='Aluno')
-        user.groups.add(grupo_aluno)
-
-        # Cria Aluno vinculado
-        aluno = Aluno.objects.create(user=user, **validated_data)
-
-        return aluno
-    
 
 class LivroSerializer(serializers.ModelSerializer):
     estado_atual = serializers.ReadOnlyField()

@@ -23,45 +23,52 @@ import EditarLivro from './componentes/admin/editarlivro/editarlivro';
 import Notificacoes from './componentes/layout/notificacoes/notificacoes';
 import CadastroAluno from './componentes/cadastro/cadastro';
 import LoginPage from './componentes/login/login';
+import axios from "axios";
+
+axios.interceptors.request.use(config => {
+  const token = sessionStorage.getItem("access_token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+}, error => {
+  return Promise.reject(error);
+});
 
 function App() {
 
   return (
-    <AnimatePresence mode="wait">
-          <Router>
-            <Routes>
+        <Router>
+          <Routes>
 
-              <Route path='/' element={<Casa />}/>
-              <Route path='/cadastro' element={<CadastroAluno />}/>
-              <Route path='/login' element={<LoginPage />}/>
-              <Route path='/catalogo' element={<Catalogo />}/>
-              <Route path='/reservas' element={<Reservas />}/>
-              <Route path='/exposicao' element={<Exposicao />}/>
-              <Route path='/perfil' element={<Perfil />}/>
+            <Route path='/' element={<Casa />}/>
+            <Route path='/cadastro' element={<CadastroAluno />}/>
+            <Route path='/login' element={<LoginPage />}/>
+            <Route path='/catalogo' element={<Catalogo />}/>
+            <Route path='/reservas' element={<Reservas />}/>
+            <Route path='/exposicao' element={<Exposicao />}/>
+            <Route path='/perfil' element={<Perfil />}/>
 
-              <Route path='detalhes/:id' element={<Detalhes />}/>
+            <Route path='detalhes/:id' element={<Detalhes />}/>
 
-              <Route path='/admin' element={<Admin/>}>
-                <Route index element={<Dashboard />}/>
-                <Route path='dashboard' element={<Dashboard />}/>
-                <Route path='gestao' element={<GestaoLivros />}/>
-                <Route path='addlivro' element={<AddLivro />}/>
-                <Route path='livros/:id' element={<EditarLivro />}/>
-                <Route path='estudantes' element={<Estudantes />}/>
-                <Route path='emprestimos' element={<Emprestimos />}/>
-                <Route path='multas' element={<Multas />}/>
-                <Route path='acervo' element={<Acervo />}/>
-                <Route path='categoriasautores' element={<CategoriasAutores />}/>
-                <Route path='relatorios' element={<Relatorios />}/>
-                <Route path='configuracoesadmin' element={<Configuracoesadmin />}/>
-                <Route path='admins' element={<Admins />}/>
-                <Route path='notificacoes' element={<Notificacoes />}/>
-                <Route path='' element={<Sair />}/>
-              </Route>
+            <Route path='/admin' element={<Admin/>}>
+              <Route index element={<Dashboard />}/>
+              <Route path='dashboard' element={<Dashboard />}/>
+              <Route path='gestao' element={<GestaoLivros />}/>
+              <Route path='addlivro' element={<AddLivro />}/>
+              <Route path='livros/:id' element={<EditarLivro />}/>
+              <Route path='estudantes' element={<Estudantes />}/>
+              <Route path='emprestimos' element={<Emprestimos />}/>
+              <Route path='multas' element={<Multas />}/>
+              <Route path='acervo' element={<Acervo />}/>
+              <Route path='categoriasautores' element={<CategoriasAutores />}/>
+              <Route path='relatorios' element={<Relatorios />}/>
+              <Route path='configuracoesadmin' element={<Configuracoesadmin />}/>
+              <Route path='admins' element={<Admins />}/>
+              <Route path='notificacoes' element={<Notificacoes />}/>
+              <Route path='' element={<Sair />}/>
+            </Route>
 
-            </Routes>
-          </Router>
-    </AnimatePresence>
+          </Routes>
+        </Router>
 
   )
 }

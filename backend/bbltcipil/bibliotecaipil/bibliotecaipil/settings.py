@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
 
     # Local apps 
     'livros.apps.LivrosConfig',
+    'accounts.apps.AccountsConfig',
 ]
 
 MIDDLEWARE = [
@@ -111,10 +113,37 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+
+'''
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+'''
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PARSER_CLASSES": (
+        "rest_framework.parsers.JSONParser",
+    ),
+}
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "AUTH_COOKIE": "access_token",             # Cookie HttpOnly do access
+    "AUTH_COOKIE_REFRESH": "refresh_token",    # Cookie HttpOnly do refresh
+    "AUTH_COOKIE_SECURE": False,               # True em produção (HTTPS)
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    "AUTH_COOKIE_SAMESITE": "Lax",
 }
 
 
@@ -123,7 +152,7 @@ REST_FRAMEWORK = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "Africa/Luanda"
 
 USE_I18N = True
 
@@ -135,5 +164,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Configuração CORS
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]

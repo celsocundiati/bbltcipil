@@ -2,12 +2,13 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Categoria, Autor, Aluno, Livro, Reserva, Emprestimo
 from .serializers import (
     CategoriaSerializer, AutorSerializer, AlunoSerializer,
     LivroSerializer, ReservaSerializer, EmprestimoSerializer,
-    RegistarAlunoSerializer
 )
+
 
 # ==============================
 # Base ViewSet para DRY
@@ -38,13 +39,6 @@ class BaseDebugViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 # ==============================
-# Cadastro de Aluno
-# ==============================
-class RegistarAlunoViewSet(BaseDebugViewSet):
-    serializer_class = RegistarAlunoSerializer
-    queryset = Aluno.objects.all()
-
-# ==============================
 # Categorias
 # ==============================
 class CategoriaViewSet(BaseDebugViewSet):
@@ -64,13 +58,14 @@ class AutorViewSet(BaseDebugViewSet):
 class AlunoViewSet(BaseDebugViewSet):
     queryset = Aluno.objects.all()
     serializer_class = AlunoSerializer
-
+    permission_classes = [IsAuthenticated]  # 🔐 só acessível para logados
 # ==============================
 # Livros
 # ==============================
 class LivroViewSet(BaseDebugViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroSerializer
+    permission_classes = [IsAuthenticated] 
 
     @action(detail=False, methods=['get'])
     def recentes(self, request):

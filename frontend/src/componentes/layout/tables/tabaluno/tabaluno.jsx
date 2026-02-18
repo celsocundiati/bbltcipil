@@ -7,10 +7,14 @@ function TabAluno(){
     const [alunos, setAlunos] = useState([]);
 
     useEffect(() => {
-        axios.get("http://localhost:8000/api/alunos/")
-        .then(res => setAlunos(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de Alunos", err));
+        axios
+        .get("http://localhost:8000/api/alunos/", { withCredentials: true }) // ✅ envia cookie de sessão
+        .then((res) =>
+            setAlunos(Array.isArray(res.data.results) ? res.data.results : res.data)
+        )
+        .catch((err) => console.error("Erro na captura de Alunos", err));
     }, []);
+
 
     const totalAlunos = alunos.length;
     
@@ -46,7 +50,7 @@ function TabAluno(){
                                 </tr>
                             ) : (
                             Array.isArray(alunos) && alunos.map(aluno => (
-                                    <tr key={aluno.id} className="hover:bg-black/3 transition">
+                                    <tr key={aluno.n_processo} className="hover:bg-black/3 transition">
                                         <td className="px-5 py-4 truncate">
                                             <div className="flex items-center justify-left gap-3">
                                                 <div className="w-12 h-12 rounded-full bg-[#f97b17] text-white flex items-center justify-center font-bold shrink-0">
