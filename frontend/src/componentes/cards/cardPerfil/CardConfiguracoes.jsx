@@ -1,130 +1,163 @@
+
 import { FiSettings } from "react-icons/fi";
 import { motion } from "framer-motion";
-import livros from "../../../dados/db.json";
-import { section } from "framer-motion/client";
 import { NavLink } from "react-router-dom";
-import {LuBookOpen} from "react-icons/lu";
-import {IoCalendarClearOutline} from "react-icons/io5";
+import { LuBookOpen } from "react-icons/lu";
+import { IoCalendarClearOutline } from "react-icons/io5";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const configuracoes = [
-    {id: 1, titulo: "Alterar Senha", descricao: "Atualize sua senha de acesso"},
-    {id: 2, titulo: "Notificações", descricao: "Gerencie suas preferência de notificações"},
-    {id: 3, titulo: "Privacidade", descricao: "Configurações de privacidade de dados"},
-]
+  { id: 1, titulo: "Alterar Senha", descricao: "Atualize sua senha de acesso" },
+  { id: 2, titulo: "Notificações", descricao: "Gerencie suas preferências de notificações" },
+  { id: 3, titulo: "Privacidade", descricao: "Configurações de privacidade de dados" },
+];
 
-function Configuracoes()
-{
+function Configuracoes() {
+  const [reservas, setReservas] = useState([]);
+  const [emprestimos, setEmprestimos] = useState([]);
+  const navigate = useNavigate();
+  const token = sessionStorage.getItem("access_token");
 
-    const livrosReservado = livros.livros.filter(
-        livro => livro.estado === "Reservado" || livro.estado === "Pendente"
-    );
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-    const livrosEmprestado = livros.livros.filter(
-        livro => livro.estado === "Emprestado"
-    );
-    
-    const randomReservado = livrosReservado.length > 0
-        ? livrosReservado[Math.floor(Math.random() * livrosReservado.length)]
-        : null;
-    
-    const randomEmprestado = livrosEmprestado.length > 0
-        ? livrosEmprestado[Math.floor(Math.random() * livrosEmprestado.length)]
-        : null;
+    const fetchData = async () => {
+      try {
+        const [resReservas, resEmprestimos] = await Promise.all([
+          axios.get("http://localhost:8000/api/reservas/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get("http://localhost:8000/api/emprestimos/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-    
+        setReservas(Array.isArray(resReservas.data.results) ? resReservas.data.results : resReservas.data);
+        setEmprestimos(Array.isArray(resEmprestimos.data.results) ? resEmprestimos.data.results : resEmprestimos.data);
 
-    return(
-        <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-                whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-                viewport={{ once: true }}             // anima apenas uma vez
-                transition={{ duration: 0.8 }} 
-            className="flex flex-col gap-4 w-full h-full">
+      } catch (err) {
+        console.log("Erro ao buscar dados", err);
+        if (err.response?.status === 401) {
+          navigate("/login");
+        }
+      }
+    };
 
-            <section className="w-full h-full bg-white px-8 py-8 rounded-lg border border-black/8">
-                <section className="flex items-center gap-2 justify-between">
-                    <div className="flex items-center gap-2 "><LuBookOpen size={20} className="text-[#F86417]"/> <h1 className="text-xl">Livros Emprestados</h1></div>
-                    <NavLink to="/reservas" className="text-[#F86417] cursor-pointer">Ver todos</NavLink>
-                </section>
+    fetchData();
+  }, [navigate, token]);
 
-                {randomEmprestado && (
-                <section className="mt-5 space-y-16">
-                    <article className="space-y-2 bg-black/3 hover:bg-black/6 cursor-pointer rounded px-4 py-2 flex gap-2">
-                    <div>
-                        <img
-                        src={randomEmprestado.capa}
-                        alt="Imagem"
-                        className="rounded w-15 h-20"
-                        loading="lazy"
-                        />
-                    </div>
+  // 🔎 Filtragem real baseada no backend
+  const reservasAtivas = reservas.filter(r => r.estado === "reservado" || r.estado === "pendente");
+  const emprestimosAtivos = emprestimos.filter(e => e.acoes !== "devolvido");
 
-                    <div className="flex flex-col gap-1.5">
-                        <h1 className="text-sm">{randomEmprestado.titulo}</h1>
-                        <p className="text-black/57 text-sm">{randomEmprestado.autor}</p>
+  const randomReservado = reservasAtivas.length > 0
+    ? reservasAtivas[Math.floor(Math.random() * reservasAtivas.length)]
+    : null;
 
-                        <div className="text-[#f97b17] flex gap-2 items-center">
-                            <IoCalendarClearOutline size={18} />
-                            <p className="text-sm">Devolução em dd/mm/aa</p>
-                        </div>
-                    </div>
-                    </article>
-                </section>
-                )}
-            </section>
+  const randomEmprestado = emprestimosAtivos.length > 0
+    ? emprestimosAtivos[Math.floor(Math.random() * emprestimosAtivos.length)]
+    : null;
 
-            <section className="w-full h-full bg-white px-8 py-8 rounded-lg border border-black/8">
-                <section className="flex items-center gap-2 justify-between">
-                    <div className="flex items-center gap-2 ">
-                        <IoCalendarClearOutline size={20} className="text-[#F86417]"/>
-                        <h1 className="text-xl">Livros Reservados</h1>
-                    </div>
-                    <NavLink to="/reservas" className="text-[#F86417] cursor-pointer">Ver todas</NavLink>
-                </section>
+    if (!emprestimos) {
+        return <div className="p-10 text-center">Carregando Configurações...</div>;
+    }
 
-                
-                {randomReservado && (
-                <section className="mt-5 space-y-16">
-                    <article className="space-y-2 bg-black/3 hover:bg-black/6 cursor-pointer rounded px-4 py-2 flex gap-2">
-                    <div>
-                        <img
-                        src={randomReservado.capa}
-                        alt="Imagem"
-                        className="rounded w-15 h-20"
-                        loading="lazy"
-                        />
-                    </div>
+  return (
+    <motion.main
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8 }}
+      className="flex flex-col gap-4 w-full h-full"
+    >
 
-                    <div className="flex flex-col gap-1.5">
-                        <h1 className="text-sm">{randomReservado.titulo}</h1>
-                        <p className="text-black/57 text-sm">{randomReservado.autor}</p>
+      {/* EMPRESTADOS */}
+      <section className="bg-white px-8 py-8 rounded-lg border border-black/8">
+        <section className="flex items-center gap-2 justify-between">
+          <div className="flex items-center gap-2">
+            <LuBookOpen size={20} className="text-[#F86417]" />
+            <h1 className="text-xl">Livros Emprestados</h1>
+          </div>
+          <NavLink to="/reservas" className="text-[#F86417]">Ver todos</NavLink>
+        </section>
 
-                        <div className="text-[#f97b17] flex gap-2 items-center">
-                        <p className="text-sm bg-[#f97b17]/15 px-4 py-0.5 text-center rounded">Pendente</p>
-                        </div>
-                    </div>
-                    </article>
-                </section>
-                )}
-                
-            </section>
+        {randomEmprestado && (
+          <section className="mt-5">
+            <article className="bg-black/3 hover:bg-black/6 rounded px-4 py-2 flex gap-3">
+              <img
+                src={randomEmprestado.capa}
+                alt="Capa"
+                className="rounded w-16 h-24"
+              />
+              <div className="flex flex-col gap-1">
+                <h1 className="text-sm">{randomEmprestado.livro_nome}</h1>
+                <p className="text-black/57 text-sm">{randomEmprestado.autor_nome}</p>
+                <div className="text-[#f97b17] flex gap-2 items-center">
+                  <IoCalendarClearOutline size={18} />
+                  <p className="text-sm">Devolução: {randomEmprestado.data_devolucao}</p>
+                </div>
+              </div>
+            </article>
+          </section>
+        )}
+      </section>
 
-            <section className="w-full h-full bg-white px-8 py-8 rounded-lg border border-black/8">
-                <section className="flex items-center gap-2">
-                    <FiSettings size={20} className="text-[#F86417]"/> <h1 className="text-xl">Configurações da Conta</h1>
-                </section>
+      {/* RESERVADOS */}
+      <section className="bg-white px-8 py-8 rounded-lg border border-black/8">
+        <section className="flex items-center gap-2 justify-between">
+          <div className="flex items-center gap-2">
+            <IoCalendarClearOutline size={20} className="text-[#F86417]" />
+            <h1 className="text-xl">Livros Reservados</h1>
+          </div>
+          <NavLink to="/reservas" className="text-[#F86417]">Ver todas</NavLink>
+        </section>
 
-                {
-                    configuracoes.map(conf => (
-                        <section key={conf.id} className="mt-5 space-y-16">
-                            <article className="space-y-2 bg-black/3 hover:bg-black/6 cursor-pointer rounded px-4 py-2">
-                                <h1 className="text-lg">{conf.titulo}</h1>
-                                <p className="text-black/70">{conf.descricao}</p>
-                            </article>
-                        </section>
-                    ))
-                }
-            </section>
-        </motion.main>
-    );
+        {randomReservado && (
+          <section className="mt-5">
+            <article className="bg-black/3 hover:bg-black/6 rounded px-4 py-2 flex gap-3">
+              <img
+                src={randomReservado.capa}
+                alt="Capa"
+                className="rounded w-16 h-24"
+              />
+              <div className="flex flex-col gap-1">
+                <h1 className="text-sm">{randomReservado.livro_nome}</h1>
+                <p className="text-black/57 text-sm">{randomReservado.autor_nome}</p>
+                <div className="text-[#f97b17]">
+                  <p className="text-sm bg-[#f97b17]/15 px-4 py-0.5 rounded">
+                    {randomReservado.estado_label}
+                  </p>
+                </div>
+              </div>
+            </article>
+          </section>
+        )}
+      </section>
+
+      {/* CONFIGURAÇÕES */}
+      <section className="bg-white px-8 py-8 rounded-lg border border-black/8">
+        <section className="flex items-center gap-2">
+          <FiSettings size={20} className="text-[#F86417]" />
+          <h1 className="text-xl">Configurações da Conta</h1>
+        </section>
+
+        {configuracoes.map(conf => (
+          <section key={conf.id} className="mt-5">
+            <article className="bg-black/3 hover:bg-black/6 rounded px-4 py-2 cursor-pointer">
+              <h1 className="text-lg">{conf.titulo}</h1>
+              <p className="text-black/70">{conf.descricao}</p>
+            </article>
+          </section>
+        ))}
+      </section>
+
+    </motion.main>
+  );
 }
+
 export default Configuracoes;

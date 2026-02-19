@@ -61,5 +61,7 @@ class MeView(APIView):
                 "curso": aluno.curso if aluno else None,
                 "classe": aluno.classe if aluno else None,
                 "estado": aluno.estado if aluno else None,
+                "n_reservas": aluno.n_reservas if aluno else None,
+                "n_emprestimos": aluno.n_emprestimos if aluno else None,
             }
         })

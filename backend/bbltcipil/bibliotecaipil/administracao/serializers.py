@@ -19,6 +19,7 @@ class EmprestimoAdminSerializer(serializers.ModelSerializer):
         model = Emprestimo
         fields = '__all__'
 
+
 class AlunoAdminSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
@@ -27,10 +28,12 @@ class AlunoAdminSerializer(serializers.ModelSerializer):
         model = Aluno
         fields = '__all__'
 
+
 class AutorAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Autor
         fields = '__all__'
+
 
 class CategoriaAdminSerializer(serializers.ModelSerializer):
     class Meta:

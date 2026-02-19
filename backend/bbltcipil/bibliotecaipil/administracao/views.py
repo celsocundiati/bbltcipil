@@ -25,15 +25,18 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
     serializer_class = EmprestimoAdminSerializer
     permission_classes = [IsAdminUser]
 
+
 class AlunoAdminViewSet(viewsets.ModelViewSet):
     queryset = Aluno.objects.all()
     serializer_class = AlunoAdminSerializer
     permission_classes = [IsAdminUser]
 
+
 class AutorAdminViewSet(viewsets.ModelViewSet):
     queryset = Autor.objects.all()
     serializer_class = AutorAdminSerializer
     permission_classes = [IsAdminUser]
+
 
 class CategoriaAdminViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()

@@ -67,33 +67,6 @@ class LivroSerializer(serializers.ModelSerializer):
         return info_map.get(estado, "")
 
 
-# class LivroSerializer(serializers.ModelSerializer):
-#     estado_atual = serializers.ReadOnlyField()
-#     informacao_atual = serializers.ReadOnlyField()
-#     autor_nome = serializers.CharField(source="autor.nome", read_only=True)
-#     categoria_nome = serializers.CharField(source="categoria.nome", read_only=True)
-
-#     def validate_publicado_em(self, value):
-#         hoje = timezone.now().date()
-
-#         if value > hoje:
-#             raise serializers.ValidationError(
-#                 "A data de lançamento não pode ser superior à data atual."
-#             )
-
-#         return value
-    
-#     def validate_quantidade(self, value):
-#         if value < 1:
-#             raise serializers.ValidationError(
-#                 "A quantidade deve ser no mínimo 1."
-#             )
-#         return value
-
-#     class Meta:
-#         model = Livro
-#         fields = '__all__'
-
 
 class AutorSerializer(serializers.ModelSerializer):
     class Meta:
