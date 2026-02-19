@@ -12,108 +12,74 @@ import axios from "axios";
 
 function Detalhes() {
   const { id } = useParams();
-
-  const [livros, setLivros] = useState([]);
+  const [livro, setLivro] = useState(null);
   const [aluno, setAluno] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Captura todos os livros
-  useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/livros/")
-      .then((res) => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
-      .catch((err) => console.error("Erro ao capturar livros", err))
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Captura o aluno (atual: hardcoded id=1, depois trocar para logado)
+  // Captura livro pelo ID
   useEffect(() => {
     const token = sessionStorage.getItem("access_token");
+    axios
+      .get(`http://localhost:8000/api/livros/${id}/`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      .then((res) => setLivro(res.data))
+      .catch((err) => console.error("Erro ao capturar livro", err))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-    if (!token) {
-      console.log("Sem token");
-      return;
-    }
+  // Captura aluno logado
+  useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
+    if (!token) return;
 
     axios
       .get("http://localhost:8000/api/accounts/me/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => {
-        setAluno(res.data.aluno); // atenção aqui 👇
-      })
+      .then((res) => setAluno(res.data.aluno))
       .catch((err) => console.error("Erro ao capturar aluno", err));
   }, []);
 
-
   if (loading) return <p className="text-center mt-10">Carregando detalhes do livro...</p>;
+  if (!livro) return <p className="text-red-600 text-center mt-20">Nenhum livro encontrado.</p>;
 
-  const livro = livros.find((livro) => livro.id === Number(id));
-  if (!livro)
-    return (
-      <div className="w-full flex justify-center items-center mt-20">
-        <p className="text-red-600 text-lg font-semibold">Nenhum livro encontrado.</p>
-      </div>
-    );
-
-  // Define estilo do botão
-  function btnEstilo(texto) {
-    const status = texto.toLowerCase();
+  // Estilo do botão
+  const btnEstilo = (estado) => {
     const base = "h-14 rounded-xl p-1.5 font-medium";
-    return status === "disponível" ? `${base} bg-[#F86417] cursor-pointer text-white` : `${base} bg-black/13 text-black/30 cursor-not-allowed`;
-  }
-
-  // Label do botão
-  const btnLabel = () => {
-    switch (livro.estado_atual.toLowerCase()) {
-      case "disponível":
-        return "Reservar Livro";
-      case "emprestado":
-        return "Empréstimo concluída";
-      case "pendente":
-        return "Aguardando aprovação";
-      case "indisponível":
-      case "reservado":
-        return "Pronta para empréstimo";
-      default:
-        return "";
-    }
+    return estado.toLowerCase() === "disponível"
+      ? `${base} bg-[#F86417] cursor-pointer text-white`
+      : `${base} bg-black/13 text-black/30 cursor-not-allowed`;
   };
 
-  // Função para reservar livro
-  const handleReservar = async (aluno, livro) => {
+  // Reserva do livro
+  const handleReservar = async () => {
     if (!aluno) {
-      alert("Aluno não encontrado ou não logado.");
+      alert("Aluno não logado");
       return;
     }
     try {
-      await axios.post("http://127.0.0.1:8000/api/reservas/", {
-        aluno: aluno.n_processo ,
-        livro: livro.id,
-      });
+      await axios.post(
+        "http://127.0.0.1:8000/api/reservas/",
+        { aluno: aluno.n_processo, livro: livro.id },
+        { headers: { Authorization: `Bearer ${sessionStorage.getItem("access_token")}` } }
+      );
       alert("Reserva realizada com sucesso!");
     } catch (error) {
-        if (error.response) {
-        console.error("Erro do backend:", error.response.data);
-        alert("Erro: " + JSON.stringify(error.response.data));
-        } else {
-        console.error("Erro desconhecido:", error);
-        alert("Erro ao fazer a reserva.");
-        }
+      console.error(error.response || error);
+      alert("Erro ao fazer reserva");
     }
   };
 
-  // Renderiza o sumário, quebrando linhas se necessário
-  const renderSumario = () => {
-    if (!livro.sumario) return <p className="text-black/70">Sem sumário disponível.</p>;
-    return livro.sumario.split("\n").map((linha, idx) => (
-      <li key={idx} className="text-black/70 text-base">
-        {linha}
-      </li>
-    ));
-  };
+  // Renderiza sumário
+  const renderSumario = () =>
+    livro.sumario
+      ? livro.sumario.split("\n").map((linha, idx) => (
+          <li key={idx} className="text-black/70 text-base">
+            {linha}
+          </li>
+        ))
+      : "Sem sumário disponível";
 
   return (
     <motion.main
@@ -141,18 +107,19 @@ function Detalhes() {
           <img src={livro.capa} alt={livro.titulo} className="h-96 w-full object-cover" />
 
           <div className="p-5 w-full flex flex-col gap-5 my-3">
+            {/* Aqui usamos estado_atual e informacao_atual do serializer */}
             <EstadoDetalhes estado={livro.estado_atual} label={livro.informacao_atual} />
             <button
               disabled={livro.estado_atual.toLowerCase() !== "disponível"}
-              onClick={() => handleReservar(aluno, livro)}
+              onClick={handleReservar}
               className={btnEstilo(livro.estado_atual)}
             >
-              {/* {btnLabel()} */}
               {livro.informacao_atual}
             </button>
           </div>
         </motion.article>
 
+        {/* Outras informações do livro */}
         <motion.article
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -162,7 +129,6 @@ function Detalhes() {
         >
           <div className="space-y-10 bg-white p-5 rounded-2xl border border-black/10">
             <h1 className="text-2xl pt-4 font-semibold">{livro.titulo}</h1>
-
             <div className="grid grid-cols-2 gap-5">
               <div className="space-y-5">
                 <label className="flex items-center gap-3">
@@ -172,7 +138,6 @@ function Detalhes() {
                     <p>{livro.autor_nome}</p>
                   </span>
                 </label>
-
                 <label className="flex items-center gap-3">
                   <LuBookOpen size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1" />
                   <span>
@@ -180,7 +145,6 @@ function Detalhes() {
                     <p>{livro.categoria_nome}</p>
                   </span>
                 </label>
-
                 <label className="flex items-center gap-3">
                   <HiOutlineHashtag size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1" />
                   <span>
@@ -189,7 +153,6 @@ function Detalhes() {
                   </span>
                 </label>
               </div>
-
               <div className="space-y-5">
                 <label className="flex items-center gap-3">
                   <IoCalendarClearOutline size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1" />
@@ -198,7 +161,6 @@ function Detalhes() {
                     <p>{livro.publicado_em}</p>
                   </span>
                 </label>
-
                 <label className="flex items-center gap-3">
                   <AiOutlineFileText size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1" />
                   <span>
@@ -206,7 +168,6 @@ function Detalhes() {
                     <p>{livro.n_paginas}</p>
                   </span>
                 </label>
-
                 <label className="flex items-center gap-3">
                   <AiOutlineBook size={40} className="bg-[#F86417]/10 rounded-sm p-1.5 text-[#F86417] px-1" />
                   <span>

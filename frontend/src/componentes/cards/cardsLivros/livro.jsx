@@ -8,7 +8,7 @@ import axios from "axios";
 
 function CardLivro(){
 
-    const [livros, setLivros] = useState([]);
+    const [livros, setLivros] = useState([]); 
 
     useEffect(() => {
       axios.get('http://localhost:8000/api/livros/')

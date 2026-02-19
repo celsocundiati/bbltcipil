@@ -24,8 +24,8 @@ class Autor(models.Model):
 
 class Livro(models.Model):
     ESTADOS = [
-        ('disponivel', 'Disponível'),
-        ('indisponivel', 'Indisponível'),
+        ('Disponível', 'Disponível'),
+        ('Indisponível', 'Indisponível'),
     ]
 
     titulo = models.CharField(max_length=120)
