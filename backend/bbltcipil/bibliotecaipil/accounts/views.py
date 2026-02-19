@@ -48,7 +48,7 @@ class MeView(APIView):
     def get(self, request):
         user = request.user
         try:
-            aluno = Aluno.objects.get(user=user)
+            aluno = request.user.aluno
         except Aluno.DoesNotExist:
             aluno = None
 

@@ -96,22 +96,43 @@ class LivroViewSet(BaseDebugViewSet):
 # ==============================
 # Reservas
 # ==============================
+# class ReservaViewSet(BaseDebugViewSet):
+#     queryset = Reserva.objects.all()
+#     serializer_class = ReservaSerializer
+    
+
 class ReservaViewSet(BaseDebugViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(aluno__user=user)
+
 
 # ==============================
 # Empréstimos
 # ==============================
+
 class EmprestimoViewSet(BaseDebugViewSet):
-    queryset = Emprestimo.objects.all()
     serializer_class = EmprestimoSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Atualiza automaticamente empréstimos atrasados"""
-        queryset = super().get_queryset()
+        user = self.request.user
+
+        queryset = Emprestimo.objects.filter(
+            reserva__aluno__user=user
+        )
+
         hoje = timezone.now().date()
-        queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
+
+        queryset.filter(
+            acoes='ativo',
+            data_devolucao__lt=hoje
+        ).update(acoes='atrasado')
+
         return queryset
 
 

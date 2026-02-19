@@ -23,7 +23,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
       setLoading(true);
 
       axios
-        .get(`http://127.0.0.1:8000/api/categorias/${categoria.id}/`)
+        .get(`http://127.0.0.1:8000/api/admin/categorias/${categoria.id}/`)
         .then(res => {
           setFormData(res.data);
           setLoading(false);
@@ -53,7 +53,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
 
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/api/categorias/${categoria.id}/`,
+        `http://127.0.0.1:8000/api/admin/categorias/${categoria.id}/`,
         formData
       );
       setModal({

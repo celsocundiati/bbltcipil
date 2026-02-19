@@ -20,7 +20,7 @@ function TabAutores(){
     });
 
     useEffect(() => {
-        axios.get("http://localhost:8000/api/autores/")
+        axios.get("http://localhost:8000/api/admin/autores/")
         .then(res => setAutores(Array.isArray(res.data.results) ? res.data.results : res.data))
         .catch(err => console.error("Erro na captura de Autores", err));
     }, []);
@@ -42,7 +42,7 @@ function TabAutores(){
     }
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/autores/${modal.autor.id}/`);
+            await axios.delete(`http://127.0.0.1:8000/api/admin/autores/${modal.autor.id}/`);
             setAutores(prev => prev.filter(a => a.id !== modal.autor.id));
             closeModal();
         }

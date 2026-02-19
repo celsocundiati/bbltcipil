@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # Local apps 
     'livros.apps.LivrosConfig',
     'accounts.apps.AccountsConfig',
+    'administracao.apps.AdministracaoConfig',
 ]
 
 MIDDLEWARE = [

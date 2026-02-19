@@ -31,7 +31,7 @@ function TabCategorias(){
     }
 
     useEffect(() => {
-        axios.get("http://localhost:8000/api/categorias/")
+        axios.get("http://localhost:8000/api/admin/categorias/")
         .then(res => setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data))
         .catch(err => console.error("Erro na captura de Categorias", err));
     }, []);
@@ -49,7 +49,7 @@ function TabCategorias(){
     }
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/categorias/${modal.categoria.id}/`);
+            await axios.delete(`http://127.0.0.1:8000/api/admin/categorias/${modal.categoria.id}/`);
             setCategorias(prev => prev.filter(c => c.id !== modal.categoria.id));
             closeModal();
         }

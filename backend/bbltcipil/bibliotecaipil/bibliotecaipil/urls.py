@@ -14,5 +14,6 @@ urlpatterns = [
 
     # Apps
     path("api/accounts/", include("accounts.urls")),
+    path("api/admin/", include('administracao.urls')),
     path("api/", include("livros.urls")),
 ]

@@ -45,7 +45,7 @@ function ModalAluno({onClose}){
         setErro(null);
 
         try {
-            await axios.post("http://127.0.0.1:8000/api/alunos/", form);
+            await axios.post("http://127.0.0.1:8000/api/admin/alunos/", form);
             setModal({
                 open: true,
                 type: "success",

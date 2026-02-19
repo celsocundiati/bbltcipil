@@ -44,7 +44,7 @@ function ModalLivro({ onClose }) {
     };
 
     try {
-        const res = await axios.post("http://127.0.0.1:8000/api/livros/", payload);
+        const res = await axios.post("http://127.0.0.1:8000/api/admin/livros/", payload);
         console.log("Livro criado:", res.data.mensagem);
 
         // Reset do form

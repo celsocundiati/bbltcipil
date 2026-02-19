@@ -39,7 +39,7 @@ function ModalEmprestimo({ emprestimo, onClose, onSave }) {
 
     try {
       const res = await axios.patch(
-        `http://localhost:8000/api/emprestimos/${emprestimo.id}/`,
+        `http://localhost:8000/api/admin/emprestimos/${emprestimo.id}/`,
         {
           data_devolucao: formData.data_devolucao
         }

@@ -47,6 +47,7 @@ class ReservaSerializer(serializers.ModelSerializer):
     capa = serializers.ReadOnlyField()
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
     aluno_nome = serializers.CharField(source="aluno.user.username", read_only=True)  # Melhor referência
+    livro_id = serializers.IntegerField(source="livro.id", read_only=True)
     data_formatada = serializers.DateTimeField(format="%d/%m/%Y", source='data_reserva', read_only=True)
     hora_formatada = serializers.DateTimeField(format="%H:%M:%S", source='data_reserva', read_only=True)
     estado_label = serializers.CharField(source="get_estado_display", read_only=True)
@@ -63,6 +64,7 @@ class EmprestimoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="reserva.aluno.user.username", read_only=True)
     capa = serializers.ReadOnlyField()
     autor_nome = serializers.CharField(source='reserva.livro.autor.nome', read_only=True)
+    livro_id = serializers.IntegerField(source="reserva.livro.id", read_only=True)
 
     def validate_data_devolucao(self, value):
         if value < timezone.now().date():

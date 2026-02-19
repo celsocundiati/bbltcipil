@@ -55,7 +55,7 @@ function TabelaReservas() {
     const [reservaSelecionada, setReservaSelecionada] = useState(null);
 
     useEffect(() => {
-        axios.get("http://localhost:8000/api/reservas/")
+        axios.get("http://localhost:8000/api/admin/reservas/")
             .then(res => {
                 const data = Array.isArray(res.data.results)
                     ? res.data.results
@@ -68,7 +68,7 @@ function TabelaReservas() {
     const atualizarEstado = async (reserva, novoEstado) => {
         try {
             await axios.patch(
-                `http://127.0.0.1:8000/api/reservas/${reserva.id}/`,
+                `http://127.0.0.1:8000/api/admin/reservas/${reserva.id}/`,
                 { estado: novoEstado }
             );
 

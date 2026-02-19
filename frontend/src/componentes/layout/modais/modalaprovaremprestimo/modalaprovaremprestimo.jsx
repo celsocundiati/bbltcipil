@@ -25,7 +25,7 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/emprestimos/",
+        "http://localhost:8000/api/admin/emprestimos/",
         {
           reserva: reserva.id,
           data_devolucao: dataDevolucao

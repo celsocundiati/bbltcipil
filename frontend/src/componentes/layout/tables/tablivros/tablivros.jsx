@@ -17,7 +17,7 @@ function TabelaLivros(){
     useEffect(() => {
     const token = sessionStorage.getItem("access_token");
 
-    axios.get("http://localhost:8000/api/livros/", {
+    axios.get("http://localhost:8000/api/admin/livros/", {
         headers: {
         Authorization: `Bearer ${token}`,
         },
@@ -34,7 +34,7 @@ function TabelaLivros(){
     }
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/livros/${modal.livro.id}/`);
+            await axios.delete(`http://127.0.0.1:8000/api/admin/livros/${modal.livro.id}/`);
             setLivros(prev => prev.filter(item => item.id !== modal.livro.id));
         }
         if(modal.type === "update"){

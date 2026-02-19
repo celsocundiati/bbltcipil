@@ -28,11 +28,25 @@ function Detalhes() {
 
   // Captura o aluno (atual: hardcoded id=1, depois trocar para logado)
   useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
+
+    if (!token) {
+      console.log("Sem token");
+      return;
+    }
+
     axios
-      .get("http://localhost:8000/api/alunos/71284")
-      .then((res) => setAluno(res.data))
+      .get("http://localhost:8000/api/accounts/me/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setAluno(res.data.aluno); // atenção aqui 👇
+      })
       .catch((err) => console.error("Erro ao capturar aluno", err));
   }, []);
+
 
   if (loading) return <p className="text-center mt-10">Carregando detalhes do livro...</p>;
 

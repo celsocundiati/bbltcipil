@@ -8,7 +8,7 @@ function TabAluno(){
 
     useEffect(() => {
         axios
-        .get("http://localhost:8000/api/alunos/", { withCredentials: true }) // ✅ envia cookie de sessão
+        .get("http://localhost:8000/api/admin/alunos/", { withCredentials: true }) // ✅ envia cookie de sessão
         .then((res) =>
             setAlunos(Array.isArray(res.data.results) ? res.data.results : res.data)
         )

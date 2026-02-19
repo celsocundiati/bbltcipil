@@ -6,7 +6,6 @@ import ModalEmprestimo from "../../modais/modalemprestimo/modalemprestimo";
 
 function TabelaEmprestimos(){
 
-
     const [emprestimos, setEmprestimos] = useState([]);
     const [emprestimoSelecionado, setEmprestimoSelecionado] = useState(null);
     const [modal, setModal] = useState({
@@ -19,7 +18,7 @@ function TabelaEmprestimos(){
     const atualizarDevolucao = async (emprest, novoEstado) => {
         try {
             await axios.patch(
-                `http://127.0.0.1:8000/api/emprestimos/${emprest.id}/`,
+                `http://127.0.0.1:8000/api/admin/emprestimos/${emprest.id}/`,
                 { acoes: novoEstado }
             );
 
@@ -37,7 +36,7 @@ function TabelaEmprestimos(){
     };
 
     useEffect(() => {
-        axios.get("http://localhost:8000/api/emprestimos/")
+        axios.get("http://localhost:8000/api/admin/emprestimos/")
         .then(res => setEmprestimos(Array.isArray(res.data.results) ? res.data.results : res.data))
         .catch(err => console.error("Erro na captura de Empréstimos", err));
     }, []);
@@ -50,7 +49,7 @@ function TabelaEmprestimos(){
     }
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/emprestimos/${modal.emprestimo.id}/`);
+            await axios.delete(`http://127.0.0.1:8000/api/admin/emprestimos/${modal.emprestimo.id}/`);
             setEmprestimos(prev => prev.filter(item => item.id !== modal.emprestimo.id));
             closeModal();
         }

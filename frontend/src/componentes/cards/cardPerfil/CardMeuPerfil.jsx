@@ -6,11 +6,30 @@ import { LuFilePen } from "react-icons/lu";
 import ImagemUpload from "./imgPerfil";
 import Modal from "../../layout/modais/modal";
 import axios from "axios"
+import { useNavigate} from "react-router-dom";
 import alunos from "../../../dados/db.json"
 
 function MeuPerfil(){
 
     const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await axios.post("http://localhost:8000/api/logout/", {}, {
+            headers: {
+                Authorization: `Bearer ${sessionStorage.getItem("access_token")}`
+            }
+            });
+        } catch (error) {
+            console.log("Erro no logout");
+        }
+
+        sessionStorage.removeItem("access_token");
+        sessionStorage.removeItem("refresh_token");
+        navigate("/login")
+    };
+
 
     /*const [alunos, setAlunos] = useState([]);
 
@@ -65,7 +84,7 @@ function MeuPerfil(){
                         </div>
                         <div className=" space-y-3">
                             <button onClick={handleClick} className="w-full bg-[#F86417] text-white flex items-center py-3 justify-center rounded-lg cursor-pointer"><LuFilePen size={20} /><p>Editar Perfil</p></button>
-                            <button className="w-full border border-[#000000]/30 flex items-center justify-center rounded-lg py-3 cursor-pointer"><HiOutlineLogout size={20}/><p>Sair</p></button>
+                            <button onClick={handleLogout} className="w-full border border-[#000000]/30 flex items-center justify-center rounded-lg py-3 cursor-pointer"><HiOutlineLogout size={20}/><p>Sair</p></button>
                         </div>
                     </section>
 

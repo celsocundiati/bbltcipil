@@ -30,7 +30,7 @@ function ModalAddAutor({onClose}){
       setErro(null);
   
       try {
-        await axios.post("http://127.0.0.1:8000/api/autores/", form);
+        await axios.post("http://127.0.0.1:8000/api/admin/autores/", form);
         setModal({
             open: true,
             type: "success",

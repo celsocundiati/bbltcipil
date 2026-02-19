@@ -18,7 +18,7 @@ function ModalEditarAutor({ onClose, form, setForm }){
     const [erro, setErro] = useState(null);
 
     useEffect(() => {
-        axios.get(`http://127.0.0.1:8000/api/autores/${form?.id}/`)
+        axios.get(`http://127.0.0.1:8000/api/admin/autores/${form?.id}/`)
         .then(res => setAutor(res.data))
         .catch(err => console.error('Erro ao buscar os dados pelo ID', err));
       }, [form]);
@@ -36,20 +36,20 @@ function ModalEditarAutor({ onClose, form, setForm }){
             setErro(null);
         
         try {
-            await axios.put(`http://127.0.0.1:8000/api/autores/${form?.id}/`, form);
+            await axios.put(`http://127.0.0.1:8000/api/admin/autores/${autor?.id}/`, autor);
             setModal({
                 open: true,
                 type: "success",
                 message: "Autor atualizado com sucesso!",
             });
         
-            setForm({
+            setAutor({
                 nome: "",
                 nacionalidade: "",
             });
         } catch (err) {
             if (err.response?.data) {
-            const erros = Object.values(error.response.data)
+            const erros = Object.values(err.response.data)
                 .flat()
                 .join("\n");
 
@@ -79,7 +79,7 @@ function ModalEditarAutor({ onClose, form, setForm }){
                     </button>
                     <article className="py-4 text-left">
                         <h2 className="text-xl font-medium">
-                            Adicionar Autor
+                            Atualizar Autor
                         </h2>
                         <p className="text-lg">
                             Cadastrar novao autor
