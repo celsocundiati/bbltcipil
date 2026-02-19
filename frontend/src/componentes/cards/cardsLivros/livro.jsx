@@ -17,11 +17,11 @@ function CardLivro(){
     }, []);
 
     return(
-        <motion.section initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-            viewport={{ once: true }}             // anima apenas uma vez
-            transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo mnkkj
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <motion.section initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+          whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+          viewport={{ once: true }}             // anima apenas uma vez
+          transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo mnkkj
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {livros.map(livro => (
           <section key={livro.id} className="bg-white rounded-md shadow overflow-hidden relative hover:scale-105 duration-300 ease-in-out transition-transform cursor-pointer">
             <img

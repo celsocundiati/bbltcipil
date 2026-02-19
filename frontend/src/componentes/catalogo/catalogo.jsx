@@ -4,11 +4,22 @@ import Footer from "../casa/footer/footer";
 import Filtragem from "./seccoes/Filtragem";
 import WelcomeCatalogo from "./seccoes/Welcome";
 import { motion } from "framer-motion";
-import {livros} from "../../dados/db.json";
+import { useState, useEffect } from "react";
+import axios from "axios";
+
 
 function Catalogo() {
-    return(
 
+    
+    const [livros, setLivros] = useState([]); 
+
+    useEffect(() => {
+        axios.get('http://localhost:8000/api/livros/')
+        .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
+        .catch(err => console.error('Erro ao capturar livros', err))
+    }, []);
+
+    return(
         <div>
             <Cabecalho/>
             <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo

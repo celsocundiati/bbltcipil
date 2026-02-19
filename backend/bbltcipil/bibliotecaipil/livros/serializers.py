@@ -39,9 +39,17 @@ class LivroSerializer(serializers.ModelSerializer):
         if Reserva.objects.filter(
             livro=obj,
             aluno=aluno,
-            estado__in=["reservado", "pendente"]
+            estado__in=["reservado"]
         ).exists():
             return "Reservado"
+
+        # Verifica reserva do próprio aluno
+        if Reserva.objects.filter(
+            livro=obj,
+            aluno=aluno,
+            estado__in=["pendente"]
+        ).exists():
+            return "Pendente"
 
         return estado_global
 
