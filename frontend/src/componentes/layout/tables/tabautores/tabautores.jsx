@@ -1,29 +1,44 @@
 import BtnAddAdmin from "../../btns01/btnaddmin";
 import ModalAddAutor from "../../modais/modaladdautor/modaladdautor";
+import ModalEditarAutor from "../../modais/autoreditar/autoreditar";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FiTrash2 } from "react-icons/fi";
 import { LuFilePen } from "react-icons/lu";
-import {MdPersonOutline} from "react-icons/md"
-import ModalEditarAutor from "../../modais/autoreditar/autoreditar";
+import { MdPersonOutline } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
-function TabAutores(){
+function TabAutores() {
+  const [showModalAutor, setShowModalAutor] = useState(false);
+  const [editarAutor, setEditarAutor] = useState(false);
+  const [autorSelecionado, setAutorSelecionado] = useState(false);
+  const [autores, setAutores] = useState([]);
+  const [modal, setModal] = useState({ open: false, type: null, autor: null });
+  const navigate = useNavigate();
 
-    const [showModalAutor, setShowModalAutor] = useState(false);
-    const [editarAutor, setEditarAutor] = useState(false);
-    const [autorSelecionado, setAutorSelecionado] = useState(false);
-    const [autores, setAutores] = useState([]);
-    const [modal, setModal] = useState({
-        open: false,
-        type: null,
-        autor: null,
-    });
+  useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
 
-    useEffect(() => {
-        axios.get("http://localhost:8000/api/admin/autores/")
-        .then(res => setAutores(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de Autores", err));
-    }, []);
+    // 🔐 Redireciona se não houver token
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    // ✅ Requisição com token
+    axios
+      .get("http://localhost:8000/api/admin/autores/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) =>
+        setAutores(Array.isArray(res.data.results) ? res.data.results : res.data)
+      )
+      .catch((err) => {
+        console.error("Erro na captura de Autores", err);
+        if (err.response?.status === 401) navigate("/login");
+      });
+  }, [navigate]);
+
 
 
     

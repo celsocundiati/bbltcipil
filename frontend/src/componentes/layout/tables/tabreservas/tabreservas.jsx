@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import ModalAprovarEmprestimo from "../../modais/modalaprovaremprestimo/modalaprovaremprestimo";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate} from "react-router-dom";
 
 function TabelaReservas() {
 
@@ -53,6 +53,7 @@ function TabelaReservas() {
 
     const [reservas, setReservas] = useState([]);
     const [reservaSelecionada, setReservaSelecionada] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         axios.get("http://localhost:8000/api/admin/reservas/")
@@ -62,8 +63,11 @@ function TabelaReservas() {
                     : res.data;
                 setReservas(data);
             })
-            .catch(err => console.error("Erro ao buscar reservas", err));
-    }, []);
+            .catch(err => {
+            console.error("Erro na captura reservas", err)
+            if (err.response?.status === 401) navigate("/login");
+        });
+    }, [navigate]);
 
     const atualizarEstado = async (reserva, novoEstado) => {
         try {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link , useNavigate} from "react-router-dom";
 import { LuFilePen } from "react-icons/lu";
 import { FiEye, FiTrash2 } from "react-icons/fi";
 
@@ -13,18 +13,22 @@ function TabelaLivros(){
         type: null,
         livro: null,
     });
+    const navigate = useNavigate();
     
     useEffect(() => {
-    const token = sessionStorage.getItem("access_token");
+        const token = sessionStorage.getItem("access_token");
 
-    axios.get("http://localhost:8000/api/admin/livros/", {
-        headers: {
-        Authorization: `Bearer ${token}`,
-        },
-    })
+        axios.get("http://localhost:8000/api/admin/livros/", {
+            headers: {
+            Authorization: `Bearer ${token}`,
+            },
+        })
     .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
-    .catch(err => console.error("Erro na captura de livros", err));
-    }, []);
+    .catch(err => {
+            console.error("Erro na captura livros", err)
+            if (err.response?.status === 401) navigate("/login");
+        });
+    }, [navigate]);
 
     function openModal(type, livro){
         setModal({open: true, type, livro});

@@ -1,22 +1,37 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { obterIniciais } from "../utilitarios/Utils";
 
-function TabAluno(){
-    
-    const [alunos, setAlunos] = useState([]);
+function TabAluno() {
+  const [alunos, setAlunos] = useState([]);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        axios
-        .get("http://localhost:8000/api/admin/alunos/", { withCredentials: true }) // ✅ envia cookie de sessão
-        .then((res) =>
-            setAlunos(Array.isArray(res.data.results) ? res.data.results : res.data)
-        )
-        .catch((err) => console.error("Erro na captura de Alunos", err));
-    }, []);
+  useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
 
+    // 🔐 Redireciona se não houver token
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-    const totalAlunos = alunos.length;
+    // ✅ Requisição com token
+    axios
+      .get("http://localhost:8000/api/admin/alunos/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) =>
+        setAlunos(Array.isArray(res.data.results) ? res.data.results : res.data)
+      )
+      .catch((err) => {
+        console.error("Erro na captura de Alunos", err);
+        // Redireciona se o token não for válido
+        if (err.response?.status === 401) navigate("/login");
+      });
+  }, [navigate]);
+
+  const totalAlunos = alunos.length;
     
     return(
         <main>

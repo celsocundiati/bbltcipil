@@ -3,6 +3,7 @@ import axios from "axios";
 import { LuFilePen } from "react-icons/lu";
 import { FiTrash2 } from "react-icons/fi";
 import ModalEmprestimo from "../../modais/modalemprestimo/modalemprestimo";
+import { useNavigate } from "react-router-dom";
 
 function TabelaEmprestimos(){
 
@@ -13,6 +14,7 @@ function TabelaEmprestimos(){
         type: null,
         emprestimo: null,
     });
+    const navigate = useNavigate();
 
         
     const atualizarDevolucao = async (emprest, novoEstado) => {
@@ -36,10 +38,20 @@ function TabelaEmprestimos(){
     };
 
     useEffect(() => {
+        const token = sessionStorage.getItem("access_token");
+
+        // 🔐 Redireciona se não houver token
+        if (!token) {
+        navigate("/login");
+        return;
+        }
         axios.get("http://localhost:8000/api/admin/emprestimos/")
         .then(res => setEmprestimos(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de Empréstimos", err));
-    }, []);
+        .catch(err  => {
+            console.error("Erro na captura de Empréstimos", err)
+            if (err.response?.status === 401) navigate("/login");
+        });
+    }, [navigate]);
 
     function openModal(type, emprestimo){
             setModal({open: true, type, emprestimo});

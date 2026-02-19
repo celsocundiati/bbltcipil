@@ -1,11 +1,14 @@
-import BtnAddAdmin from "../../btns01/btnaddmin";
+
+    import BtnAddAdmin from "../../btns01/btnaddmin";
 import ModalAddCategoria from "../../modais/modaladdcategoria/modaladdcategoria";
 import CategoriaEditar from "../../modais/categoriaeditar/categoriaeditar";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FiTrash2 } from "react-icons/fi";
 import { LuFilePen } from "react-icons/lu";
-import {HiOutlineFolder} from "react-icons/hi2";
+import { HiOutlineFolder } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
+
 
 function TabCategorias(){
 
@@ -16,9 +19,9 @@ function TabCategorias(){
         type: null,
         categoria: null,
     });
-
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
+    const navigate = useNavigate();
 
     function handleOpenEditModal(categoria) {
         setCategoriaSelecionada(categoria);
@@ -30,11 +33,27 @@ function TabCategorias(){
         setCategoriaSelecionada(null);
     }
 
-    useEffect(() => {
-        axios.get("http://localhost:8000/api/admin/categorias/")
-        .then(res => setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de Categorias", err));
-    }, []);
+  useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
+
+    // 🔐 Redireciona se não houver token
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    axios
+      .get("http://localhost:8000/api/admin/categorias/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) =>
+        setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data)
+      )
+      .catch((err) => {
+        console.error("Erro na captura de Categorias", err);
+        if (err.response?.status === 401) navigate("/login");
+      });
+  }, [navigate]);
 
 
     function handleClick(){
