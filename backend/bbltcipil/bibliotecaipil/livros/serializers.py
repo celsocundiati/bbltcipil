@@ -61,6 +61,7 @@ class LivroSerializer(serializers.ModelSerializer):
             "Disponível": "Este livro está disponível para reserva",
             "Indisponível": "Livro indisponível no estoque",
             "Reservado": "Você possui uma reserva ativa",
+            "Pendente": "Aguardando aprovação",
             "Emprestado": "Livro emprestado a si",
         }
 

@@ -29,7 +29,7 @@ function Sessao02() {
   // 🔎 Métricas calculadas diretamente
   const livrosDisponiveis = livros.filter(livro => livro.estado_atual === "Disponível").length;
   const totalAcervo = livros.length;
-  const minhasReservas = reservas.length;
+  const minhasReservas = reservas.filter(reservas => reservas.estado !== "finalizada").length;
 
   const cards = [
     {
