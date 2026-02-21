@@ -47,46 +47,67 @@ def decrementar_total_obras(sender, instance, **kwargs):
 # ===============================
 # RESERVA → NOTIFICAÇÕES
 # ===============================
-
 @receiver(post_save, sender=Reserva)
-def criar_notificacao_reserva(sender, instance, created, **kwargs):
+def notificar_reserva(sender, instance, created, **kwargs):
+    link = f"/reservas#reserva-{instance.id}"  # gera o link automático
     if created:
         Notificacao.objects.create(
             usuario=instance.aluno.user,
             titulo="Reserva criada",
             descricao=f"Você reservou o livro '{instance.livro.titulo}'.",
-            tipo="reserva"
+            tipo="Reserva",
+            link=link
         )
-
+    else:
+        # Quando a reserva muda para 'aprovada'
+        if instance.estado == "aprovada":
+            Notificacao.objects.create(
+                usuario=instance.aluno.user,
+                titulo="Reserva aprovada",
+                descricao=f"Sua reserva do livro '{instance.livro.titulo}' foi aprovada e está pronta para empréstimo.",
+                tipo="Reserva",
+                link=link
+            )
 
 @receiver(post_delete, sender=Reserva)
 def notificar_cancelamento(sender, instance, **kwargs):
-    Notificacao.objects.create(
-        usuario=instance.aluno.user,
-        titulo="Reserva cancelada",
-        descricao=f"A reserva do livro '{instance.livro.titulo}' foi cancelada.",
-        tipo="reserva_cancelada"
-    )
-
-
-# ===============================
-# EMPRESTIMO → DEVOLUÇÃO
-# ===============================
-
-@receiver(pre_save, sender=Emprestimo)
-def notificar_devolucao(sender, instance, **kwargs):
-    if not instance.pk:
-        return
-
-    try:
-        antigo = Emprestimo.objects.get(pk=instance.pk)
-    except Emprestimo.DoesNotExist:
-        return
-
-    if antigo.acoes != "devolvido" and instance.acoes == "devolvido":
+    if instance.aluno:
         Notificacao.objects.create(
             usuario=instance.aluno.user,
-            titulo="Livro devolvido",
-            descricao=f"O livro '{instance.livro.titulo}' foi devolvido com sucesso.",
-            tipo="devolucao"
+            titulo="Reserva cancelada",
+            descricao=f"A reserva do livro '{instance.livro.titulo}' foi cancelada.",
+            tipo="Reserva",
+            link=f"/reservas#reserva-{instance.id}"
         )
+
+# ===============================
+# EMPRÉSTIMOS → NOTIFICAÇÕES
+# ===============================
+@receiver(post_save, sender=Emprestimo)
+def notificar_emprestimo(sender, instance, created, **kwargs):
+    link = f"/emprestimos#emprestimo-{instance.id}"
+    if created:
+        Notificacao.objects.create(
+            usuario=instance.aluno.user,
+            titulo="Empréstimo iniciado",
+            descricao=f"Você retirou o livro '{instance.livro.titulo}'. Data de devolução: {instance.data_devolucao}.",
+            tipo="Emprestimo",
+            link=link
+        )
+    else:
+        if instance.acoes == "atrasado":
+            Notificacao.objects.create(
+                usuario=instance.aluno.user,
+                titulo="Devolução em atraso",
+                descricao=f"O livro '{instance.livro.titulo}' está atrasado! Data de devolução: {instance.data_devolucao}.",
+                tipo="Emprestimo",
+                link=link
+            )
+        elif instance.acoes == "devolvido":
+            Notificacao.objects.create(
+                usuario=instance.aluno.user,
+                titulo="Livro devolvido",
+                descricao=f"O livro '{instance.livro.titulo}' foi devolvido com sucesso.",
+                tipo="Emprestimo",
+                link=link
+            )

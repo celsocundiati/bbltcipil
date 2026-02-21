@@ -1,92 +1,16 @@
-// import { useState, useEffect } from "react";
-// import axios from "axios";
-// import { useNavigate } from "react-router-dom";
-
-// function TabNotificacoes(){
-
-//     const [reservas, setReservas] = useState([]);
-//     const navigate = useNavigate();
-
-//     const token = sessionStorage.getItem("access_token");
-
-//     useEffect(() => {
-//         if(!token){
-//             navigate("/login")
-//             return;
-//         }
-//         axios.get("http://localhost:8000/api/reservas/", {
-//             headers: {Authorization: `${token}`},
-//         })
-//         .then(res => {
-//             const data = Array.isArray(res.data.results)
-//                 ? res.data.results
-//                 : res.data;
-//             setReservas(data);
-//         })
-//         .catch(err => console.error("Erro ao buscar reservas", err));
-//     }, [navigate, token]);
-
-//     const handleRedirect = (id) => {
-//         navigate(`/admin/acervo#reserva-${id}`); 
-//     };
-
-//     return (
-//         <main>
-//             <section className="w-full h-full grid grid-cols-1 md:grid-cols-1 gap-5 mb-15">
-//                 <section className="mb-5">
-//                     <span className="text-black/70">
-//                         Total: {reservas.length}
-//                     </span>
-//                 </section>
-
-//                 <section className="w-full">
-//                     <div className="w-full grid grid-cols-1 gap-5">
-//                         {reservas.length === 0 ? (
-//                             <div className="text-center py-4 text-red-700 bg-white border border-black/10 rounded-lg p-5">
-//                                 Nenhuma reserva encontrada.
-//                             </div>
-//                         ) : (
-//                             [...reservas]
-//                                 .sort((a, b) => b.id - a.id)
-//                                 .map((reserva) => (
-//                                     <div 
-//                                         key={`reserva-${reserva.id}`} 
-//                                         onClick={() => handleRedirect(reserva.id)} 
-//                                         className="w-full bg-white border border-black/10 rounded-lg p-5 hover:bg-black/5 transition-colors cursor-pointer"
-//                                     >
-//                                         <div className="flex items-center gap-2 mb-2">
-//                                             <div className="w-2.5 h-2.5 bg-[#F97B17] rounded-full"></div>
-//                                             <span className="text-lg">Reserva solicitada</span>
-//                                         </div>
-                                        
-//                                         <div className="px-5">
-//                                             <p className="text-black/70">{reserva.aluno_nome} - {reserva.livro_nome}</p>
-//                                             <div className="flex flex-col text-black/70">
-//                                                 <span className="text-lg">{reserva?.data_formatada} - {reserva?.hora_formatada}</span>
-//                                             </div>
-//                                         </div>
-//                                     </div>
-//                                 ))
-//                         )}
-//                     </div>
-//                 </section>
-                
-//             </section>
-//         </main>
-//     );
-// }
-// export default TabNotificacoes;
-
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function ListaNotificacoes() {
   const [notificacoes, setNotificacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = sessionStorage.getItem("access_token");
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) return;
+
     axios
       .get("http://localhost:8000/api/notificacoes/", {
         headers: { Authorization: `Bearer ${token}` },
@@ -105,7 +29,18 @@ function ListaNotificacoes() {
         setNotificacoes((prev) =>
           prev.map((n) => (n.id === id ? { ...n, lida: true } : n))
         );
-      });
+      })
+      .catch((err) => console.error("Erro ao marcar como lida:", err));
+  };
+
+  const handleRedirect = (link) => {
+    if (link.startsWith("#")) {
+      // Redirecionamento para âncoras internas
+      navigate(link);
+    } else {
+      // Redirecionamento para rotas completas
+      navigate(link);
+    }
   };
 
   if (loading) {
@@ -132,7 +67,7 @@ function ListaNotificacoes() {
           key={notif.id}
           onClick={() => {
             if (!notif.lida) marcarLida(notif.id);
-            if (notif.link) window.location.href = notif.link;
+            if (notif.link) handleRedirect(notif.link); // Corrigido: passava nada antes
           }}
           className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer shadow-sm
             ${notif.lida
@@ -142,7 +77,10 @@ function ListaNotificacoes() {
         >
           <div className="flex items-start gap-3">
             {!notif.lida && (
-              <span className="w-3 h-3 mt-1 bg-orange-500 rounded-full animate-pulse" title="Nova notificação"></span>
+              <span
+                className="w-3 h-3 mt-1 bg-orange-500 rounded-full animate-pulse"
+                title="Nova notificação"
+              ></span>
             )}
             <div className="flex flex-col">
               <h4 className="font-semibold text-gray-800">{notif.titulo}</h4>
@@ -168,7 +106,12 @@ function ListaNotificacoes() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
             </svg>
           )}
         </div>
