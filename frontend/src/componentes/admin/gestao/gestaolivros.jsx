@@ -12,7 +12,7 @@ function GestaoLivros(){
             <section>
                 <HeaderOutle page="gestaolivro"/>
             </section>
-            <section className="flex items-center justify-center gap-8 bg-white px-5 py-8 border border-black/5 rounded-2xl">
+            <section className="flex items-center justify-center gap-8 bg-white px-5 py-8 border border-black/5 rounded-2xl flex-col md:flex-row">
                 <InputAdmin page="catalogo" type="text" placeholder="Busque por título, autor e categórias"/>
                 <Select tipo="categoria" />
                 <Select tipo="estado" />

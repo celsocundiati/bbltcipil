@@ -119,7 +119,7 @@ function RotulosOutle({page})
                     ))}
                 </section>
             ) : page === "admins" ?(
-                <section className="w-full grid grid-cols-3 gap-5">
+                <section className="w-full grid grid-cols-1 md:grid-cols-3 gap-5">
                     {adminsRotulos.map((admR, index) => (
                         <div key={index} className="w-full border border-black/10 rounded-lg p-5 flex gap-4 bg-white hover:shadow transition">
                             <div className="h-13 flex items-center px-2 py-1 text-[#F97B17] bg-black/3 rounded-md"> {admR.icone} </div>
@@ -131,7 +131,7 @@ function RotulosOutle({page})
                     ))}
                 </section>
             ) : page === "multas" ?(
-                <section className="w-full grid grid-cols-4 gap-5">
+                <section className="w-full grid grid-cols-1 md:grid-cols-4 gap-5">
                     {multasRotulos.map((admR, index) => (
                         <div key={index} className="w-full border border-black/10 rounded-lg p-5 flex justify-between bg-white hover:shadow transition">
                             <div>

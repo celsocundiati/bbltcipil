@@ -60,9 +60,9 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Estudantes</h1>
                         <p className="text-black/70 text-lg">Gerir estudantes registados na biblioteca</p>
                     </article>
-                    <button onClick={handleClick3} className="flex items-center bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">
+                    {/* <button onClick={handleClick3} className="flex items-center bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">
                         <MdPersonOutline size={25}/> + Adicionar Estudante
-                    </button>
+                    </button> */}
                 </section>
             ) : page === "emprestimos" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
