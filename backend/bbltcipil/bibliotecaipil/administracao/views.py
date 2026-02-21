@@ -15,10 +15,12 @@ class LivroAdminViewSet(viewsets.ModelViewSet):
     serializer_class = LivroAdminSerializer
     permission_classes = [IsAdminUser]
 
+
 class ReservaAdminViewSet(viewsets.ModelViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaAdminSerializer
     permission_classes = [IsAdminUser]
+
 
 class EmprestimoAdminViewSet(viewsets.ModelViewSet):
     queryset = Emprestimo.objects.all()
@@ -42,3 +44,4 @@ class CategoriaAdminViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaAdminSerializer
     permission_classes = [IsAdminUser]
+

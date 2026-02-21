@@ -1,12 +1,13 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Categoria, Autor, Aluno, Livro, Reserva, Emprestimo
+from rest_framework.permissions import IsAuthenticated
+from .models import Categoria, Autor, Aluno, Livro, Reserva, Emprestimo, Notificacao
 from .serializers import (
     CategoriaSerializer, AutorSerializer, AlunoSerializer,
     LivroSerializer, ReservaSerializer, EmprestimoSerializer,
+    NotificacaoSerializer
 )
 
 
@@ -38,12 +39,14 @@ class BaseDebugViewSet(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 # ==============================
 # Categorias
 # ==============================
 class CategoriaViewSet(BaseDebugViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
+
 
 # ==============================
 # Autores
@@ -52,61 +55,58 @@ class AutorViewSet(BaseDebugViewSet):
     queryset = Autor.objects.all()
     serializer_class = AutorSerializer
 
+
 # ==============================
 # Alunos
 # ==============================
 class AlunoViewSet(BaseDebugViewSet):
     queryset = Aluno.objects.all()
     serializer_class = AlunoSerializer
-    permission_classes = [IsAuthenticated]  # 🔐 só acessível para logados
+    permission_classes = [IsAuthenticated]  # 🔐 só logados
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user) if not user.is_staff else self.queryset
+
+
 # ==============================
 # Livros
 # ==============================
 class LivroViewSet(BaseDebugViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroSerializer
-    permission_classes = [IsAuthenticated] 
-
-    @action(detail=False, methods=['get'])
-    def recentes(self, request):
-        """Lista livros por ordem de cadastro"""
-        livros = Livro.objects.order_by('-data')
-        return Response(self.get_serializer(livros, many=True).data)
-    
-    @action(detail=False, methods=['get'])
-    def populares(self, request):
-        """Lista livros marcados como populares"""
-        livros = Livro.objects.filter(is_popular=True)
-        return Response(self.get_serializer(livros, many=True).data)
+    permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=["post"])
     def reservar(self, request, pk=None):
-        """Criar reserva simples do livro"""
+        """Cria reserva para o usuário logado"""
         livro = self.get_object()
+        user = request.user
 
         if livro.estado_atual != "Disponível":
-            return Response(
-                {"erro": "Livro não disponível"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"erro": "Livro não disponível"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Aqui você poderia criar a reserva para o aluno logado
-        return Response({"mensagem": "Reserva enviada com sucesso"})
+        # Cria reserva real (sempre que possível)
+        AlunoModel = apps.get_model('livros', 'Aluno')
+        try:
+            aluno = AlunoModel.objects.get(user=user)
+        except AlunoModel.DoesNotExist:
+            return Response({"erro": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        reserva = Reserva.objects.create(livro=livro, aluno=aluno, estado='pendente')
+        return Response({"mensagem": "Reserva enviada com sucesso", "reserva_id": reserva.pk})
+
 
 # ==============================
 # Reservas
 # ==============================
-# class ReservaViewSet(BaseDebugViewSet):
-#     queryset = Reserva.objects.all()
-#     serializer_class = ReservaSerializer
-    
-
 class ReservaViewSet(BaseDebugViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """Retorna apenas reservas do usuário logado"""
         user = self.request.user
         return self.queryset.filter(aluno__user=user)
 
@@ -114,49 +114,53 @@ class ReservaViewSet(BaseDebugViewSet):
 # ==============================
 # Empréstimos
 # ==============================
-
 class EmprestimoViewSet(BaseDebugViewSet):
     serializer_class = EmprestimoSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-
-        queryset = Emprestimo.objects.filter(
-            reserva__aluno__user=user
-        )
-
         hoje = timezone.now().date()
 
-        queryset.filter(
-            acoes='ativo',
-            data_devolucao__lt=hoje
-        ).update(acoes='atrasado')
+        queryset = Emprestimo.objects.filter(reserva__aluno__user=user)
 
+        # Atualiza status atrasado automaticamente
+        queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
         return queryset
 
 
-'''
-Views Dinamicamente
-=========================
+# ==============================
+# Notificações
+# ==============================
+class NotificacaoViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificacaoSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['criada_em']
+    ordering = ['-criada_em']
 
-from rest_framework import viewsets
-from .models import Categoria, Autor, Aluno, Livro, Reserva, Emprestimo, Devolucao
-from .serializers import SERIALIZERS
+    def get_queryset(self):
+        """Retorna apenas notificações do usuário logado"""
+        queryset = Notificacao.objects.filter(usuario=self.request.user)
+        lidas = self.request.query_params.get('lidas')
+        if lidas is not None:
+            if lidas.lower() == 'false':
+                queryset = queryset.filter(lida=False)
+            elif lidas.lower() == 'true':
+                queryset = queryset.filter(lida=True)
+        return queryset
 
-MODELS = [Categoria, Autor, Aluno, Livro, Reserva, Emprestimo, Devolucao]
+    def perform_create(self, serializer):
+        """Define automaticamente o usuário"""
+        serializer.save(usuario=self.request.user)
 
-VIEWS = {}
-
-for model in MODELS:
-    viewset = type(
-        f"{nodel.__name__}ViewSet",
-        (viewsets.ModelViewSet,),
-        {
-            "queryset": model.objects.all(),
-            "serializer_class": SERIALIZERS[model.__name__]
-        }
-    )
-    VIEWS[model.__name__] = viewset
-
-'''
+    @action(detail=True, methods=["post"])
+    def marcar_lida(self, request, pk=None):
+        """Marca uma notificação como lida"""
+        try:
+            notif = self.get_object()
+            notif.lida = True
+            notif.save(update_fields=['lida'])
+            return Response({"status": "ok"})
+        except Notificacao.DoesNotExist:
+            return Response({"error": "Notificação não encontrada"}, status=status.HTTP_404_NOT_FOUND)

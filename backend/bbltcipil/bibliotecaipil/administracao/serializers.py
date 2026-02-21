@@ -11,6 +11,7 @@ class ReservaAdminSerializer(serializers.ModelSerializer):
         model = Reserva
         fields = '__all__'
 
+
 class EmprestimoAdminSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="reserva.livro.titulo", read_only=True)
     aluno_nome = serializers.CharField(source="reserva.aluno.user.username", read_only=True)
@@ -47,3 +48,4 @@ class LivroAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Livro
         fields = '__all__'
+

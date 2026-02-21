@@ -1,13 +1,13 @@
-import TabNotificacoes from "../tables/tabnotificacoes/TabNotificacoes";
+import ListaNotificacoes from "../layout/tables/tabnotificacoes/TabNotificacoes";
 
 function Notificacoes(){
     return(
-        <main className="mt-30">
+        <section className="mt-30">
             <h1 className="text-2xl font-medium">Notificações</h1>
             <section>
-                <TabNotificacoes/>
+                <ListaNotificacoes/>
             </section>
-        </main>
+        </section>
     );
 }
 export default Notificacoes;

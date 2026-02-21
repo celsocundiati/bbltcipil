@@ -1,7 +1,7 @@
 
 import { FiSettings } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { LuBookOpen } from "react-icons/lu";
 import { IoCalendarClearOutline } from "react-icons/io5";
 import { useEffect, useState } from "react";
@@ -147,12 +147,14 @@ function Configuracoes() {
         </section>
 
         {configuracoes.map(conf => (
-          <section key={conf.id} className="mt-5">
-            <article className="bg-black/3 hover:bg-black/6 rounded px-4 py-2 cursor-pointer">
-              <h1 className="text-lg">{conf.titulo}</h1>
-              <p className="text-black/70">{conf.descricao}</p>
-            </article>
-          </section>
+          <Link to= {conf.id === 2 ? "/notificacoes" : "#"}>
+            <section key={conf.id} className="mt-5">
+              <article className="bg-black/3 hover:bg-black/6 rounded px-4 py-2 cursor-pointer">
+                <h1 className="text-lg">{conf.titulo}</h1>
+                <p className="text-black/70">{conf.descricao}</p>
+              </article>
+            </section>
+          </Link>
         ))}
       </section>
 

@@ -32,7 +32,7 @@ class Livro(models.Model):
     isbn = models.CharField(max_length=13, unique=True)
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="livros")
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="livros")
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='disponivel')
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='Disponivel')
     publicado_em = models.DateField()
     descricao = models.TextField(blank=True, null=True)
     sumario = models.TextField()
@@ -209,3 +209,15 @@ class Emprestimo(models.Model):
 
     def __str__(self):
         return f"{self.livro.titulo} — {self.aluno.user.username} ({self.acoes})"
+
+
+class Notificacao(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=200)
+    descricao = models.TextField(blank=True, null=True)
+    criada_em = models.DateTimeField(auto_now_add=True)
+    tipo = models.CharField(default="Geral")
+    lida = models.BooleanField(default=False)  # <--- campo chave
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.titulo}"

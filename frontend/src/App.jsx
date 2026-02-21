@@ -20,10 +20,10 @@ import Admin from './componentes/admin/administrador';
 import Multas from './componentes/admin/multas/multa';
 import Estudantes from './componentes/admin/estudantes/estudantess';
 import EditarLivro from './componentes/admin/editarlivro/editarlivro';
-import Notificacoes from './componentes/layout/notificacoes/notificacoes';
 import CadastroAluno from './componentes/cadastro/cadastro';
 import LoginPage from './componentes/login/login';
 import axios from "axios";
+import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
 
 axios.interceptors.request.use(config => {
   const token = sessionStorage.getItem("access_token");
@@ -46,6 +46,7 @@ function App() {
             <Route path='/reservas' element={<Reservas />}/>
             <Route path='/exposicao' element={<Exposicao />}/>
             <Route path='/perfil' element={<Perfil />}/>
+            <Route path='/notificacoes' element={<ListaNotificacoes />}/>
 
             <Route path='detalhes/:id' element={<Detalhes />}/>
 
@@ -63,7 +64,6 @@ function App() {
               <Route path='relatorios' element={<Relatorios />}/>
               <Route path='configuracoesadmin' element={<Configuracoesadmin />}/>
               <Route path='admins' element={<Admins />}/>
-              <Route path='notificacoes' element={<Notificacoes />}/>
               <Route path='' element={<Sair />}/>
             </Route>
 

@@ -34,6 +34,8 @@ function CardLivro() {
     fetchLivros();
   }, [navigate, token]);
 
+  
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
