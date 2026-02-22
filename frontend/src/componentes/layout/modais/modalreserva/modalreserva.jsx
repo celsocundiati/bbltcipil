@@ -3,8 +3,8 @@ import {HiOutlineXMark} from "react-icons/hi2";
 function ModalReserva({onClose}){
     return(
         <main>
-            <dialog className="fixed inset-0 z-50 shadow bg-black/20 h-full flex flex-col w-full rounded-xl border border-black/10">
-                <div className="w-1/2 bg-white shadow-md rounded-xl p-6 relative top-1/9 left-1/4">
+            <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                     <button onClick={onClose} className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black">
                         <HiOutlineXMark size={35}/>
                     </button>

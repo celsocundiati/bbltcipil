@@ -62,8 +62,8 @@ function ModalAddCategoria({onClose}){
 
     return(
         <section>
-            <dialog className="fixed inset-0 z-50 shadow bg-black/20 h-full flex flex-col w-full  rounded-xl border border-black/10">
-                <div className="w-1/2 bg-white shadow-md rounded-xl p-6 relative top-1/9 left-1/4">
+            <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                     <button onClick={onClose} className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black">
                         <HiOutlineXMark size={35}/>
                     </button>
@@ -89,11 +89,20 @@ function ModalAddCategoria({onClose}){
                                 className="mt-1 w-full h-24 rounded-md border border-black/10 bg-black/5 outline-none px-3 py-2 text-black/70  font-medium focus:ring-2 focus:ring-green-500" />
                             </div>
                         </div>
-                        <div className="flex justify-end gap-3 pt-4">
-                            <button onClick={onClose} type="button" className="bg-white text-black px-8 py-2 rounded-lg border border-black/10 cursor-pointer hover:text-white hover:bg-red-500 transition-all duration-200">
+                        
+                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="w-full sm:w-auto border border-black/10 text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
+                            >
                                 Cancelar
                             </button>
-                            <button type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-lg cursor-pointer hover:bg-green-600 transition-all duration-200">
+
+                            <button
+                                type="submit"
+                                className="w-full sm:w-auto bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                            >
                                 Adicionar Categória
                             </button>
                         </div>
@@ -102,13 +111,13 @@ function ModalAddCategoria({onClose}){
             </dialog>
 
             {modal.open && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center text-left z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+                <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                    <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                         <h3 className="text-lg  font-semibold mb-2">
                             {modal.type === "success" ? "Sucesso" : "Erro"}
                         </h3>
                         <p>{modal.message}</p>
-                        <div className="flex justify-end gap-3 mt-2">
+                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
                             <button
                                 type="submit"
                                 onClick={() => {

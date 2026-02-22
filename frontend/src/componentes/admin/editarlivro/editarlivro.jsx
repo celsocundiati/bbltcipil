@@ -1,97 +1,102 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import {FaBook} from "react-icons/fa";
+import { FaBook } from "react-icons/fa";
 
-function EditarLivro(){
+function EditarLivro() {
 
     const navigate = useNavigate();
-    const {id} = useParams();
+    const { id } = useParams();
+
     const [livro, setLivro] = useState(null);
     const [autores, setAutores] = useState([]);
     const [categorias, setCategorias] = useState([]);
-    const [loading, setLoading] = useState(false);
+
+    const [loadingPage, setLoadingPage] = useState(true);
+    const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [erro, setErro] = useState(null);
+
     const [modal, setModal] = useState({
         open: false,
-        type: "success", // "success" ou "error"
+        type: "success",
         message: "",
     });
 
-    
     const hoje = new Date();
+    const dataMaximaPermitida = hoje.toISOString().split("T")[0];
 
-    const dataMaximaPermitida = new Date(
-        hoje.getFullYear(),
-        hoje.getMonth(),
-        hoje.getDate()
-    ).toISOString().split("T")[0];
-
+    // =============================
+    // FETCH ÚNICO
+    // =============================
     useEffect(() => {
-        axios.get(`http://127.0.0.1:8000/api/livros/${id}/`)
-        .then(res => setLivro(res.data))
-        .catch(err => console.error('Erro ao buscar os dados pelo ID', err));
+
+        async function fetchData() {
+            try {
+                setLoadingPage(true);
+
+                const [livroRes, autoresRes, categoriasRes] = await Promise.all([
+                    axios.get(`http://127.0.0.1:8000/api/livros/${id}/`),
+                    axios.get(`http://127.0.0.1:8000/api/autores/`),
+                    axios.get(`http://127.0.0.1:8000/api/categorias/`)
+                ]);
+
+                setLivro(livroRes.data);
+
+                setAutores(
+                    Array.isArray(autoresRes.data.results)
+                        ? autoresRes.data.results
+                        : autoresRes.data
+                );
+
+                setCategorias(
+                    Array.isArray(categoriasRes.data.results)
+                        ? categoriasRes.data.results
+                        : categoriasRes.data
+                );
+
+            } catch (error) {
+                console.error(error);
+                setErro("Erro ao carregar dados.");
+            } finally {
+                setLoadingPage(false);
+            }
+        }
+
+        fetchData();
+
     }, [id]);
 
-    useEffect(() => {
-        axios.get("http://localhost:8000/api/autores/")
-        .then(res => setAutores(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de Autores", err));
-    }, []);
-  
-    useEffect(() => {
-        axios.get("http://localhost:8000/api/categorias/")
-        .then(res => setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de categorias", err));
-    }, []);
-
+    // =============================
+    // HANDLE CHANGE
+    // =============================
     const handleChange = (e) => {
-    setLivro({
-      ...livro,
-      [e.target.name]: e.target.value,
-    });
+        setLivro({
+            ...livro,
+            [e.target.name]: e.target.value,
+        });
     };
 
-    const cancel = async (e) => {
-        setLivro({
-            isbn: "",
-            capa: "",
-            titulo: "",
-            autor: "",
-            categoria: "",
-            sumario: "",
-            editora: "",
-            nPaginas: 1,
-            data_publicacao: "",
-            quantidade: 1,
-        });
-    }
-
+    // =============================
+    // SUBMIT
+    // =============================
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        setLoadingSubmit(true);
         setErro(null);
 
         try {
-            await axios.put(`http://127.0.0.1:8000/api/livros/${id}/`, livro);
+
+            await axios.put(
+                `http://127.0.0.1:8000/api/livros/${id}/`,
+                livro
+            );
+
             setModal({
                 open: true,
                 type: "success",
-                message: "Livro atualizado com sucesso!",
+                message: "Livro atualizado com sucesso!"
             });
 
-            setLivro({
-                isbn: "",
-                imagem: "",
-                titulo: "",
-                autor: "",
-                categoria: "",
-                sumario: "",
-                editora: "",
-                nPaginas: 1,
-                data_publicacao: "",
-                quantidade: 1,
-            });
         } catch (err) {
 
             if (err.response?.data) {
@@ -99,200 +104,270 @@ function EditarLivro(){
                     .flat()
                     .join("\n");
 
-                    setModal({
-                        open: true,
-                        type: "error",
-                        message: erros,
-                    });
+                setModal({
+                    open: true,
+                    type: "error",
+                    message: erros
+                });
+
                 setErro(erros);
+
             } else {
-                alert("Erro ao comunicar com o servidor");
+                setModal({
+                    open: true,
+                    type: "error",
+                    message: "Erro ao comunicar com o servidor."
+                });
             }
 
-            console.error(err);
-
         } finally {
-            setLoading(false);
+            setLoadingSubmit(false);
         }
     };
 
-    function closeModal(){
-        setModal({open:false});
-        navigate("/admin/gestao");
+    // =============================
+    // LOADING PAGE
+    // =============================
+    if (loadingPage) {
+        return (
+            <div className="w-full h-screen flex items-center justify-center">
+                <p className="text-xl animate-pulse">Carregando dados...</p>
+            </div>
+        );
     }
 
-    if(!livro) return <p>Carregando...</p>
+    if (!livro) return null;
 
-    return(
+    // =============================
+    // JSX
+    // =============================
+    return (
         <main className="w-full h-full py-12">
             <section className="my-12 flex items-center justify-center w-full mx-auto md:w-3/4 border border-black/10 rounded-xl shadow">
-            
-                <div className="bg-white rounded-xl p-6 w-full h-full relative">
+
+                <div className="bg-white rounded-xl p-6 w-full relative">
+
                     <article className="my-9">
-                        <button className="absolute top-12 right-4 text-[#F97B17]" >
-                            <FaBook size={35}/>
+                        <button className="absolute top-12 right-4 text-[#F97B17]">
+                            <FaBook size={35} />
                         </button>
+
                         <h2 className="text-2xl font-medium">
-                            Editando o livro <span className="text-[#F97B17] font-bold">{livro.titulo}</span> 
+                            Editando o livro
+                            <span className="text-[#F97B17] font-bold ml-2">
+                                {livro?.titulo}
+                            </span>
                         </h2>
+
                         <p className="text-black/70 text-xl">
-                            Atualize os detalhes do livro para adicionar ao catálogo
+                            Atualize os detalhes do livro
                         </p>
                     </article>
+
                     <form onSubmit={handleSubmit} className="space-y-4">
+
                         <div className="grid grid-cols-2 gap-4">
+
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg" htmlFor="titulo">Título*</label>
-                                <input type="text" name="titulo" required placeholder="Título do livro" value={livro.titulo} onChange={handleChange} 
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <label>Título*</label>
+                                <input
+                                    type="text"
+                                    name="titulo"
+                                    value={livro.titulo || ""}
+                                    onChange={handleChange}
+                                    required
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
+
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg" htmlFor="isbn">ISBN*</label>
+                                <label>ISBN*</label>
                                 <input
                                     type="text"
                                     name="isbn"
-                                    id="isbn"
-                                    value={livro.isbn}
+                                    value={livro.isbn || ""}
+                                    onChange={handleChange}
                                     required
-                                    placeholder="530"
-                                    minLength={1}
                                     maxLength={13}
-                                    inputMode="numeric"
-                                    pattern="[0-9]{1,10000}"
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (/^\d*$/.test(value) && value.length <= 13) {
-                                            handleChange(e);
-                                        }
-                                    }}
-                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
                                 />
                             </div>
+
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg">Autor*</label>
-                                <select name="autor" required value={livro.autor} onChange={handleChange} className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500 cursor-pointer">
-                                    <option value="">Selecione o Autor</option>
-                                    {Array.isArray(autores) && autores.map(aut => (
-                                        <option key={aut.id} value={aut.id}>{aut.nome}</option>
+                                <label>Autor*</label>
+                                <select
+                                    name="autor"
+                                    value={livro.autor || ""}
+                                    onChange={handleChange}
+                                    required
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                >
+                                    <option value="">Selecione</option>
+                                    {autores.map(aut => (
+                                        <option key={aut.id} value={aut.id}>
+                                            {aut.nome}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
+
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg" htmlFor="publicado_em">Ano de publicação*</label>
-                                <input type="date" name="publicado_em" required 
-                                max={dataMaximaPermitida} placeholder="2000-01-01" value={livro.publicado_em} onChange={handleChange} 
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
-                            </div>
-                            <div className="flex flex-col">
-                                <label className="text-black/75 text-lg">Categória*</label>
-                                <select name="categoria" required value={livro.categoria} onChange={handleChange} className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500 cursor-pointer">
-                                    <option value="">Selecione a Categoria</option>
-                                    {Array.isArray(categorias) && categorias.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                                <label>Categoria*</label>
+                                <select
+                                    name="categoria"
+                                    value={livro.categoria || ""}
+                                    onChange={handleChange}
+                                    required
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                >
+                                    <option value="">Selecione</option>
+                                    {categorias.map(cat => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.nome}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
+
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg" htmlFor="editora">Editora*</label>
-                                <input type="text" name="editora" required placeholder="Carvalhais" value={livro.editora} onChange={handleChange}
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <label>Data de publicação*</label>
+                                <input
+                                    type="date"
+                                    name="data_publicacao"
+                                    value={livro.data_publicacao || ""}
+                                    max={dataMaximaPermitida}
+                                    onChange={handleChange}
+                                    required
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
+
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg" htmlFor="nPaginas">Nº de páginas*</label>
+                                <label>Editora*</label>
                                 <input
                                     type="text"
-                                    name="n_paginas"
-                                    id="n_paginas"
-                                    value={livro.n_paginas}
+                                    name="editora"
+                                    value={livro.editora || ""}
+                                    onChange={handleChange}
                                     required
-                                    placeholder="530"
-                                    minLength={1}
-                                    maxLength={5}
-                                    inputMode="numeric"
-                                    pattern="[0-9]{1,10000}"
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (/^\d*$/.test(value) && value.length <= 5) {
-                                            handleChange(e);
-                                        }
-                                    }}
-                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
                                 />
                             </div>
+
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg" htmlFor="quantidade">Quantidade*</label>
-                                <input type="number" name="quantidade" min={1} required placeholder="22" value={livro.quantidade} 
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (value >= 1) {
-                                            handleChange(e);
-                                        }
-                                    }}
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                                <label>Nº páginas*</label>
+                                <input
+                                    type="number"
+                                    name="n_paginas"
+                                    value={livro.n_paginas || ""}
+                                    min={1}
+                                    onChange={handleChange}
+                                    required
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
                             </div>
+
+                            <div className="flex flex-col">
+                                <label>Quantidade*</label>
+                                <input
+                                    type="number"
+                                    name="quantidade"
+                                    value={livro.quantidade || ""}
+                                    min={1}
+                                    onChange={handleChange}
+                                    required
+                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+
                         </div>
+
                         <div className="flex flex-col">
-                            <label className="text-black/75 text-lg">
-                                Descrição*
-                            </label>
-                            <textarea placeholder="Breve descrição do livro..." required name="descricao" value={livro.descricao} onChange={handleChange}
-                                className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            <label>Descrição*</label>
+                            <textarea
+                                name="descricao"
+                                value={livro.descricao || ""}
+                                onChange={handleChange}
+                                required
+                                className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
                         </div>
+
                         <div className="flex flex-col">
-                            <label className="text-black/75 text-lg">
-                                Sumário*
-                            </label>
-                            <textarea placeholder="Breve descrição do livro..." required name="sumario" value={livro.sumario} onChange={handleChange}
-                                className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            <label>Sumário*</label>
+                            <textarea
+                                name="sumario"
+                                value={livro.sumario || ""}
+                                onChange={handleChange}
+                                required
+                                className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
                         </div>
+
                         <div className="flex flex-col">
-                            <label className="text-black/75 text-lg" htmlFor="capa">URL da capa</label>
-                            <input type="text" name="capa" required placeholder="htpps://..." value={livro.capa} onChange={handleChange}
-                                className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
+                            <label>URL da capa*</label>
+                            <input
+                                type="text"
+                                name="capa"
+                                value={livro.capa || ""}
+                                onChange={handleChange}
+                                required
+                                className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
                         </div>
-                        
+
                         <div className="flex justify-end gap-3 pt-4">
-                            <button type="button" onClick={cancel}
-                                className="cursor-pointer px-6 py-2 rounded-lg border border-black/10 hover:bg-red-500 hover:text-white transition">
+
+                            <button
+                                type="button"
+                                onClick={() => navigate("/admin/gestao")}
+                                className="px-6 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                            >
                                 Cancelar
                             </button>
-                            <button type="submit" 
-                                className="cursor-pointer px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition">
-                                Adicionar Livro
+
+                            <button
+                                type="submit"
+                                disabled={loadingSubmit}
+                                className="px-6 py-2 bg-green-500 text-white rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                            >
+                                {loadingSubmit ? "Salvando..." : "Atualizar Livro"}
                             </button>
+
                         </div>
+
                     </form>
                 </div>
             </section>
 
             {modal.open && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-sm">
-                    <h3 className="text-lg font-semibold mb-2">
-                        {modal.type === "success" ? "Sucesso" : "Erro"}
-                    </h3>
-                    <p>{modal.message}</p>
-                    <div className="flex justify-end gap-3 mt-2">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                if (modal.type === "success") {
-                                    navigate("/admin/gestao");
-                                } else {
-                                    setModal({ ...modal, open: false }); // apenas fecha no erro
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-lg focus:ring-2 focus:ring-green-500 w-full max-w-sm">
+                        <h3 className="text-lg font-semibold mb-2">
+                            {modal.type === "success" ? "Sucesso" : "Erro"}
+                        </h3>
+                        <p className="whitespace-pre-line">{modal.message}</p>
+                        <div className="flex justify-end mt-4">
+                            <button
+                                onClick={() =>
+                                    modal.type === "success"
+                                        ? navigate("/admin/gestao")
+                                        : setModal({ ...modal, open: false })
                                 }
-                            }}
-                            className={`cursor-pointer px-6 py-2 rounded-lg border border-black/10 text-white transition ${
-                                modal.type === "success" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                            }`}
-                        >
-                            {modal.type === "success" ? "Confirmado" : "Tente novamente"}
-                        </button>
+                                className={`px-6 py-2 text-white rounded-lg focus:ring-2 focus:ring-green-500 ${
+                                    modal.type === "success"
+                                        ? "bg-green-500"
+                                        : "bg-red-500"
+                                }`}
+                            >
+                                Confirmar
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
         </main>
     );
 }
+
 export default EditarLivro;

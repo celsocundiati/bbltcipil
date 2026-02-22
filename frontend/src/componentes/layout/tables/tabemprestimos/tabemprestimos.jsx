@@ -353,8 +353,8 @@ function TabelaEmprestimos(){
             </section>
 
             {modal.open && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                    <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                         <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir livro" : "Devolver Livro"}
                         </h3>
@@ -362,12 +362,12 @@ function TabelaEmprestimos(){
                             {modal.type === "delete" ? "excluir" : "devolver"} este livro ?
                         </p>
                         {modal.type === "delete" ? (
-                            <div className="flex justify-end gap-3 mt-5">
+                            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
                                 <button onClick={closeModal} className="px-3 py-2 bg-black/10 rounded-lg hover:bg-red-500 hover:text-white cursor-pointer">Cancelar</button>
                                 <button onClick={handleConfirm} className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 cursor-pointer">Confirmar</button>
                             </div>
                         ) : ( 
-                            <div className="flex justify-end gap-3 mt-5">
+                            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
                                 <button onClick={closeModal} className="px-3 py-2 bg-black/10 rounded-lg hover:bg-red-500 hover:text-white cursor-pointer">Cancelar</button>
                                 <button onClick={() => atualizarDevolucao(modal.emprestimo, "devolvido")} className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 cursor-pointer">Confirmar</button>
                             </div>

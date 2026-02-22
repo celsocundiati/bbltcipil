@@ -50,8 +50,8 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
   return (
     <section>
-      <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-        <div className="w-1/2 bg-white shadow-xl rounded-2xl p-6 relative">
+      <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+        <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
 
           {/* Fechar */}
           <button
@@ -109,22 +109,22 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
             </div>
 
             {/* Botões */}
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-2 rounded-lg border border-black/10 cursor-pointer hover:bg-red-500 hover:text-white transition"
-              >
-                Cancelar
-              </button>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+                  <button
+                      type="button"
+                      onClick={onClose}
+                      className="w-full sm:w-auto border border-black/10 text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
+                  >
+                      Cancelar
+                  </button>
 
-              <button
-                type="submit"
-                className="px-6 py-2 rounded-lg border border-black/10 cursor-pointer bg-green-500 text-white hover:bg-green-600 transition"
-              >
-                Confirmar Empréstimo
-              </button>
-            </div>
+                  <button
+                      type="submit"
+                      className="w-full sm:w-auto bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                  >
+                      Confirmar empréstimo
+                  </button>
+              </div>
 
           </form>
 

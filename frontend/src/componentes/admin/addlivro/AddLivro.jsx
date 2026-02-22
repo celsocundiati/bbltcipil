@@ -187,13 +187,6 @@ function AddLivro(){
                                 </select>
                             </div>
                             <div className="flex flex-col">
-                                <label className="text-black/75 text-lg" htmlFor="publicado_em">Ano de publicação*</label>
-                                <input type="date" name="publicado_em"
-                                    max={dataMaximaPermitida} required placeholder="2000-01-01"
-                                    value={form.publicado_em} onChange={handleChange} 
-                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
-                            </div>
-                            <div className="flex flex-col">
                                 <label className="text-black/75 text-lg">Categória*</label>
                                 <select name="categoria" required value={form.categoria} onChange={handleChange} className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500 cursor-pointer">
                                     <option value="">Selecione a Categoria</option>
@@ -201,6 +194,13 @@ function AddLivro(){
                                         <option key={cat.id} value={cat.id}>{cat.nome}</option>
                                     ))}
                                 </select>
+                            </div>
+                            <div className="flex flex-col">
+                                <label className="text-black/75 text-lg" htmlFor="publicado_em">Ano de publicação*</label>
+                                <input type="date" name="publicado_em"
+                                    max={dataMaximaPermitida} required placeholder="2000-01-01"
+                                    value={form.publicado_em} onChange={handleChange} 
+                                    className="bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"/>
                             </div>
                             <div className="flex flex-col">
                                 <label className="text-black/75 text-lg" htmlFor="editora">Editora*</label>

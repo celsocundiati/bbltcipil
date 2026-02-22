@@ -90,8 +90,8 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
 
   return (
     <section>
-        <dialog className="fixed inset-0 z-50 bg-black/20 h-full w-full flex items-center justify-center rounded-xl border border-black/10">
-            <div className="w-1/2 bg-white shadow-md rounded-xl p-6 relative">
+        <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+            <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black"
@@ -158,13 +158,13 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
         </dialog>
         
             {modal.open && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center text-left z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+                <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                    <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                         <h3 className="text-lg  font-semibold mb-2">
                             {modal.type === "success" ? "Sucesso" : "Erro"}
                         </h3>
                         <p>{modal.message}</p>
-                        <div className="flex justify-end gap-3 mt-2">
+                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
                             <button
                                 type="button"
                                 onClick={() => {

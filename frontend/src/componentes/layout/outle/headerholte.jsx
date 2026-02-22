@@ -52,7 +52,7 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Livros</h1>
                         <p className="text-black/70 text-lg">Gerir catálogo completo da biblioteca</p>
                     </article>
-                    {/* <Link to="/admin/addlivro" className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</Link> */}
+                    <Link to="/admin/addlivro" className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</Link>
                 </section>
             ) : page === "estudantes" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
