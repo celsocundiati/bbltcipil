@@ -53,23 +53,50 @@ function Detalhes() {
   };
 
   // Reserva do livro
+  // const handleReservar = async () => {
+  //   if (!aluno) {
+  //     alert("Aluno não logado");
+  //     return;
+  //   }
+  //   try {
+  //     await axios.post(
+  //       "http://127.0.0.1:8000/api/reservas/",
+  //       { livro: livro.id },
+  //       { headers: { Authorization: `Bearer ${sessionStorage.getItem("access_token")}` } }
+  //     );
+  //     alert("Reserva realizada com sucesso!");
+  //   } catch (error) {
+  //     console.error(error.response || error);
+  //     alert("Erro ao fazer reserva");
+  //   }
+  // };
+
   const handleReservar = async () => {
-    if (!aluno) {
-      alert("Aluno não logado");
-      return;
+  if (!aluno) {
+    alert("Aluno não logado");
+    return;
+  }
+
+  try {
+    await axios.post(
+      "http://127.0.0.1:8000/api/reservas/",
+      { livro: livro.id },
+      { headers: { Authorization: `Bearer ${sessionStorage.getItem("access_token")}` } }
+    );
+    alert("Reserva realizada com sucesso!");
+  } catch (error) {
+    // Se houver resposta do backend, mostra a mensagem detalhada
+    if (error.response && error.response.data) {
+      const data = error.response.data;
+      // Caso seja um dict de erros por campo (ex: {"livro": "..."}), pega a primeira mensagem
+      const msg = data.livro || data.non_field_errors || JSON.stringify(data);
+      alert(`Erro ao fazer reserva: ${msg}`);
+    } else {
+      alert("Erro ao fazer reserva. Tente novamente mais tarde.");
     }
-    try {
-      await axios.post(
-        "http://127.0.0.1:8000/api/reservas/",
-        { aluno: aluno.n_processo, livro: livro.id },
-        { headers: { Authorization: `Bearer ${sessionStorage.getItem("access_token")}` } }
-      );
-      alert("Reserva realizada com sucesso!");
-    } catch (error) {
-      console.error(error.response || error);
-      alert("Erro ao fazer reserva");
-    }
-  };
+    console.error(error.response || error);
+  }
+};
 
   // Renderiza sumário
   const renderSumario = () =>

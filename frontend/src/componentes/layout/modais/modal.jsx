@@ -2,7 +2,6 @@ import {HiOutlineXMark} from "react-icons/hi2";
 
 function Modal({tipo, onClose}){
 
-
     return(
         <section>
             {tipo === "success" ?(

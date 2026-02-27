@@ -101,38 +101,41 @@ class ReservaSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.user.username", read_only=True)
     livro_id = serializers.IntegerField(source="livro.id", read_only=True)
     data_formatada = serializers.DateTimeField(
-        format="%d/%m/%Y",
-        source='data_reserva',
-        read_only=True
+        format="%d/%m/%Y", source='data_reserva', read_only=True
     )
     hora_formatada = serializers.DateTimeField(
-        format="%H:%M:%S",
-        source='data_reserva',
-        read_only=True
+        format="%H:%M:%S", source='data_reserva', read_only=True
     )
-    estado_label = serializers.CharField(
-        source="get_estado_display",
-        read_only=True
-    )
+    estado_label = serializers.CharField(source="get_estado_display", read_only=True)
     informacao = serializers.ReadOnlyField()
-    autor_nome = serializers.CharField(
-        source='livro.autor.nome',
-        read_only=True
-    )
+    autor_nome = serializers.CharField(source='livro.autor.nome', read_only=True)
 
     class Meta:
         model = Reserva
         fields = '__all__'
         read_only_fields = ["aluno"]
 
-    
-    def create(self, validated_data):
-        # Garante que a reserva recebe o aluno do usuário logado
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            validated_data['aluno'] = Aluno.objects.get(user=request.user)
-        return super().create(validated_data)
+    def validate(self, data):
+        """Valida duplicidade de reservas antes de criar"""
+        user = self.context['request'].user
+        try:
+            aluno = Aluno.objects.get(user=user)
+        except Aluno.DoesNotExist:
+            raise serializers.ValidationError("Usuário não possui perfil de Aluno.")
 
+        livro = data.get('livro')
+        if Reserva.objects.filter(
+            aluno=aluno, livro=livro, estado__in=['pendente', 'reservado']
+        ).exists():
+            raise serializers.ValidationError({
+                "livro": "Você já possui uma reserva ativa para este livro."
+            })
+        return data
+
+    def create(self, validated_data):
+        """Preenche automaticamente o aluno logado"""
+        validated_data['aluno'] = Aluno.objects.get(user=self.context['request'].user)
+        return super().create(validated_data)
 
 # ==============================
 # EMPRÉSTIMO
@@ -176,31 +179,48 @@ class EmprestimoSerializer(serializers.ModelSerializer):
 # ALUNO
 # ==============================
 
+
 class AlunoSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        source="user.username",
+    # Campos herdados do AlunoOficial
+    n_processo = serializers.CharField(
+        source="aluno_oficial.n_processo",
         read_only=True
     )
-    email = serializers.CharField(
-        source="user.email",
+    nome_completo = serializers.CharField(
+        source="aluno_oficial.nome_completo",
+        read_only=True
+    )
+    curso = serializers.CharField(
+        source="aluno_oficial.curso",
+        read_only=True
+    )
+    classe = serializers.CharField(
+        source="aluno_oficial.classe",
+        read_only=True
+    )
+    data_nascimento = serializers.DateField(
+        source="aluno_oficial.data_nascimento",
         read_only=True
     )
 
     class Meta:
         model = Aluno
-        fields = '__all__'
-        read_only_fields = ["user"]
-
-    def validate_data_nascimento(self, value):
-        hoje = timezone.now().date()
-
-        if value > hoje:
-            raise serializers.ValidationError(
-                "A data de nascimento não pode ser superior à data atual."
-            )
-
-        return value
-
+        fields = [
+            "n_processo",
+            "nome_completo",
+            "curso",
+            "classe",
+            "data_nascimento",
+            "telefone",
+            "estado",
+            "n_reservas",
+            "n_emprestimos",
+        ]
+        read_only_fields = [
+            "estado",
+            "n_reservas",
+            "n_emprestimos",
+        ]
 
 # ==============================
 # NOTIFICAÇÃO

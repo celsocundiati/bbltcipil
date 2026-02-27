@@ -9,6 +9,7 @@ import {livros, emprestimos, alunos} from "../../../dados/db.json";
         {icone:<HiOutlineSquares2X2 size={25} />, caminho:"dashboard", label:"Dashboard"},
         {icone:<HiOutlineBookOpen size={25} />, caminho:"gestao", label:"Gestão de livros"},
         {icone:<HiOutlineUsers size={25} />, caminho:"estudantes", label:"Estudantes"},
+        {icone:<HiOutlineUsers size={25} />, caminho:"alunosoficiais", label:"Alunos Oficiais"},
         {icone:<HiOutlineCalendarDays size={25} />, caminho:"acervo", label:"Reservas"},
         {icone:<HiOutlineArrowPath size={25} />, caminho:"emprestimos", label:"Empréstimos"},
         {icone:<HiOutlineCurrencyDollar size={25}/>, caminho:"multas", label:"Multas"},

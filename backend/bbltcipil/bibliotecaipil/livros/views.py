@@ -59,15 +59,17 @@ class AutorViewSet(BaseDebugViewSet):
 # ==============================
 # Alunos
 # ==============================
+
 class AlunoViewSet(BaseDebugViewSet):
     queryset = Aluno.objects.all()
     serializer_class = AlunoSerializer
-    permission_classes = [IsAuthenticated]  # 🔐 só logados
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        return self.queryset.filter(user=user) if not user.is_staff else self.queryset
-
+        # Apenas admin vê todos, usuário comum só o próprio
+        queryset = super().get_queryset().select_related("aluno_oficial", "user")
+        return queryset if user.is_staff else queryset.filter(user=user)
 
 # ==============================
 # Livros
@@ -100,7 +102,8 @@ class LivroViewSet(BaseDebugViewSet):
 # ==============================
 # Reservas
 # ==============================
-class ReservaViewSet(BaseDebugViewSet):
+
+class ReservaViewSet(viewsets.ModelViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
     permission_classes = [IsAuthenticated]
@@ -109,7 +112,6 @@ class ReservaViewSet(BaseDebugViewSet):
         """Retorna apenas reservas do usuário logado"""
         user = self.request.user
         return self.queryset.filter(aluno__user=user)
-
 
 # ==============================
 # Empréstimos

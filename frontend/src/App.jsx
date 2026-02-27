@@ -24,6 +24,8 @@ import CadastroAluno from './componentes/cadastro/cadastro';
 import LoginPage from './componentes/login/login';
 import axios from "axios";
 import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
+import AdminAuditLog from './componentes/admin/notificacaoadmin/notificacaoadmin';
+import AlunosOficais from './componentes/admin/alunooficial/alunooficial';
 
 axios.interceptors.request.use(config => {
   const token = sessionStorage.getItem("access_token");
@@ -57,6 +59,7 @@ function App() {
               <Route path='addlivro' element={<AddLivro />}/>
               <Route path='livros/:id' element={<EditarLivro />}/>
               <Route path='estudantes' element={<Estudantes />}/>
+              <Route path='alunosoficiais' element={<AlunosOficais />}/>
               <Route path='emprestimos' element={<Emprestimos />}/>
               <Route path='multas' element={<Multas />}/>
               <Route path='acervo' element={<Acervo />}/>
@@ -64,6 +67,7 @@ function App() {
               <Route path='relatorios' element={<Relatorios />}/>
               <Route path='configuracoesadmin' element={<Configuracoesadmin />}/>
               <Route path='admins' element={<Admins />}/>
+              <Route path='audit-log' element={<AdminAuditLog />}/>
               <Route path='' element={<Sair />}/>
             </Route>
 

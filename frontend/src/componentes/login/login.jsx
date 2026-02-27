@@ -1,9 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [n_processo, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,18 +15,11 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      console.log("Tentando login com:", { username, password });
+      console.log("Tentando login com:", { n_processo, password });
 
-      /*const res = await axios.post(
-        "http://localhost:8000/api/accounts/login/",
-        {
-          username: username,
-          password: password,
-        }
-      );*/
       const res = await axios.post(
         "http://localhost:8000/api/accounts/login/",
-        { username, password }, // dados
+        { n_processo, password }, // dados
         { headers: { "Content-Type": "application/json" } } // garante JSON
       );
 
@@ -77,7 +70,7 @@ function LoginPage() {
           <input
             type="username"
             placeholder="Username institucional"
-            value={username}
+            value={n_processo}
             onChange={(e) => setUsername(e.target.value)}
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
             required
@@ -103,9 +96,9 @@ function LoginPage() {
 
         <p className="mt-4 text-center text-gray-600 text-sm">
           Ainda não possui conta?{" "}
-          <a href="/cadastro" className="text-orange-500 font-medium">
+          <Link to="/cadastro" className="text-orange-500 font-medium">
             Criar conta
-          </a>
+          </Link>
         </p>
       </div>
     </main>

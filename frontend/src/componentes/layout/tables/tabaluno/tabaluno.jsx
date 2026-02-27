@@ -69,12 +69,12 @@ function TabAluno() {
                                         <td className="px-5 py-4 truncate">
                                             <div className="flex items-center justify-left gap-3">
                                                 <div className="w-12 h-12 rounded-full bg-[#f97b17] text-white flex items-center justify-center font-bold shrink-0">
-                                                    {obterIniciais(aluno.username)}
+                                                    {obterIniciais(aluno.nome_completo)}
                                                 </div>
 
                                                 <div className="overflow-hidden">
                                                     <p className="font-medium truncate">
-                                                        {aluno.username}
+                                                        {aluno.nome_completo}
                                                     </p>
                                                     <p className="text-sm text-cinza-900 truncate">
                                                         {aluno.email}

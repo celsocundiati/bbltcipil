@@ -85,10 +85,10 @@ function ModalAluno({onClose}){
         }
     };
 
-        function closeModal(){
-            setModal({open:false});
-            onClose()
-        }
+    function closeModal(){
+        setModal({open:false});
+        onClose()
+    }
 
 
     return(
