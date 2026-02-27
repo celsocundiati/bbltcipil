@@ -3,6 +3,9 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.apps import apps
 from django.contrib.auth.models import User
+from administracao.models import AlunoOficial
+from rest_framework.exceptions import ValidationError as DRFValidationError
+
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=60, unique=True)
@@ -32,7 +35,7 @@ class Livro(models.Model):
     isbn = models.CharField(max_length=13, unique=True)
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="livros")
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="livros")
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='Disponivel')
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='Disponível')
     publicado_em = models.DateField()
     descricao = models.TextField(blank=True, null=True)
     sumario = models.TextField()
@@ -76,35 +79,54 @@ class Livro(models.Model):
 
 
 class Aluno(models.Model):
+
     ESTADOS = [
-        ('Ativo', 'Ativo'),
-        ('Suspenso', 'Suspenso'),
+        ("Ativo", "Ativo"),
+        ("Suspenso", "Suspenso"),
     ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    n_processo = models.IntegerField(primary_key=True)
-    curso = models.CharField(max_length=100, blank=True)
-    classe = models.CharField(max_length=20, blank=True)
-    data_nascimento = models.DateField(blank=True, null=True)
+
+    aluno_oficial = models.OneToOneField(
+        "administracao.AlunoOficial",
+        on_delete=models.CASCADE,
+        related_name="perfil"
+    )
+
     telefone = models.CharField(max_length=20, blank=True)
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='Ativo')
+    estado = models.CharField(max_length=20, choices=ESTADOS, default="Ativo")
     n_reservas = models.IntegerField(default=0)
     n_emprestimos = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.user.username} - {self.n_processo}"
+        # Agora acessamos o n_processo direto pelo aluno_oficial
+        return f"{self.user.username} - {self.aluno_oficial.n_processo}"
 
     def atualizar_contadores(self):
-        Emprestimo = apps.get_model('livros', 'Emprestimo')
+        Emprestimo = apps.get_model("livros", "Emprestimo")
 
-        self.n_reservas = self.reservas.filter(estado__in=['reservado', 'pendente']).count()
-        self.n_emprestimos = Emprestimo.objects.filter(reserva__aluno=self).exclude(acoes='devolvido').count()
-        self.save(update_fields=['n_reservas', 'n_emprestimos'])
+        self.n_reservas = self.reservas.filter(
+            estado__in=["reservado", "pendente"]
+        ).count()
+
+        self.n_emprestimos = Emprestimo.objects.filter(
+            reserva__aluno=self
+        ).exclude(
+            acoes="devolvido"
+        ).count()
+
+        self.save(update_fields=["n_reservas", "n_emprestimos"])
 
     def atualizar_estado(self):
-        Emprestimo = apps.get_model('livros', 'Emprestimo')
-        atrasados = Emprestimo.objects.filter(reserva__aluno=self, acoes='atrasado').count()
-        self.estado = 'Suspenso' if atrasados > 3 else 'Ativo'
-        self.save(update_fields=['estado'])
+        Emprestimo = apps.get_model("livros", "Emprestimo")
+
+        atrasados = Emprestimo.objects.filter(
+            reserva__aluno=self,
+            acoes="atrasado"
+        ).count()
+
+        self.estado = "Suspenso" if atrasados > 3 else "Ativo"
+        self.save(update_fields=["estado"])
 
 
 class Reserva(models.Model):
@@ -115,40 +137,78 @@ class Reserva(models.Model):
         ('finalizada', 'Finalizada'),
     ]
 
-    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="reservas")
-    livro = models.ForeignKey(Livro, on_delete=models.CASCADE, related_name="reservas")
+    aluno = models.ForeignKey(
+        Aluno, 
+        on_delete=models.CASCADE,
+        related_name="reservas"
+    )
+    livro = models.ForeignKey(
+        Livro,
+        on_delete=models.CASCADE,
+        related_name="reservas"
+    )
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendente')
     data_reserva = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-data_reserva']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['aluno', 'livro'],
+                condition=models.Q(estado__in=['pendente', 'reservado']),
+                name='unique_active_reserva'
+            )
+        ]
 
     def __str__(self):
         return f"{self.livro.titulo} reservado por {self.aluno.user.username} ({self.estado})"
 
-    def save(self, *args, **kwargs):
-        is_new = self.pk is None
+    # 🔹 Property para acessar o perfil oficial do aluno
+    @property
+    def aluno_perfil(self):
+        """Retorna o perfil oficial do aluno, se existir"""
+        return getattr(self.aluno.aluno_oficial, 'perfil', None)
 
-        if is_new:
-            if self.livro.quantidade <= 0:
-                raise ValidationError(f"Livro '{self.livro.titulo}' indisponível no estoque.")
-            if Reserva.objects.filter(aluno=self.aluno, livro=self.livro, estado__in=['pendente','reservado']).exists():
-                raise ValidationError("Você já possui uma reserva ativa para este livro.")
-
-        super().save(*args, **kwargs)
-        self.aluno.atualizar_contadores()
-
-
+    # 🔹 Property para a capa do livro
     @property
     def capa(self):
         return self.livro.capa
 
+    # 🔹 Property com informação amigável do estado
     @property
     def informacao(self):
         info_map = {
             'pendente': "Aguardando aprovação ou disponibilidade",
             'reservado': "Pronta para empréstimo",
-            'emprestado': "Livro emprestado atualmente",
+            'aprovada': "Reserva aprovada e pronta para retirada",
             'finalizada': "Reserva concluída",
         }
         return info_map.get(self.estado, "")
+
+    # 🔹 Valida duplicidade e disponibilidade ao salvar
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        if is_new:
+            # Verifica estoque do livro
+            if self.livro.quantidade <= 0:
+                raise DRFValidationError({"livro": f"Livro '{self.livro.titulo}' indisponível no estoque."})
+
+            # Evita reservas duplicadas ativas
+            if Reserva.objects.filter(
+                aluno=self.aluno,
+                livro=self.livro,
+                estado__in=['pendente', 'reservado']
+            ).exists():
+                raise DRFValidationError({"livro": "Você já possui uma reserva ativa para este livro."})
+
+        super().save(*args, **kwargs)
+
+        # Atualiza contadores e estado do aluno
+        if self.aluno:
+            self.aluno.atualizar_contadores()
+            self.aluno.atualizar_estado()
+
 
 
 class Emprestimo(models.Model):
@@ -222,3 +282,5 @@ class Notificacao(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} - {self.titulo}"
+    
+    

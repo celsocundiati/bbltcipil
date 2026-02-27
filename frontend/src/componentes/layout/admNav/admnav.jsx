@@ -28,7 +28,7 @@ function AdminNav() {
         <section className="flex items-center gap-5 ml-auto">
 
           <div className="flex items-center gap-5">
-            <Link to="/notificacoes">
+            <Link to="/admin/audit-log">
               <HiOutlineBell
                 size={26}
                 className="hover:text-[#F97B17] transition"

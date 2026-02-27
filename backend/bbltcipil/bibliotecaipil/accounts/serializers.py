@@ -1,69 +1,105 @@
 from rest_framework import serializers
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Group
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth import authenticate,  get_user_model
-from livros.models import Aluno
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from administracao.models import AlunoOficial, AuditLog
+from livros.models import Aluno
 
 User = get_user_model()
 
 
-class RegistarAlunoSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
-    email = serializers.EmailField(write_only=True)
+# =====================================================
+# SIGNUP - ATIVAÇÃO DE CONTA (Aluno Oficial)
+# =====================================================
 
-    class Meta:
-        model = Aluno
-        fields = [
-            'username',
-            'email',
-            'password',
-            'n_processo',
-            'curso',
-            'classe',
-            'data_nascimento',
-            'telefone'
-        ]
 
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
+class SignupAlunoSerializer(serializers.Serializer):
+    n_processo = serializers.CharField(max_length=15)
+    n_bilhete = serializers.CharField(max_length=30)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, data):
+        n_processo = data["n_processo"]
+        n_bilhete = data["n_bilhete"]
+        email = data["email"]
+
+        # Verifica se já existe email registado
+        if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("Já existe uma conta com este email.")
-        return value
 
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Nome de utilizador já existente.")
-        return value
+        # Verifica existência na base oficial
+        try:
+            aluno = AlunoOficial.objects.get(
+                n_processo=n_processo,
+                n_bilhete=n_bilhete
+            )
+        except AlunoOficial.DoesNotExist:
+            raise serializers.ValidationError("Aluno não encontrado ou dados incorretos.")
 
+        # Verifica se já ativou conta
+        if aluno.user:
+            raise serializers.ValidationError("Este aluno já possui conta ativa.")
+
+        data["aluno_instance"] = aluno
+        return data
+    
     def create(self, validated_data):
-        username = validated_data.pop('username')
-        password = validated_data.pop('password')
-        email = validated_data.pop('email')
+        aluno_oficial = validated_data["aluno_instance"]
+        email = validated_data["email"]
+        password = validated_data["password"]
 
+        # Cria o User
         user = User.objects.create_user(
-            username=username,
+            username=aluno_oficial.n_processo,
             email=email,
             password=password
         )
 
-        grupo_aluno, _ = Group.objects.get_or_create(name='Aluno')
+        # Adiciona ao grupo Aluno
+        grupo_aluno, _ = Group.objects.get_or_create(name="Aluno")
         user.groups.add(grupo_aluno)
 
-        aluno = Aluno.objects.create(user=user, **validated_data)
+        # Associa ao AlunoOficial
+        aluno_oficial.user = user
+        aluno_oficial.save()
 
-        return aluno
+        # Cria o perfil Aluno
+        Aluno.objects.create(
+            user=user,
+            aluno_oficial=aluno_oficial,
+        )
+
+        # Auditoria
+        AuditLog.objects.create(
+            usuario=user,
+            acao="create",
+            modelo="User",
+            objeto_id=user.id,
+            alteracoes={
+                "n_processo": aluno_oficial.n_processo,
+                "email": email
+            }
+        )
+
+        return user
+    
 
 
-class LoginSerializer(TokenObtainPairSerializer):
+# =====================================================
+# LOGIN - n_processo + senha
+# =====================================================
 
-    def validate(self, attrs):
-        username = attrs.get("username")
-        password = attrs.get("password")
+class LoginAlunoSerializer(serializers.Serializer):
+    n_processo = serializers.CharField(max_length=15)
+    password = serializers.CharField(write_only=True)
 
-        user = authenticate(username=username, password=password)
+    def validate(self, data):
+        n_processo = data["n_processo"]
+        password = data["password"]
+
+        user = authenticate(username=n_processo, password=password)
 
         if not user:
             raise AuthenticationFailed("Credenciais inválidas.")
@@ -73,7 +109,7 @@ class LoginSerializer(TokenObtainPairSerializer):
 
         refresh = RefreshToken.for_user(user)
 
-        data = {
+        return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
             "user": {
@@ -83,5 +119,3 @@ class LoginSerializer(TokenObtainPairSerializer):
                 "groups": [group.name for group in user.groups.all()]
             }
         }
-
-        return data

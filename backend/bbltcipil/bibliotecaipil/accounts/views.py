@@ -3,65 +3,97 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from livros.models import Aluno
-from .serializers import RegistarAlunoSerializer, LoginSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import SignupAlunoSerializer, LoginAlunoSerializer
+from administracao.models import AlunoOficial
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 User = get_user_model()
 
 
-# ================== Cadastro de Aluno ==================
-class RegistarAlunoView(APIView):
+# =====================================================
+# SIGNUP - Ativação de Conta
+# =====================================================
+
+class SignupAlunoView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
-        serializer = RegistarAlunoSerializer(data=request.data)
-        if serializer.is_valid():
-            aluno = serializer.save()
-            return Response({
-                "mensagem": "Aluno registado com sucesso",
-                "aluno_id": aluno.n_processo,
-                "username": aluno.user.username
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = SignupAlunoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-class LoginView(TokenObtainPairView):
-    serializer_class = LoginSerializer
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "mensagem": "Conta criada com sucesso."
+        }, status=status.HTTP_201_CREATED)
 
 
-# ================== Logout ==================
+# =====================================================
+# LOGIN - n_processo + senha
+# =====================================================
+
+class LoginAlunoView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = LoginAlunoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+# =====================================================
+# LOGOUT
+# =====================================================
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        response = Response({"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK)
-        response.delete_cookie("access_token")
-        response.delete_cookie("refresh_token")
-        return response
+        try:
+            refresh_token = request.data.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            pass
+
+        return Response(
+            {"detail": "Logout realizado com sucesso."},
+            status=status.HTTP_200_OK
+        )
 
 
-# ================== Me / Dados do Usuário ==================
+# =====================================================
+# ME - Dados do usuário autenticado
+# =====================================================
+
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
+
         try:
-            aluno = request.user.aluno
-        except Aluno.DoesNotExist:
+            aluno = AlunoOficial.objects.get(user=user)
+        except AlunoOficial.DoesNotExist:
             aluno = None
 
         return Response({
             "id": user.id,
             "username": user.username,
             "email": user.email,
+            "grupo": [group.name for group in user.groups.all()],
             "aluno": {
                 "n_processo": aluno.n_processo if aluno else None,
+                "nome_completo": aluno.nome_completo if aluno else None,
                 "curso": aluno.curso if aluno else None,
                 "classe": aluno.classe if aluno else None,
-                "estado": aluno.estado if aluno else None,
-                "n_reservas": aluno.n_reservas if aluno else None,
-                "n_emprestimos": aluno.n_emprestimos if aluno else None,
+                "data_nascimento": aluno.data_nascimento if aluno else None,
+                "idade": aluno.idade if aluno else None,
             }
         })

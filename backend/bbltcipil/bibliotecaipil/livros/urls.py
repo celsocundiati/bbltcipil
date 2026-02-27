@@ -12,7 +12,7 @@ router.register(r'autores', AutorViewSet)
 router.register(r'categorias', CategoriaViewSet)
 router.register(r'reservas', ReservaViewSet, basename='reserva')
 router.register(r'emprestimos', EmprestimoViewSet, basename='emprestimo')
-router.register(r'alunos', AlunoViewSet)
+router.register(r'alunos', AlunoViewSet, basename='aluno')
 router.register(r"notificacoes", NotificacaoViewSet, basename="notificacao")
 
 urlpatterns = [

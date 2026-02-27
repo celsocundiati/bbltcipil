@@ -234,7 +234,7 @@ function EditarLivro() {
                                 <input
                                     type="date"
                                     name="data_publicacao"
-                                    value={livro.data_publicacao || ""}
+                                    value={livro.publicado_em || ""}
                                     max={dataMaximaPermitida}
                                     onChange={handleChange}
                                     required
@@ -341,7 +341,7 @@ function EditarLivro() {
             </section>
 
             {modal.open && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-55">
                     <div className="bg-white p-6 rounded-lg focus:ring-2 focus:ring-green-500 w-full max-w-sm">
                         <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "success" ? "Sucesso" : "Erro"}

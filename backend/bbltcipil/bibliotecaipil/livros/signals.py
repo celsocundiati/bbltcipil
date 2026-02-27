@@ -53,8 +53,8 @@ def notificar_reserva(sender, instance, created, **kwargs):
     if created:
         Notificacao.objects.create(
             usuario=instance.aluno.user,
-            titulo="Reserva criada",
-            descricao=f"Você reservou o livro '{instance.livro.titulo}'.",
+            titulo="Reserva solicitada",
+            descricao=f"Você solicitou a reserva do livro '{instance.livro.titulo}'.",
             tipo="Reserva",
             link=link
         )

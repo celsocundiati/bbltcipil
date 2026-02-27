@@ -6,6 +6,7 @@ import Modal from "../modais/modal";
 import ModalLivro from "../modais/modalgestao/modallivro";
 import ModalAluno from "../modais/modalaluno/modalaluno";
 import {Link} from "react-router-dom";
+import ModalAlunoOficial from "../modais/modalalunooficial/modalalunooficial";
 
 
 function HeaderOutle({page}){
@@ -22,7 +23,7 @@ function HeaderOutle({page}){
 
     
     function handleClick() {
-        console.log("Eu sou o BBV");
+        console.log("Eu sou o BBV, e eu sou o Celso Cs");
         setShowModal(true);
     }
     function handleClick2(){
@@ -60,9 +61,16 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Estudantes</h1>
                         <p className="text-black/70 text-lg">Gerir estudantes registados na biblioteca</p>
                     </article>
-                    {/* <button onClick={handleClick3} className="flex items-center bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">
+                </section>
+            ) : page === "alunosoficiais" ?(
+                <section className="flex relative flex-wrap justify-between items-center mt-30">
+                    <article className="space-y-2">  
+                        <h1 className="text-2xl font-medium">Gestão de Estudantes</h1>
+                        <p className="text-black/70 text-lg">Gerir estudantes registados na biblioteca</p>
+                    </article>
+                    <button onClick={handleClick3} className="flex items-center bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">
                         <MdPersonOutline size={25}/> + Adicionar Estudante
-                    </button> */}
+                    </button>
                 </section>
             ) : page === "emprestimos" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
@@ -147,7 +155,7 @@ function HeaderOutle({page}){
             {showModal && <ModalLivro onClose={() => setShowModal(false)}/> }
             {showModalEmprest && <Modal tipo="emprestimo" onClose={() => setShowModalEmprest(false)}/> }
             {showModalReserva && <Modal tipo="reserva" onClose={() => setShowModalReserva(false)}/> }
-            {showModalEstudante && <ModalAluno  onClose={() => setShowModalEstudante(false)}/> }
+            {showModalEstudante && <ModalAlunoOficial  onClose={() => setShowModalEstudante(false)}/> }
             {showModalDevol && <Modal tipo="devoluicao" onClose={() => setShowModalDevol(false)}/> }
             {showModalAdmin && <Modal tipo="admins" onClose={() => setShowModalAdmin(false)}/> }
             {showModalMulta && <Modal tipo="multas" onClose={() => setShowModalMulta(false)}/> }
