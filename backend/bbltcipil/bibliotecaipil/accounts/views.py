@@ -4,8 +4,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import SignupAlunoSerializer, LoginAlunoSerializer
-from administracao.models import AlunoOficial
+from .serializers import SignupSerializer, LoginAlunoSerializer
+from .models import AlunoOficial
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 User = get_user_model()
@@ -15,12 +15,12 @@ User = get_user_model()
 # SIGNUP - Ativação de Conta
 # =====================================================
 
-class SignupAlunoView(APIView):
+class SignupView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def post(self, request):
-        serializer = SignupAlunoSerializer(data=request.data)
+        serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -97,3 +97,6 @@ class MeView(APIView):
                 "idade": aluno.idade if aluno else None,
             }
         })
+    
+
+

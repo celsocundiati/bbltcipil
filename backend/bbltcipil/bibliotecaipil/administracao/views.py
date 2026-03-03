@@ -1,7 +1,11 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAdminUser
+from rest_framework import viewsets, permissions, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from accounts.models import Funcionario
 from livros.models import Reserva, Emprestimo, Aluno, Autor, Categoria, Livro
-from .models import AuditLog, AlunoOficial
+from .models import AuditLog
+from accounts.models import AlunoOficial
 from .serializers import (
     ReservaAdminSerializer,
     EmprestimoAdminSerializer,
@@ -10,7 +14,8 @@ from .serializers import (
     CategoriaAdminSerializer,
     LivroAdminSerializer,
     AuditLogSerializer,
-    AlunoOficialAdminSerializer
+    AlunoOficialAdminSerializer,
+    FuncionarioSerializer
 )
 from .audit_service import AuditService
 
@@ -234,3 +239,36 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
         if modelo:
             queryset = queryset.filter(modelo=modelo)
         return queryset
+    
+
+# accounts/views.py
+
+
+class FuncionarioAdminViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para visualizar, criar, atualizar e apagar Funcionários.
+    Inclui filtros por estado e busca por nome, agente ou bilhete.
+    """
+    queryset = Funcionario.objects.select_related('user', 'funcionario_oficial').all()
+    serializer_class = FuncionarioSerializer
+    permission_classes = [permissions.IsAdminUser]  # Apenas admins podem acessar
+
+    # Filtros, pesquisa e ordenação
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['estado', 'funcionario_oficial__n_agente']
+    search_fields = [
+        'funcionario_oficial__nome',
+        'funcionario_oficial__cargo',
+        'funcionario_oficial__n_bilhete',
+        'funcionario_oficial__n_agente',
+        'telefone',
+        'user__username'
+    ]
+    ordering_fields = [
+        'user__username',
+        'funcionario_oficial__nome',
+        'n_reservas',
+        'n_emprestimos'
+    ]
+    ordering = ['user__username']  # Ordem padrão
+

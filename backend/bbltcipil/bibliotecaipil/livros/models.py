@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.apps import apps
 from django.contrib.auth.models import User
-from administracao.models import AlunoOficial
+from accounts.models import AlunoOficial
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 
@@ -216,7 +216,6 @@ class Reserva(models.Model):
         if self.aluno:
             self.aluno.atualizar_contadores()
             self.aluno.atualizar_estado()
-
 
 
 class Emprestimo(models.Model):

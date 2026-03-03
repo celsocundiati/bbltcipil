@@ -3,7 +3,8 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Group
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from administracao.models import AlunoOficial, AuditLog
+from administracao.models import AuditLog
+from .models import AlunoOficial, FuncionarioOficial, Funcionario
 from livros.models import Aluno
 
 User = get_user_model()
@@ -14,62 +15,94 @@ User = get_user_model()
 # =====================================================
 
 
-class SignupAlunoSerializer(serializers.Serializer):
-    n_processo = serializers.CharField(max_length=15)
+class SignupSerializer(serializers.Serializer):
+    n_identificacao = serializers.CharField(max_length=20)
     n_bilhete = serializers.CharField(max_length=30)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, data):
-        n_processo = data["n_processo"]
+        n_identificacao = data["n_identificacao"]
         n_bilhete = data["n_bilhete"]
         email = data["email"]
 
-        # Verifica se já existe email registado
+        # Verifica email já existente
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("Já existe uma conta com este email.")
 
-        # Verifica existência na base oficial
+        instance = None
+        tipo = None
+
+        # 1️⃣ Tenta como aluno
         try:
-            aluno = AlunoOficial.objects.get(
-                n_processo=n_processo,
+            instance = AlunoOficial.objects.get(
+                n_processo=n_identificacao,
                 n_bilhete=n_bilhete
             )
+            tipo = "aluno"
         except AlunoOficial.DoesNotExist:
-            raise serializers.ValidationError("Aluno não encontrado ou dados incorretos.")
+            pass
 
-        # Verifica se já ativou conta
-        if aluno.user:
-            raise serializers.ValidationError("Este aluno já possui conta ativa.")
+        # 2️⃣ Se não for aluno, tenta como funcionário
+        if not instance:
+            try:
+                instance = FuncionarioOficial.objects.get(
+                    n_agente=n_identificacao,
+                    n_bilhete=n_bilhete
+                )
+                tipo = "funcionario"
+            except FuncionarioOficial.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Utilizador não encontrado ou dados incorretos."
+                )
 
-        data["aluno_instance"] = aluno
+        # 3️⃣ Verifica se já tem conta ativa
+        if instance.user:
+            raise serializers.ValidationError(
+                "Este utilizador já possui conta ativa."
+            )
+
+        data["instance"] = instance
+        data["tipo"] = tipo
         return data
-    
+
     def create(self, validated_data):
-        aluno_oficial = validated_data["aluno_instance"]
+        instance = validated_data["instance"]
+        tipo = validated_data["tipo"]
         email = validated_data["email"]
         password = validated_data["password"]
+        n_identificacao = validated_data["n_identificacao"]
 
-        # Cria o User
+        # Cria User
         user = User.objects.create_user(
-            username=aluno_oficial.n_processo,
+            username=n_identificacao,
             email=email,
             password=password
         )
 
-        # Adiciona ao grupo Aluno
-        grupo_aluno, _ = Group.objects.get_or_create(name="Aluno")
-        user.groups.add(grupo_aluno)
+        # Define grupo automaticamente
+        grupo_nome = "Aluno" if tipo == "aluno" else "Funcionario"
+        grupo, _ = Group.objects.get_or_create(name=grupo_nome)
+        user.groups.add(grupo)
 
-        # Associa ao AlunoOficial
-        aluno_oficial.user = user
-        aluno_oficial.save()
+        # Associa ao oficial
+        instance.user = user
+        instance.save()
 
-        # Cria o perfil Aluno
-        Aluno.objects.create(
-            user=user,
-            aluno_oficial=aluno_oficial,
-        )
+        # 🔵 Se for aluno → cria perfil Aluno
+        if tipo == "aluno":
+            Aluno.objects.create(
+                user=user,
+                aluno_oficial=instance
+            )
+
+        # 🟢 Se for funcionário → cria perfil Funcionario
+        if tipo == "funcionario":
+            Funcionario.objects.create(
+                user=user,
+                funcionario_oficial=instance,
+                telefone="",  # pode depois permitir editar no perfil
+            )
 
         # Auditoria
         AuditLog.objects.create(
@@ -78,8 +111,8 @@ class SignupAlunoSerializer(serializers.Serializer):
             modelo="User",
             objeto_id=user.id,
             alteracoes={
-                "n_bilhete": aluno_oficial.n_bilhete,
-                "n_processo": aluno_oficial.n_processo
+                "tipo": tipo,
+                "identificacao": n_identificacao
             }
         )
 
@@ -119,3 +152,5 @@ class LoginAlunoSerializer(serializers.Serializer):
                 "groups": [group.name for group in user.groups.all()]
             }
         }
+    
+
