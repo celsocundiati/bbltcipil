@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from livros.models import Reserva, Emprestimo, Aluno, Autor, Categoria, Livro
-from .models import AuditLog, AlunoOficial
-from django.contrib.auth.models import User
-
+from accounts.models import AlunoOficial, FuncionarioOficial, Funcionario
+from .models import AuditLog
 
 class ReservaAdminSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
@@ -102,4 +101,28 @@ class AlunoOficialAdminSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["created_at", "updated_at"]
 
-        
+
+
+class FuncionarioSerializer(serializers.ModelSerializer):
+    # Campos adicionais apenas para visualização (read-only)
+    nome_completo = serializers.CharField(source="funcionario_oficial.nome", read_only=True)
+    cargo_funcionario = serializers.CharField(source="funcionario_oficial.cargo", read_only=True)
+    n_bilhete = serializers.CharField(source="funcionario_oficial.n_bilhete", read_only=True)
+    n_agente = serializers.CharField(source="funcionario_oficial.n_agente", read_only=True)
+
+    class Meta:
+        model = Funcionario
+        # Inclui todos os campos do Funcionario + os extras definidos acima
+        fields = [
+            'id',
+            'user',
+            'funcionario_oficial',
+            'telefone',
+            'estado',
+            'n_reservas',
+            'n_emprestimos',
+            'nome_completo',
+            'cargo_funcionario',
+            'n_bilhete',
+            'n_agente',
+        ]

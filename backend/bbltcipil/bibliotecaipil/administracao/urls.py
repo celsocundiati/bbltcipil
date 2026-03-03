@@ -8,7 +8,8 @@ from .views import (
     CategoriaAdminViewSet,
     LivroAdminViewSet,
     AuditLogViewSet,
-    AlunoOficialAdminViewSet
+    AlunoOficialAdminViewSet,
+    FuncionarioAdminViewSet
 )
 
 router = DefaultRouter()
@@ -20,6 +21,7 @@ router.register(r'categorias', CategoriaAdminViewSet, basename='categoria-admin'
 router.register(r'livros', LivroAdminViewSet, basename='livro-admin')
 router.register(r'auditlog', AuditLogViewSet, basename='audit-admin')
 router.register(r'alunosoficiais', AlunoOficialAdminViewSet, basename='alunosoficiais-admin')
+router.register(r'funcionarios', FuncionarioAdminViewSet, basename='funcionario')
 
 urlpatterns = [
     path('', include(router.urls)),
