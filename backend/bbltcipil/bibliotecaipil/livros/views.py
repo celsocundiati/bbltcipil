@@ -113,9 +113,20 @@ class ReservaViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return self.queryset.filter(aluno__user=user)
 
+    def perform_create(self, serializer):
+        reserva = serializer.save(aluno=self.request.user.aluno)  # aluno logado
+        reserva._request = self.request  # necessário para signals
+        return reserva
+
+    def perform_update(self, serializer):
+        reserva = serializer.save()
+        reserva._request = self.request  # necessário para signals
+        return reserva
+
 # ==============================
 # Empréstimos
 # ==============================
+
 class EmprestimoViewSet(BaseDebugViewSet):
     serializer_class = EmprestimoSerializer
     permission_classes = [IsAuthenticated]
@@ -125,12 +136,19 @@ class EmprestimoViewSet(BaseDebugViewSet):
         hoje = timezone.now().date()
 
         queryset = Emprestimo.objects.filter(reserva__aluno__user=user)
-
-        # Atualiza status atrasado automaticamente
         queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
         return queryset
 
+    def perform_create(self, serializer):
+        emprestimo = serializer.save()
+        emprestimo._request = self.request  # necessário para signals
+        return emprestimo
 
+    def perform_update(self, serializer):
+        emprestimo = serializer.save()
+        emprestimo._request = self.request  # necessário para signals
+        return emprestimo
+    
 # ==============================
 # Notificações
 # ==============================

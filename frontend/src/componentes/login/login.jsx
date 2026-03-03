@@ -28,6 +28,7 @@ function LoginPage() {
       // 🔑 Salva tokens no sessionStorage
       sessionStorage.setItem("access_token", res.data.access);
       sessionStorage.setItem("refresh_token", res.data.refresh);
+      sessionStorage.setItem("username", res.data.username); 
 
       console.log("Login realizado. Tokens:", res.data);
       navigate("/");

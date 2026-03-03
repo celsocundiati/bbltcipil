@@ -9,19 +9,21 @@ function Badge({ acao }) {
   let color, icon;
 
   switch (acao) {
-    case "create":
+    case "Criou":
+    case "Adicionou":
       color = "bg-blue-100 text-blue-700";
       icon = <HiCheckCircle size={18} />;
       break;
-    case "update":
+    case "Atualizou":
       color = "bg-yellow-100 text-yellow-700";
       icon = <HiPencil size={18} />;
       break;
-    case "delete":
+    case "Removeu":
+    case "Cancelou":
       color = "bg-red-100 text-red-700";
       icon = <HiTrash size={18} />;
       break;
-    case "approve":
+    case "Aprovou":
       color = "bg-green-100 text-green-700";
       icon = <HiShieldCheck size={18} />;
       break;
@@ -127,10 +129,12 @@ export default function AdminAuditLog() {
           className="border border-gray-300 rounded px-3 py-2"
         >
           <option value="">Todas ações</option>
-          <option value="create">Criou</option>
-          <option value="update">Atualizou</option>
-          <option value="delete">Removeu</option>
-          <option value="approve">Aprovou</option>
+          <option value="Criou">Criou</option>
+          <option value="Adicionou">Adicionou</option>
+          <option value="Atualizou">Atualizou</option>
+          <option value="Aprovou">Aprovou</option>
+          <option value="Cancelou">Cancelou</option>
+          <option value="Removeu">Removeu</option>
         </select>
         <select
           value={modeloFilter}

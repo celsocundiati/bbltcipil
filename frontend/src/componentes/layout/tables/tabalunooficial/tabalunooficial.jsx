@@ -46,8 +46,8 @@ function TabALunosOficiais() {
                                 <tr>
                                     <th className="w-[25%] px-5 py-3 text-center">Estudante</th>
                                     <th className="w-[17%] px-5 py-3 text-center">Nº Processo</th>
-                                    <th className="w-[15%] px-5 py-3 text-center">Curso</th>
                                     <th className="w-[15%] px-5 py-3 text-center">Nº Bilhete</th>
+                                    <th className="w-[15%] px-5 py-3 text-center">Curso</th>
                                     <th className="w-[10%] px-5 py-3 text-center">Classe</th>
                                     <th className="w-[17%] px-5 py-3 text-center">Nascimento</th>
                                     <th className="w-[17%] px-5 py-3 text-center">Idade</th>

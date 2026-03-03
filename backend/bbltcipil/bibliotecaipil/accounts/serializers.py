@@ -74,12 +74,12 @@ class SignupAlunoSerializer(serializers.Serializer):
         # Auditoria
         AuditLog.objects.create(
             usuario=user,
-            acao="create",
+            acao="signin",
             modelo="User",
             objeto_id=user.id,
             alteracoes={
-                "n_processo": aluno_oficial.n_processo,
-                "email": email
+                "n_bilhete": aluno_oficial.n_bilhete,
+                "n_processo": aluno_oficial.n_processo
             }
         )
 

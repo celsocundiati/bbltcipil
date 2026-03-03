@@ -98,7 +98,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
 class ReservaSerializer(serializers.ModelSerializer):
     capa = serializers.ReadOnlyField()
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
-    aluno_nome = serializers.CharField(source="aluno.user.username", read_only=True)
+    aluno_nome = serializers.CharField(source="aluno.aluno_oficial.nome_completo", read_only=True)
     livro_id = serializers.IntegerField(source="livro.id", read_only=True)
     data_formatada = serializers.DateTimeField(
         format="%d/%m/%Y", source='data_reserva', read_only=True
@@ -135,7 +135,11 @@ class ReservaSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Preenche automaticamente o aluno logado"""
         validated_data['aluno'] = Aluno.objects.get(user=self.context['request'].user)
+
         return super().create(validated_data)
+
+
+    
 
 # ==============================
 # EMPRÉSTIMO
@@ -147,7 +151,7 @@ class EmprestimoSerializer(serializers.ModelSerializer):
         read_only=True
     )
     aluno_nome = serializers.CharField(
-        source="reserva.aluno.user.username",
+        source="reserva.aluno.aluno_oficial.nome_completo",
         read_only=True
     )
     capa = serializers.ReadOnlyField()
