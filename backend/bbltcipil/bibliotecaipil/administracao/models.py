@@ -8,10 +8,13 @@ User = get_user_model()
 
 class AuditLog(models.Model):
     ACAO_CHOICES = [
-        ("create", "Criou"),
-        ("update", "Atualizou"),
-        ("delete", "Removeu"),
-        ("approve", "Aprovou"),
+        ("Cadastrou-Se", "Cadastrou-Se"),
+        ("Adicionou", "Adicionou"),
+        ("Criou", "Criou"),
+        ("Atualizou", "Atualizou"),
+        ("Removeu", "Removeu"),
+        ("Cancelou", "Cancelou"),
+        ("Aprovou", "Aprovou"),
     ]
 
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

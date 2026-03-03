@@ -88,7 +88,7 @@ class Aluno(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     aluno_oficial = models.OneToOneField(
-        "administracao.AlunoOficial",
+        AlunoOficial,
         on_delete=models.CASCADE,
         related_name="perfil"
     )
@@ -149,6 +149,14 @@ class Reserva(models.Model):
     )
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendente')
     data_reserva = models.DateTimeField(auto_now_add=True)
+
+    aprovada_por = models.ForeignKey(
+    User,
+    null=True,
+    blank=True,
+    on_delete=models.SET_NULL,
+    related_name="reservas_aprovadas"
+)
 
     class Meta:
         ordering = ['-data_reserva']

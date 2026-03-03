@@ -8,25 +8,25 @@ function TabelaReservas() {
     const { hash } = useLocation();
     const [idDestacado, setIdDestacado] = useState(null);
 
-    useEffect(() => {
-        if (hash) {
-        const id = hash.replace('#reserva-', '');
-        setIdDestacado(id);
+    // useEffect(() => {
+    //     if (hash) {
+    //     const id = hash.replace('#reserva-', '');
+    //     setIdDestacado(id);
 
-        // 1. Rolar até o elemento
-        const elemento = document.getElementById(`reserva-${id}`);
-        if (elemento) {
-            elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+    //     // 1. Rolar até o elemento
+    //     const elemento = document.getElementById(`reserva-${id}`);
+    //     if (elemento) {
+    //         elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    //     }
 
-        // 2. Timer para remover o destaque após 1 minuto (60000ms)
-        const timer = setTimeout(() => {
-            setIdDestacado(null);
-        }, 60000);
+    //     // 2. Timer para remover o destaque após 1 minuto (60000ms)
+    //     const timer = setTimeout(() => {
+    //         setIdDestacado(null);
+    //     }, 60000);
 
-        return () => clearTimeout(timer); // Limpa o timer se o componente desmontar
-        }
-    }, [hash]);
+    //     return () => clearTimeout(timer); // Limpa o timer se o componente desmontar
+    //     }
+    // }, [hash]);
 
     const statusConf = {
         aprovada: {
@@ -181,8 +181,8 @@ function TabelaReservas() {
                                             : 'hover:bg-gray-100'
                                         }`} onClick={() => setIdDestacado(null)}>
                                         <td className="px-5 py-4 text-center">{reserva.id}</td>
-                                        <td className="px-5 py-4 text-center">{reserva.livro_nome}</td>
-                                        <td className="px-5 py-4 text-center">{reserva.aluno_nome}</td>
+                                        <td className="px-5 py-4 text-center">{reserva?.livro_nome}</td>
+                                        <td className="px-5 py-4 text-center">{reserva?.aluno_nome}</td>
                                         <td className="px-5 py-4 text-center">{reserva.data_formatada}</td>
 
                                         <td className="px-5 py-4 text-center">
