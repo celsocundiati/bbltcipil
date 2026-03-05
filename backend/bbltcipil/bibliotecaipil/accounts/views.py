@@ -4,9 +4,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import SignupSerializer, LoginAlunoSerializer
-from .models import AlunoOficial, FuncionarioOficial, Funcionario
-from livros.models import Aluno
+from .serializers import SignupSerializer, LoginSerializer
+from .models import Perfil
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 User = get_user_model()
@@ -42,7 +41,7 @@ class LoginAlunoView(APIView):
     authentication_classes = []
 
     def post(self, request):
-        serializer = LoginAlunoSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
@@ -74,69 +73,146 @@ class LogoutView(APIView):
 # =====================================================
 
 
+# class MeView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request):
+
+#         user = request.user
+
+#         try:
+#             perfil = Perfil.objects.select_related(
+#                 "aluno_oficial",
+#                 "funcionario_oficial"
+#             ).get(user=user)
+
+#         except Perfil.DoesNotExist:
+#             return Response(
+#                 {"detail": "Perfil não encontrado."},
+#                 status=404
+#             )
+
+#         dados_oficiais = {}
+
+#         if perfil.tipo == "aluno" and perfil.aluno_oficial:
+#             ao = perfil.aluno_oficial
+
+#             dados_oficiais = {
+#                 "n_processo": ao.n_processo,
+#                 "nome_completo": ao.nome_completo,
+#                 "curso": ao.curso,
+#                 "classe": ao.classe,
+#                 "data_nascimento": ao.data_nascimento,
+#                 "idade": ao.idade,
+#                 "n_bilhete": ao.n_bilhete,
+#             }
+
+#         elif perfil.tipo == "funcionario" and perfil.funcionario_oficial:
+#             fo = perfil.funcionario_oficial
+
+#             dados_oficiais = {
+#                 "n_agente": fo.n_agente,
+#                 "nome": fo.nome,
+#                 "cargo": fo.cargo,
+#                 "n_bilhete": fo.n_bilhete,
+#             }
+
+#         response_data = {
+
+#             "user": {
+#                 "id": user.id,
+#                 "username": user.username,
+#                 "email": user.email,
+#                 "grupos": [g.name for g in user.groups.all()]
+#             },
+
+#             "perfil": {
+#                 "tipo": perfil.tipo,
+#                 "telefone": perfil.telefone,
+#                 "estado": perfil.estado,
+#                 "n_reservas": perfil.n_reservas,
+#                 "n_emprestimos": perfil.n_emprestimos
+#             },
+
+#             "dados_oficiais": dados_oficiais
+#         }
+
+#         return Response(response_data)
+
 
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         user = request.user
 
-        perfil_tipo = None
-        aluno = None
-        funcionario = None
+        perfil = Perfil.objects.select_related(
+            "aluno_oficial",
+            "funcionario_oficial"
+        ).filter(user=user).first()
 
-        # Verifica primeiro se o usuário tem perfil ativo de aluno
-        try:
-            aluno = Aluno.objects.select_related('aluno_oficial').get(user=user)
-            perfil_tipo = "aluno"
-        except Aluno.DoesNotExist:
-            # Se não for aluno, tenta funcionário
-            try:
-                funcionario = Funcionario.objects.select_related('funcionario_oficial').get(user=user)
-                perfil_tipo = "funcionario"
-            except Funcionario.DoesNotExist:
-                # Nenhum perfil encontrado
-                perfil_tipo = None
+        dados_oficiais = {}
+        perfil_data = {}
+
+        if perfil:
+
+            if perfil.tipo == "aluno" and perfil.aluno_oficial:
+                ao = perfil.aluno_oficial
+
+                dados_oficiais = {
+                    "n_processo": ao.n_processo,
+                    "nome_completo": ao.nome_completo,
+                    "curso": ao.curso,
+                    "classe": ao.classe,
+                    "data_nascimento": ao.data_nascimento,
+                    "idade": ao.idade,
+                    "n_bilhete": ao.n_bilhete,
+                }
+
+            elif perfil.tipo == "funcionario" and perfil.funcionario_oficial:
+                fo = perfil.funcionario_oficial
+
+                dados_oficiais = {
+                    "n_agente": fo.n_agente,
+                    "nome": fo.nome,
+                    "cargo": fo.cargo,
+                    "n_bilhete": fo.n_bilhete,
+                }
+
+            perfil_data = {
+                "tipo": perfil.tipo,
+                "telefone": perfil.telefone,
+                "estado": perfil.estado,
+                "n_reservas": perfil.n_reservas,
+                "n_emprestimos": perfil.n_emprestimos
+            }
+
+        else:
+            # Caso seja superuser ou usuário sem perfil
+            perfil_data = {
+                "tipo": "admin" if user.is_superuser else None,
+                "telefone": None,
+                "estado": "ativo",
+                "n_reservas": 0,
+                "n_emprestimos": 0
+            }
 
         response_data = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "grupo": [group.name for group in user.groups.all()],
-            "tipo_perfil": perfil_tipo,
-            "aluno": None,
-            "funcionario": None
+
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "is_superuser": user.is_superuser,
+                "grupos": [g.name for g in user.groups.all()]
+            },
+
+            "perfil": perfil_data,
+
+            "dados_oficiais": dados_oficiais
         }
-
-        if perfil_tipo == "aluno" and aluno:
-            ao = aluno.aluno_oficial
-            response_data["aluno"] = {
-                "n_processo": ao.n_processo,
-                "nome_completo": ao.nome_completo,
-                "curso": ao.curso,
-                "classe": ao.classe,
-                "data_nascimento": ao.data_nascimento,
-                "idade": ao.idade,
-                "telefone": aluno.telefone,
-                "estado": aluno.estado,
-                "n_reservas": aluno.n_reservas,
-                "n_emprestimos": aluno.n_emprestimos
-            }
-
-        elif perfil_tipo == "funcionario" and funcionario:
-            fo = funcionario.funcionario_oficial
-            response_data["funcionario"] = {
-                "n_agente": fo.n_agente,
-                "nome": fo.nome,
-                "n_bilhete": fo.n_bilhete,
-                "cargo": fo.cargo,
-                "telefone": funcionario.telefone,
-                "estado": funcionario.estado,
-                "n_reservas": funcionario.n_reservas,
-                "n_emprestimos": funcionario.n_emprestimos
-            }
 
         return Response(response_data)
     
-
