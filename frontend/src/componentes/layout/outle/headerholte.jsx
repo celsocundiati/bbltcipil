@@ -102,7 +102,7 @@ function HeaderOutle({page}){
                 </section>  
             ) : page === "categoriasautores" ?(
                 <section className="space-y-2 mt-30 flex-wrap">
-                    <h1 className="text-2xl font-medium">Gestão de Livros Categórias & Autores</h1>
+                    <h1 className="text-2xl font-medium">Gestão de Livros Categorias & Autores</h1>
                     <p className="text-black/70 text-lg">Gerir categórias de livros e autores</p>
                 </section>
             ) : page === "dashboard" ?(

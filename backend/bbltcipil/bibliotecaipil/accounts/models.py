@@ -134,6 +134,7 @@ class FuncionarioOficial(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.n_agente})"
 
+
 class AlunoOficial(models.Model):
 
     perfil = models.OneToOneField(
@@ -214,3 +215,6 @@ class AlunoOficial(models.Model):
             idade -= 1
 
         return idade
+    
+
+    
