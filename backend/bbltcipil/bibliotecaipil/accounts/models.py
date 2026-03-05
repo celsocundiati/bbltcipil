@@ -96,16 +96,19 @@ class Funcionario(models.Model):
     def __str__(self):
         # Agora acessamos o n_processo direto pelo aluno_oficial
         return f"{self.user.username} - {self.funcionario_oficial.nome}"
+    
 
     def atualizar_contadores(self):
         Emprestimo = apps.get_model("livros", "Emprestimo")
+        Reserva = apps.get_model("livros", "Reserva")
 
-        self.n_reservas = self.reservas.filter(
+        self.n_reservas = Reserva.objects.filter(
+            usuario=self.user,
             estado__in=["reservado", "pendente"]
         ).count()
 
         self.n_emprestimos = Emprestimo.objects.filter(
-            reserva__aluno=self
+            reserva__usuario=self.user
         ).exclude(
             acoes="devolvido"
         ).count()
@@ -116,11 +119,10 @@ class Funcionario(models.Model):
         Emprestimo = apps.get_model("livros", "Emprestimo")
 
         atrasados = Emprestimo.objects.filter(
-            reserva__aluno=self,
+            reserva__usuario=self.user,
             acoes="atrasado"
         ).count()
 
         self.estado = "Suspenso" if atrasados > 3 else "Ativo"
         self.save(update_fields=["estado"])
-
-
+        

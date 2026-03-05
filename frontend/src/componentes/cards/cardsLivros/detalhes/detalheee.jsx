@@ -13,7 +13,7 @@ import axios from "axios";
 function Detalhes() {
   const { id } = useParams();
   const [livro, setLivro] = useState(null);
-  const [aluno, setAluno] = useState(null);
+  const [dados, setDados] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Captura livro pelo ID
@@ -28,7 +28,7 @@ function Detalhes() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Captura aluno logado
+  // Captura dados logado
   useEffect(() => {
     const token = sessionStorage.getItem("access_token");
     if (!token) return;
@@ -37,8 +37,8 @@ function Detalhes() {
       .get("http://localhost:8000/api/accounts/me/", {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setAluno(res.data.aluno))
-      .catch((err) => console.error("Erro ao capturar aluno", err));
+      .then((res) => setDados(Array.isArray(res.data.results) ? res.data.results : res.data))
+      .catch((err) => console.error("Erro ao capturar dados", err));
   }, []);
 
   if (loading) return <p className="text-center mt-10">Carregando detalhes do livro...</p>;
@@ -52,28 +52,9 @@ function Detalhes() {
       : `${base} bg-black/13 text-black/30 cursor-not-allowed`;
   };
 
-  // Reserva do livro
-  // const handleReservar = async () => {
-  //   if (!aluno) {
-  //     alert("Aluno não logado");
-  //     return;
-  //   }
-  //   try {
-  //     await axios.post(
-  //       "http://127.0.0.1:8000/api/reservas/",
-  //       { livro: livro.id },
-  //       { headers: { Authorization: `Bearer ${sessionStorage.getItem("access_token")}` } }
-  //     );
-  //     alert("Reserva realizada com sucesso!");
-  //   } catch (error) {
-  //     console.error(error.response || error);
-  //     alert("Erro ao fazer reserva");
-  //   }
-  // };
-
   const handleReservar = async () => {
-  if (!aluno) {
-    alert("Aluno não logado");
+  if (!dados) {
+    alert("Usuário não logado");
     return;
   }
 
