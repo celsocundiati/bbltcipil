@@ -7,9 +7,10 @@ import TabAutores from "../../layout/tables/tabautores/tabautores";
 function CategoriasAutores()
 {
     const tabs = [
-        {label: "Categórias", content: <TabCategorias />},
+        {label: "Categorias", content: <TabCategorias />},
         {label: "Autores", content: <TabAutores />}
     ]
+
     return(
         <main className="mt-12 space-y-10">
             <section>

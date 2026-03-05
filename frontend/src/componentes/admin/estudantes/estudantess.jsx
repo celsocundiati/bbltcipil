@@ -3,9 +3,16 @@ import RotulosOutle from "../../layout/outle/rotulosotles";
 import InputAdmin from "../../layout/admInput/input";
 import Select from "../../tags/selects/selects";
 import TabAluno from "../../layout/tables/tabaluno/tabaluno";
+import TabFuncionario from "../../layout/tables/tabfuncionario/tabfuncionario";
+import Tabs from "../../layout/tables/tabs/tabs";
 
-function Estudantes()
-{
+function Estudantes(){
+    
+    const tabs = [
+        {label: "Alunos", content: <TabAluno />},
+        {label: "Funcionários", content: <TabFuncionario />}
+    ]
+
     return(
         <main className=" mt-12 space-y-10">
             <section>
@@ -19,8 +26,11 @@ function Estudantes()
                 <Select tipo="todos" />
                 <Select tipo="cursos" />
             </section>
-            <section>
+            {/* <section>
                 <TabAluno />
+            </section> */}
+            <section>
+                <Tabs tabs={tabs}/>
             </section>
         </main>
     );
