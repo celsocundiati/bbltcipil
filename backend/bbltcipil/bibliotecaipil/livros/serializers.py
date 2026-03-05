@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.apps import apps
 from django.utils import timezone
 from .models import Livro, Autor, Categoria, Reserva, Emprestimo, Aluno, Notificacao
+from accounts.models import Funcionario
 
 
 # ==============================
@@ -16,7 +17,7 @@ class LivroSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Livro
-        fields = '__all__'
+        fields = "__all__"
 
     def get_estado_atual(self, obj):
         request = self.context.get("request")
@@ -25,32 +26,28 @@ class LivroSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return estado_global
 
-        try:
-            aluno = Aluno.objects.get(user=request.user)
-        except Aluno.DoesNotExist:
-            return estado_global
+        user = request.user
+        EmprestimoModel = apps.get_model("livros", "Emprestimo")
 
-        EmprestimoModel = apps.get_model('livros', 'Emprestimo')
-
-        # Verifica empréstimo do próprio aluno
+        # Verifica empréstimo do próprio usuário
         if EmprestimoModel.objects.filter(
             reserva__livro=obj,
-            reserva__aluno=aluno,
+            reserva__usuario=user,
             acoes__in=["ativo", "atrasado"]
         ).exists():
             return "Emprestado"
 
-        # Verifica reserva do próprio aluno
+        # Verifica reserva do próprio usuário
         if Reserva.objects.filter(
             livro=obj,
-            aluno=aluno,
+            usuario=user,
             estado="reservado"
         ).exists():
             return "Reservado"
 
         if Reserva.objects.filter(
             livro=obj,
-            aluno=aluno,
+            usuario=user,
             estado="pendente"
         ).exists():
             return "Pendente"
@@ -69,7 +66,6 @@ class LivroSerializer(serializers.ModelSerializer):
         }
 
         return info_map.get(estado, "")
-
 
 # ==============================
 # AUTOR
@@ -98,7 +94,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
 class ReservaSerializer(serializers.ModelSerializer):
     capa = serializers.ReadOnlyField()
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
-    aluno_nome = serializers.CharField(source="aluno.aluno_oficial.nome_completo", read_only=True)
+    aluno_nome = serializers.CharField(source="user.username", read_only=True)
     livro_id = serializers.IntegerField(source="livro.id", read_only=True)
     data_formatada = serializers.DateTimeField(
         format="%d/%m/%Y", source='data_reserva', read_only=True
@@ -113,33 +109,39 @@ class ReservaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reserva
         fields = '__all__'
-        read_only_fields = ["aluno"]
+        read_only_fields = ["usuario"]
+
 
     def validate(self, data):
-        """Valida duplicidade de reservas antes de criar"""
-        user = self.context['request'].user
-        try:
-            aluno = Aluno.objects.get(user=user)
-        except Aluno.DoesNotExist:
-            raise serializers.ValidationError("Usuário não possui perfil de Aluno.")
+        """
+        Impede que o mesmo usuário reserve o mesmo livro duas vezes
+        """
 
-        livro = data.get('livro')
-        if Reserva.objects.filter(
-            aluno=aluno, livro=livro, estado__in=['pendente', 'reservado']
-        ).exists():
+        user = self.context["request"].user
+        livro = data.get("livro")
+
+        reserva_existente = Reserva.objects.filter(
+            usuario=user,
+            livro=livro,
+            estado__in=["pendente", "reservado"]
+        ).exists()
+
+        if reserva_existente:
             raise serializers.ValidationError({
                 "livro": "Você já possui uma reserva ativa para este livro."
             })
+
         return data
 
     def create(self, validated_data):
-        """Preenche automaticamente o aluno logado"""
-        validated_data['aluno'] = Aluno.objects.get(user=self.context['request'].user)
+        """
+        Define automaticamente o usuário logado
+        """
+
+        validated_data["usuario"] = self.context["request"].user
 
         return super().create(validated_data)
 
-
-    
 
 # ==============================
 # EMPRÉSTIMO
@@ -150,34 +152,35 @@ class EmprestimoSerializer(serializers.ModelSerializer):
         source="reserva.livro.titulo",
         read_only=True
     )
-    aluno_nome = serializers.CharField(
-        source="reserva.aluno.aluno_oficial.nome_completo",
+    usuario_nome = serializers.CharField(
+        source="reserva.usuario.username",
         read_only=True
     )
-    capa = serializers.ReadOnlyField()
+    capa = serializers.ReadOnlyField(source="reserva.livro.capa")
     autor_nome = serializers.CharField(
-        source='reserva.livro.autor.nome',
+        source="reserva.livro.autor.nome",
         read_only=True
     )
     livro_id = serializers.IntegerField(
         source="reserva.livro.id",
         read_only=True
     )
+    estado_reserva = serializers.CharField(
+        source="reserva.estado",
+        read_only=True
+    )
 
     class Meta:
         model = Emprestimo
-        fields = '__all__'
+        fields = "__all__"
 
     def validate_data_devolucao(self, value):
         hoje = timezone.now().date()
-
         if value < hoje:
             raise serializers.ValidationError(
                 "A data de devolução não pode ser inferior à data atual."
             )
-
         return value
-
 
 # ==============================
 # ALUNO
@@ -235,3 +238,5 @@ class NotificacaoSerializer(serializers.ModelSerializer):
         model = Notificacao
         fields = "__all__"
         read_only_fields = ["usuario", "criada_em", "lida"]
+
+        

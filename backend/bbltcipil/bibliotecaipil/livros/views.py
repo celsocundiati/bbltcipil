@@ -74,6 +74,7 @@ class AlunoViewSet(BaseDebugViewSet):
 # ==============================
 # Livros
 # ==============================
+
 class LivroViewSet(BaseDebugViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroSerializer
@@ -85,19 +86,21 @@ class LivroViewSet(BaseDebugViewSet):
         livro = self.get_object()
         user = request.user
 
+        # Verifica disponibilidade do livro
         if livro.estado_atual != "Disponível":
             return Response({"erro": "Livro não disponível"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Cria reserva real (sempre que possível)
-        AlunoModel = apps.get_model('livros', 'Aluno')
+        # Cria reserva
         try:
-            aluno = AlunoModel.objects.get(user=user)
-        except AlunoModel.DoesNotExist:
-            return Response({"erro": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            reserva = Reserva.objects.create(
+                usuario=user,
+                livro=livro,
+                estado='pendente'
+            )
+        except Exception as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        reserva = Reserva.objects.create(livro=livro, aluno=aluno, estado='pendente')
         return Response({"mensagem": "Reserva enviada com sucesso", "reserva_id": reserva.pk})
-
 
 # ==============================
 # Reservas
@@ -111,10 +114,11 @@ class ReservaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Retorna apenas reservas do usuário logado"""
         user = self.request.user
-        return self.queryset.filter(aluno__user=user)
+        return self.queryset.filter(usuario=user)
 
     def perform_create(self, serializer):
-        reserva = serializer.save(aluno=self.request.user.aluno)  # aluno logado
+        """Cria reserva vinculada ao usuário logado"""
+        reserva = serializer.save(usuario=self.request.user)
         reserva._request = self.request  # necessário para signals
         return reserva
 
@@ -132,23 +136,26 @@ class EmprestimoViewSet(BaseDebugViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """Retorna empréstimos do usuário logado e atualiza atrasados"""
         user = self.request.user
         hoje = timezone.now().date()
 
-        queryset = Emprestimo.objects.filter(reserva__aluno__user=user)
+        queryset = Emprestimo.objects.filter(reserva__usuario=user)
+        # Atualiza acoes atrasadas
         queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
         return queryset
 
     def perform_create(self, serializer):
         emprestimo = serializer.save()
-        emprestimo._request = self.request  # necessário para signals
+        emprestimo._request = self.request
         return emprestimo
 
     def perform_update(self, serializer):
         emprestimo = serializer.save()
-        emprestimo._request = self.request  # necessário para signals
+        emprestimo._request = self.request
         return emprestimo
     
+
 # ==============================
 # Notificações
 # ==============================

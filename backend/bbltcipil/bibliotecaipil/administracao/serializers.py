@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from livros.models import Reserva, Emprestimo, Aluno, Autor, Categoria, Livro
-from accounts.models import AlunoOficial, FuncionarioOficial, Funcionario
+from accounts.models import AlunoOficial, Funcionario
 from .models import AuditLog
 
 class ReservaAdminSerializer(serializers.ModelSerializer):
