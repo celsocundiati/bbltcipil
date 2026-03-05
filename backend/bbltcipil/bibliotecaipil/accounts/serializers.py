@@ -4,16 +4,14 @@ from django.contrib.auth.models import Group
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 from administracao.models import AuditLog
-from .models import AlunoOficial, FuncionarioOficial, Funcionario
-from livros.models import Aluno
+from .models import AlunoOficial, FuncionarioOficial, Perfil
 
 User = get_user_model()
 
 
 # =====================================================
-# SIGNUP - ATIVAÇÃO DE CONTA (Aluno Oficial)
+# SIGNUP - ATIVAÇÃO DE CONTA (Aluno ou Funcionário)
 # =====================================================
-
 
 class SignupSerializer(serializers.Serializer):
     n_identificacao = serializers.CharField(max_length=20)
@@ -57,7 +55,7 @@ class SignupSerializer(serializers.Serializer):
                 )
 
         # 3️⃣ Verifica se já tem conta ativa
-        if instance.user:
+        if instance.perfil:
             raise serializers.ValidationError(
                 "Este utilizador já possui conta ativa."
             )
@@ -85,29 +83,21 @@ class SignupSerializer(serializers.Serializer):
         grupo, _ = Group.objects.get_or_create(name=grupo_nome)
         user.groups.add(grupo)
 
-        # Associa ao oficial
-        instance.user = user
+        # 🔹 Cria Perfil vinculado ao User
+        perfil = Perfil.objects.create(
+            user=user,
+            tipo=tipo,
+            telefone="",
+        )
+
+        # 🔹 Associa o Perfil ao registro oficial
+        instance.perfil = perfil
         instance.save()
-
-        # 🔵 Se for aluno → cria perfil Aluno
-        if tipo == "aluno":
-            Aluno.objects.create(
-                user=user,
-                aluno_oficial=instance
-            )
-
-        # 🟢 Se for funcionário → cria perfil Funcionario
-        if tipo == "funcionario":
-            Funcionario.objects.create(
-                user=user,
-                funcionario_oficial=instance,
-                telefone="",  # pode depois permitir editar no perfil
-            )
 
         # Auditoria
         AuditLog.objects.create(
             usuario=user,
-            acao="signin",
+            acao="signup",
             modelo="User",
             objeto_id=user.id,
             alteracoes={
@@ -117,22 +107,21 @@ class SignupSerializer(serializers.Serializer):
         )
 
         return user
-    
 
 
 # =====================================================
-# LOGIN - n_processo + senha
+# LOGIN - n_processo/n_agente + senha
 # =====================================================
 
-class LoginAlunoSerializer(serializers.Serializer):
-    n_processo = serializers.CharField(max_length=15)
+class LoginSerializer(serializers.Serializer):
+    n_identificacao = serializers.CharField(max_length=20)
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        n_processo = data["n_processo"]
+        n_identificacao = data["n_identificacao"]
         password = data["password"]
 
-        user = authenticate(username=n_processo, password=password)
+        user = authenticate(username=n_identificacao, password=password)
 
         if not user:
             raise AuthenticationFailed("Credenciais inválidas.")
@@ -149,8 +138,10 @@ class LoginAlunoSerializer(serializers.Serializer):
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
-                "groups": [group.name for group in user.groups.all()]
+                "groups": [group.name for group in user.groups.all()],
+                "tipo": user.perfil.tipo if hasattr(user, "perfil") else None
             }
         }
     
+
 

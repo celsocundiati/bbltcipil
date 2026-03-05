@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
 function LoginPage() {
-  const [n_processo, setUsername] = useState("");
+  const [n_identificacao, setIdentificacao] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,11 +15,11 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      console.log("Tentando login com:", { n_processo, password });
+      console.log("Tentando login com:", { n_identificacao, password });
 
       const res = await axios.post(
         "http://localhost:8000/api/accounts/login/",
-        { n_processo, password }, // dados
+        { n_identificacao, password }, // dados
         { headers: { "Content-Type": "application/json" } } // garante JSON
       );
 
@@ -71,8 +71,8 @@ function LoginPage() {
           <input
             type="username"
             placeholder="Username institucional"
-            value={n_processo}
-            onChange={(e) => setUsername(e.target.value)}
+            value={n_identificacao}
+            onChange={(e) => setIdentificacao(e.target.value)}
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
             required
           />
@@ -95,6 +95,7 @@ function LoginPage() {
           </button>
         </form>
 
+        
         <p className="mt-4 text-center text-gray-600 text-sm">
           Ainda não possui conta?{" "}
           <Link to="/cadastro" className="text-orange-500 font-medium">
@@ -107,3 +108,8 @@ function LoginPage() {
 }
 
 export default LoginPage;
+
+
+
+
+

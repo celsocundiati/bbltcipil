@@ -1,11 +1,14 @@
 from rest_framework import serializers
-from livros.models import Reserva, Emprestimo, Aluno, Autor, Categoria, Livro
-from accounts.models import AlunoOficial, Funcionario
 from .models import AuditLog
+from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
+from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
 
+# --------------------------
+# Reserva e Empréstimo
+# --------------------------
 class ReservaAdminSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
-    aluno_nome = serializers.CharField(source="aluno.user.username", read_only=True)  # Melhor referência
+    usuario_nome = serializers.CharField(source="usuario.username", read_only=True)
     data_formatada = serializers.DateTimeField(format="%d/%m/%Y", source='data_reserva', read_only=True)
     hora_formatada = serializers.DateTimeField(format="%H:%M:%S", source='data_reserva', read_only=True)
 
@@ -16,42 +19,79 @@ class ReservaAdminSerializer(serializers.ModelSerializer):
 
 class EmprestimoAdminSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="reserva.livro.titulo", read_only=True)
-    aluno_nome = serializers.CharField(source="reserva.aluno.user.username", read_only=True)
+    usuario_nome = serializers.CharField(source="reserva.usuario.username", read_only=True)
 
     class Meta:
         model = Emprestimo
         fields = '__all__'
 
 
-class AlunoAdminSerializer(serializers.ModelSerializer):
-    # Campos herdados do AlunoOficial
-    n_processo = serializers.CharField(
-        source="aluno_oficial.n_processo",
-        read_only=True
-    )
-    nome_completo = serializers.CharField(
-        source="aluno_oficial.nome_completo",
-        read_only=True
-    )
-    curso = serializers.CharField(
-        source="aluno_oficial.curso",
-        read_only=True
-    )
-    classe = serializers.CharField(
-        source="aluno_oficial.classe",
-        read_only=True
-    )
-    data_nascimento = serializers.DateField(
-        source="aluno_oficial.data_nascimento",
-        read_only=True
-    )
-    email = serializers.CharField(source="user.email", read_only=True)
-    
+# --------------------------
+# Perfil unificado
+# --------------------------
+class PerfilAdminSerializer(serializers.ModelSerializer):
+    nome = serializers.SerializerMethodField()
+    dados_oficiais = serializers.SerializerMethodField()
+
     class Meta:
-        model = Aluno
-        fields = '__all__'
+        model = Perfil
+        fields = [
+            "id",
+            "user",
+            "tipo",
+            "telefone",
+            "estado",
+            "n_reservas",
+            "n_emprestimos",
+            "nome",
+            "dados_oficiais",
+        ]
+
+    def get_nome(self, obj):
+        if hasattr(obj, "aluno_oficial"):
+            return obj.aluno_oficial.nome_completo
+        if hasattr(obj, "funcionario_oficial"):
+            return obj.funcionario_oficial.nome
+        return obj.user.username
+
+    def get_dados_oficiais(self, obj):
+        if obj.tipo == "aluno" and hasattr(obj, "aluno_oficial"):
+            ao = obj.aluno_oficial
+            return {
+                "n_processo": ao.n_processo,
+                "nome_completo": ao.nome_completo,
+                "curso": ao.curso,
+                "classe": ao.classe,
+                "data_nascimento": ao.data_nascimento,
+                "idade": ao.idade,
+                "n_bilhete": ao.n_bilhete
+            }
+        elif obj.tipo == "funcionario" and hasattr(obj, "funcionario_oficial"):
+            fo = obj.funcionario_oficial
+            return {
+                "n_agente": fo.n_agente,
+                "nome": fo.nome,
+                "cargo": fo.cargo,
+                "n_bilhete": fo.n_bilhete
+            }
+        return {}
 
 
+# --------------------------
+# AuditLog
+# --------------------------
+class AuditLogSerializer(serializers.ModelSerializer):
+    usuario_nome = serializers.CharField(source="usuario.username", read_only=True)
+
+    class Meta:
+        model = AuditLog
+        fields = ["id", "usuario", "usuario_nome", "acao", "modelo", "objeto_id", "alteracoes", "criado_em"]
+        read_only_fields = fields
+
+
+# --------------------------
+# Autores, Categorias e Livros
+# --------------------------
 class AutorAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Autor
@@ -67,20 +107,16 @@ class CategoriaAdminSerializer(serializers.ModelSerializer):
 class LivroAdminSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source="autor.nome", read_only=True)
     categoria_nome = serializers.CharField(source="categoria.nome", read_only=True)
+
     class Meta:
         model = Livro
         fields = '__all__'
 
 
-class AuditLogSerializer(serializers.ModelSerializer):
-    usuario_nome = serializers.CharField(source="usuario.username", read_only=True)
 
-    class Meta:
-        model = AuditLog
-        fields = ["id", "usuario", "usuario_nome", "acao", "modelo", "objeto_id", "alteracoes", "criado_em"]
-        read_only_fields = fields
-
-
+# --------------------------
+# ALUNO OFICIAL
+# --------------------------
 class AlunoOficialAdminSerializer(serializers.ModelSerializer):
     idade = serializers.ReadOnlyField()
 
@@ -95,34 +131,28 @@ class AlunoOficialAdminSerializer(serializers.ModelSerializer):
             "classe",
             "data_nascimento",
             "idade",
-            "user",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at", "idade"]
+
+
+# --------------------------
+# FUNCIONÁRIO OFICIAL
+# --------------------------
+class FuncionarioOficialAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FuncionarioOficial
+        fields = [
+            "id",
+            "n_agente",
+            "nome",
+            "n_bilhete",
+            "cargo",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
 
 
-
-class FuncionarioSerializer(serializers.ModelSerializer):
-    # Campos adicionais apenas para visualização (read-only)
-    nome_completo = serializers.CharField(source="funcionario_oficial.nome", read_only=True)
-    cargo_funcionario = serializers.CharField(source="funcionario_oficial.cargo", read_only=True)
-    n_bilhete = serializers.CharField(source="funcionario_oficial.n_bilhete", read_only=True)
-    n_agente = serializers.CharField(source="funcionario_oficial.n_agente", read_only=True)
-
-    class Meta:
-        model = Funcionario
-        # Inclui todos os campos do Funcionario + os extras definidos acima
-        fields = [
-            'id',
-            'user',
-            'funcionario_oficial',
-            'telefone',
-            'estado',
-            'n_reservas',
-            'n_emprestimos',
-            'nome_completo',
-            'cargo_funcionario',
-            'n_bilhete',
-            'n_agente',
-        ]
+        
