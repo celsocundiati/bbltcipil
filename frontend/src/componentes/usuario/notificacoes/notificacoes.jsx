@@ -1,4 +1,4 @@
-import ListaNotificacoes from "../layout/tables/tabnotificacoes/TabNotificacoes";
+import ListaNotificacoes from "../../usuario/usuario/layout/tables/tabnotificacoes/TabNotificacoes";
 
 function Notificacoes(){
     return(

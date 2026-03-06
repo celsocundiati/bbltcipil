@@ -1,6 +1,6 @@
-import Configuracoes from "../cards/cardPerfil/CardConfiguracoes";
-import MeuPerfil from "../cards/cardPerfil/CardMeuPerfil";
-import Cabecalho from "../casa/cabecalho/cabecalho";
+import Configuracoes from "../../usuario/cards/cardPerfil/CardConfiguracoes";
+import MeuPerfil from "../../usuario/cards/cardPerfil/CardMeuPerfil";
+import Cabecalho from "../../usuario/casa/cabecalho/cabecalho";
 
 
 function Perfil() {

@@ -1,11 +1,10 @@
-import Casa from './componentes/casa/casa'
-import Catalogo from './componentes/catalogo/catalogo'
+import Casa from './componentes/usuario/casa/casa'
+import Catalogo from './componentes/usuario/catalogo/catalogo'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import Reservas from './componentes/reservas/reservas';
-import Exposicao from './componentes/exposicao/exposicao';
-import Perfil from './componentes/perfil/perfil';
-import Detalhes from './componentes/cards/cardsLivros/detalhes/detalheee';
+import Reservas from './componentes/usuario/reservas/reservas';
+import Exposicao from './componentes/usuario/exposicao/exposicao';
+import Perfil from './componentes/usuario/perfil/perfil';
+import Detalhes from './componentes/usuario/cards/cardsLivros/detalhes/detalheee';
 import Dashboard from './componentes/admin/dashboard/dashboardadm';
 import GestaoLivros from './componentes/admin/gestao/gestaolivros';
 import AddLivro from './componentes/admin/addlivro/AddLivro';
@@ -15,13 +14,13 @@ import CategoriasAutores from './componentes/admin/categorias_autores/catautores
 import Relatorios from './componentes/admin/relatorios/Relatorios';
 import Admins from './componentes/admin/admins/admins';
 import Configuracoesadmin from './componentes/admin/configuracoes/Configuracoes';
-import Sair from './componentes/sair/sair';
+import Sair from './componentes/auth/sair/sair';
 import Admin from './componentes/admin/administrador';
 import Multas from './componentes/admin/multas/multa';
 import Estudantes from './componentes/admin/estudantes/estudantess';
 import EditarLivro from './componentes/admin/editarlivro/editarlivro';
-import CadastroAluno from './componentes/cadastro/cadastro';
-import LoginPage from './componentes/login/login';
+import CadastroAluno from './componentes/auth/cadastro/cadastro';
+import LoginPage from './componentes/auth/login/login';
 import axios from "axios";
 import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
 import AdminAuditLog from './componentes/admin/notificacaoadmin/notificacaoadmin';

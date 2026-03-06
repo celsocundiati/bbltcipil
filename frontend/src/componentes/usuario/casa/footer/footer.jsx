@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import {AiOutlineMail} from "react-icons/ai";
 import {LuClock} from "react-icons/lu"
 import {  FiMapPin, FiPhone } from "react-icons/fi";
-import footerImage from "../../../assets/footer01.png"
+import footerImage from "../../../../assets/footer01.png"
 import { motion } from "framer-motion";
 
 function Footer()
