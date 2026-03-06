@@ -89,7 +89,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
 class ReservaSerializer(serializers.ModelSerializer):
     capa = serializers.ReadOnlyField()
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
-    usuario_nome = serializers.CharField(source="usuario.username", read_only=True)
+    usuario_nome = serializers.SerializerMethodField()
     livro_id = serializers.IntegerField(source="livro.id", read_only=True)
     data_formatada = serializers.DateTimeField(format="%d/%m/%Y", source='data_reserva', read_only=True)
     hora_formatada = serializers.DateTimeField(format="%H:%M:%S", source='data_reserva', read_only=True)
@@ -101,6 +101,25 @@ class ReservaSerializer(serializers.ModelSerializer):
         model = Reserva
         fields = '__all__'
         read_only_fields = ["usuario"]
+
+
+    def get_usuario_nome(self, obj):
+        # Tenta pegar o perfil; se não existir, retorna username
+        perfil = getattr(obj.usuario, "perfil", None)
+        if not perfil:
+            return obj.usuario.username
+
+        # Aluno oficial
+        if perfil.tipo == "aluno" and hasattr(perfil, "aluno_oficial") and perfil.aluno_oficial:
+            return perfil.aluno_oficial.nome_completo
+
+        # Funcionário oficial
+        if perfil.tipo == "funcionario" and hasattr(perfil, "funcionario_oficial") and perfil.funcionario_oficial:
+            return perfil.funcionario_oficial.nome
+
+        # Se nenhum oficial existir, retorna username
+        return obj.usuario.username
+    
 
     def validate(self, data):
         user = self.context["request"].user

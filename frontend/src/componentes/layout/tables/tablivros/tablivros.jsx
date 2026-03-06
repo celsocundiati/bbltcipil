@@ -51,7 +51,7 @@ function TabelaLivros(){
         <main>
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
                 <section className="py-5 flex flex-col">
-                    <label className="text-xl">Lista de Livros</label>
+                    <label className="text-xl font-medium">Lista de Livros</label>
                     <label className="text-black/70">Exibindo 8 de 8 livros</label>
                 </section>
 

@@ -75,10 +75,10 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
             {/* Estudante */}
             <div className="flex flex-col space-y-1">
-              <label className="text-black/70">Estudante</label>
+              <label className="text-black/70">Usuário</label>
               <input
                 type="text"
-                value={reserva?.aluno_nome || ""}
+                value={reserva?.usuario_nome || ""}
                 readOnly
                 className="bg-gray-100 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
               />

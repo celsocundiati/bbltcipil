@@ -61,7 +61,7 @@ function ListaNotificacoes() {
 
   return (
     <div className="w-full max-w-2xl mx-auto py-6 flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Notificações</h2>
+      <h2 className="text-2xl font-medium mb-4 text-gray-800">Notificações</h2>
       {notificacoes.map((notif) => (
         <div
           key={notif.id}

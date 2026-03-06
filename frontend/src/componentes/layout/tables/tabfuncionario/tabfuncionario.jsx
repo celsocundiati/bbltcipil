@@ -49,7 +49,7 @@ function TabFuncionario() {
     <main className="p-5">
       <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
         <section className="py-5 flex flex-col">
-          <label className="text-xl font-semibold">Lista de Funcionários</label>
+          <label className="text-xl font-medium">Lista de Funcionários</label>
           <label className="text-black/70">
             Exibindo {totalFuncionarios}
           </label>
@@ -66,13 +66,13 @@ function TabFuncionario() {
             <table className="w-full table-fixed border-collapse">
               <thead className="bg-black/5">
                 <tr>
-                  <th className="px-5 py-3 text-center">Funcionário</th>
-                  <th className="px-5 py-3 text-center">Nº Agente</th>
-                  <th className="px-5 py-3 text-center">Cargo</th>
-                  <th className="px-5 py-3 text-center">Estado</th>
-                  <th className="px-5 py-3 text-center">Telefone</th>
-                  <th className="px-5 py-3 text-center">Reservas</th>
-                  <th className="px-5 py-3 text-center">Empréstimos</th>
+                  <th className="w-[15%] px-5 py-3 text-center">Funcionário</th>
+                  <th className="w-[10%] px-5 py-3 text-center">Nº Agente</th>
+                  <th className="w-[15%] px-5 py-3 text-center">Cargo</th>
+                  <th className="w-[9%] px-5 py-3 text-center">Estado</th>
+                  <th className="w-[11%] px-5 py-3 text-center">Telefone</th>
+                  <th className="w-[7%] px-5 py-3 text-center">Reservas</th>
+                  <th className="w-[7%] px-5 py-3 text-center">Empréstimos</th>
                 </tr>
               </thead>
 
@@ -100,7 +100,7 @@ function TabFuncionario() {
                                 {funcionario?.nome}
                               </p>
                               <p className="text-sm text-cinza-900 truncate">
-                                {perfil?.user}
+                                {perfil?.user.email || "Nothing"}
                               </p>
                             </div>
                           </div>
