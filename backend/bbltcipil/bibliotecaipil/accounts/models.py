@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
+from django.apps import apps
 
 
 class Perfil(models.Model):
@@ -78,6 +79,39 @@ class Perfil(models.Model):
             return self.funcionario_oficial.nome
 
         return self.user.username
+    
+    
+    def atualizar_contadores(self):
+        """Atualiza n_reservas e n_emprestimos do perfil usando apps.get_model"""
+        Reserva = apps.get_model('livros', 'Reserva')
+        Emprestimo = apps.get_model('livros', 'Emprestimo')
+
+        # Contar reservas ativas do usuário
+        self.n_reservas = Reserva.objects.filter(
+            usuario=self.user,
+            estado__in=['pendente', 'reservado']
+        ).count()
+
+        # Contar empréstimos ativos do usuário
+        self.n_emprestimos = Emprestimo.objects.filter(
+            reserva__usuario=self.user,  # <- aqui a chave
+            acoes__in=['ativo']
+        ).count()
+
+        self.save(update_fields=['n_reservas', 'n_emprestimos'])
+
+    def atualizar_estado(self):
+        Emprestimo = apps.get_model('livros', 'Emprestimo')
+
+        # Contar quantos empréstimos atrasados existem para o usuário
+        atrasados = Emprestimo.objects.filter(
+            reserva__usuario=self.user,  # atravessa a FK da reserva
+            acoes='atrasado'
+        ).count()
+
+        self.estado = 'Suspenso' if atrasados > 3 else 'Ativo'
+        self.save(update_fields=['estado'])
+
 
 
 class FuncionarioOficial(models.Model):

@@ -265,7 +265,7 @@ function TabelaEmprestimos(){
     return(
         <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
             <section className="py-5 flex flex-col">
-                <label className="text-xl">Lista de Empréstimos</label>
+                <label className="text-xl font-medium">Lista de Empréstimos</label>
                 <label className="text-black/70">Exibindo {emprestimos.length} de {emprestimos.length}</label>
             </section>
             <section className="w-full rounded-xl overflow-hidden">
@@ -274,7 +274,7 @@ function TabelaEmprestimos(){
                         <tr>
                             <th className="py-2 px-5 text-center">ID</th>
                             <th className="py-2 px-5 text-center">Livro</th>
-                            <th className="py-2 px-5 text-center">Estudante</th>
+                            <th className="py-2 px-5 text-center">Usuário</th>
                             <th className="py-2 px-5 text-center">ID Reserva</th>
                             <th className="py-2 px-5 text-center">Data Empréstimo</th>
                             <th className="py-2 px-5 text-center">Data Vencimento</th>
@@ -301,7 +301,7 @@ function TabelaEmprestimos(){
                                 >
                                     <td className="px-5 py-5 truncate text-center">{emprest.id}</td>
                                     <td className="px-5 py-5 truncate text-center">{emprest.livro_nome}</td>
-                                    <td className="px-5 py-5 truncate text-center">{emprest.aluno_nome}</td>
+                                    <td className="px-5 py-5 truncate text-center">{emprest.usuario_nome}</td>
                                     <td className="px-5 py-5 truncate text-center">{emprest.reserva}</td>
                                     <td className="px-5 py-5 truncate text-center">{emprest.data_emprestimo}</td>
                                     <td className="px-5 py-5 truncate text-center">{emprest.data_devolucao}</td>
@@ -329,12 +329,12 @@ function TabelaEmprestimos(){
                                                     <LuFilePen size={25} />
                                                 </button>
 
-                                                <button
+                                                {/* <button
                                                     onClick={() => openModal("delete", emprest)}
                                                     className="text-red-500 hover:text-red-700 cursor-pointer transition"
                                                 >
                                                     <FiTrash2 size={25} />
-                                                </button>
+                                                </button> */}
                                                 </>
                                             )}
                                         </div>

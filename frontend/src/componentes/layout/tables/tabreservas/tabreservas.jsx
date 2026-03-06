@@ -137,7 +137,7 @@ function TabelaReservas() {
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
 
                 <section className="py-5 flex flex-col">
-                    <h2 className="text-xl font-semibold">Lista de Reservas</h2>
+                    <h2 className="text-xl font-medium">Lista de Reservas</h2>
                     <span className="text-black/70">
                         Total: {reservas.length}
                     </span>
@@ -148,8 +148,8 @@ function TabelaReservas() {
                         <thead className="bg-black/5">
                             <tr>
                                 <th className="px-5 py-3 text-center">ID</th>
-                                <th className="px-5 py-3 text-center">Livro</th>
-                                <th className="px-5 py-3 text-center">Estudante</th>
+                                <th className="w-[25%] px-5 py-3 text-center">Livro</th>
+                                <th className="w-[12%] px-5 py-3 text-center">Usuário</th>
                                 <th className="px-5 py-3 text-center">Data</th>
                                 <th className="px-5 py-3 text-center">Estado</th>
                                 <th className="px-5 py-3 text-center">Ação</th>
@@ -182,7 +182,7 @@ function TabelaReservas() {
                                         }`} onClick={() => setIdDestacado(null)}>
                                         <td className="px-5 py-4 text-center">{reserva.id}</td>
                                         <td className="px-5 py-4 text-center">{reserva?.livro_nome}</td>
-                                        <td className="px-5 py-4 text-center">{reserva?.aluno_nome}</td>
+                                        <td className="px-5 py-4 text-center">{reserva?.usuario_nome || "Nenhum"}</td>
                                         <td className="px-5 py-4 text-center">{reserva.data_formatada}</td>
 
                                         <td className="px-5 py-4 text-center">

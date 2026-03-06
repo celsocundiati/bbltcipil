@@ -37,7 +37,7 @@ function TabALunosOficiais() {
         <main>
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
                 <section className="py-5 flex flex-col">
-                    <label className="text-xl">Lista de ALunos Oficiais do IPIL</label>
+                    <label className="text-xl font-medium">Lista de ALunos Oficiais do IPIL</label>
                     <label className="text-black/70">Exibindo {totalAlunos}</label>
                 </section>
                     <section className="bg-white rounded-lg shadow-md overflow-hidden">

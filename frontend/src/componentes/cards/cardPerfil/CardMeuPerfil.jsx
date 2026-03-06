@@ -342,15 +342,13 @@ function MeuPerfil() {
                                     <>Nº Processo: {info?.n_processo || "N/A"}</>
                                 )}
 
-                                {perfil === "funcionario" ? (
+                                {perfil === "funcionario" && (
                                     <>Bilhete: {info?.n_bilhete || "N/A"}</>
-                                ) : (
-                                    <>Username: {dados?.user?.username}</>
                                 )}
 
-                                {/* {!perfil && (
+                                {!perfil && (
                                     <>Username: {dados?.user?.username}</>
-                                )} */}
+                                )}
 
                             </p>
 

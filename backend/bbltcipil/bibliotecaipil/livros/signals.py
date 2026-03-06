@@ -113,7 +113,7 @@ def notificar_cancelamento(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Emprestimo)
 def notificar_emprestimo(sender, instance, created, **kwargs):
-    link = f"/emprestimos#emprestimo-{instance.id}"
+    link = f"/reservas#reserva-{instance.reserva.id}"
     perfil = instance.reserva.perfil_oficial
     usuario = perfil.user if perfil else instance.reserva.usuario
 

@@ -30,6 +30,7 @@ class EmprestimoAdminSerializer(serializers.ModelSerializer):
 # Perfil unificado
 # --------------------------
 class PerfilAdminSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
     nome = serializers.SerializerMethodField()
     dados_oficiais = serializers.SerializerMethodField()
 
@@ -53,6 +54,16 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
         if hasattr(obj, "funcionario_oficial"):
             return obj.funcionario_oficial.nome
         return obj.user.username
+
+    def get_user(self, obj):
+        user = obj.user
+
+        return {
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        }
 
     def get_dados_oficiais(self, obj):
         if obj.tipo == "aluno" and hasattr(obj, "aluno_oficial"):
