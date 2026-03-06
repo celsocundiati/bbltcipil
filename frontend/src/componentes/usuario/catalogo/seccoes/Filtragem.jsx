@@ -1,5 +1,5 @@
-import InputGroup from "../../tags/inputs/InputGroup";
-import Selects from "../../tags/selects/selects";
+import InputGroup from "../../../tags/inputs/InputGroup";
+import Selects from "../../../tags/selects/selects";
 import { FiFilter, FiChevronDown, FiChevronUp  } from "react-icons/fi";
 import { useState } from "react";
 

@@ -1,10 +1,10 @@
-import Cabecalho from "../casa/cabecalho/cabecalho";
+import Cabecalho from "../../usuario/casa/cabecalho/cabecalho";
 import { motion } from "framer-motion";
 import { BsStars } from "react-icons/bs";
-import CardExposicoes from "../cards/cardExposicao/CardExposicoes";
-import CardExposicoesMaster from "../cards/cardExposicao/Cardexposicaomaster";
-import CardExposicoesEvento from "../cards/cardExposicao/CardExposicoesEvento";
-import Footer from "../casa/footer/footer";
+import CardExposicoes from "../../usuario/cards/cardExposicao/CardExposicoes";
+import CardExposicoesMaster from "../../usuario/cards/cardExposicao/Cardexposicaomaster";
+import CardExposicoesEvento from "../../usuario/cards/cardExposicao/CardExposicoesEvento";
+import Footer from "../../usuario/casa/footer/footer";
 
 function Exposicao() {
     return (
