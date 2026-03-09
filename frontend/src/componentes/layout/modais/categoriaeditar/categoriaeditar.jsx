@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {HiOutlineXMark} from "react-icons/hi2";
+import api from "../../../service/api/api";
 
 function CategoriaEditar({ categoria ,onClose, setCategorias }) {
 
@@ -22,8 +23,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
     if (categoria?.id) {
       setLoading(true);
 
-      axios
-        .get(`http://127.0.0.1:8000/api/admin/categorias/${categoria.id}/`)
+      api.get(`/admin/categorias/${categoria.id}/`)
         .then(res => {
           setFormData(res.data);
           setLoading(false);
@@ -52,8 +52,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
     e.preventDefault();
 
     try {
-      const response = await axios.put(
-        `http://127.0.0.1:8000/api/admin/categorias/${categoria.id}/`,
+      const response = await api.put(`/admin/categorias/${categoria.id}/`,
         formData
       );
       setModal({
@@ -87,7 +86,6 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
 
   if (!categoria) return null;
 
-
   return (
     <section>
         <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
@@ -104,7 +102,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
                 </article>
 
                 {loading ? (
-                <div className="py-6 text-center text-black/60">A carregar...</div>
+                <div className="py-6 text-center text-black/60 animate-pulse">A carregar...</div>
                 ) : (
                 <form onSubmit={handleUpdate} className="space-y-4">
 
