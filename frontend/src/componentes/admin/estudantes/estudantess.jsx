@@ -26,9 +26,6 @@ function Estudantes(){
                 <Select tipo="todos" />
                 <Select tipo="cursos" />
             </section>
-            {/* <section>
-                <TabAluno />
-            </section> */}
             <section>
                 <Tabs tabs={tabs}/>
             </section>

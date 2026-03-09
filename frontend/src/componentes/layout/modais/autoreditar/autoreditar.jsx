@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import {HiOutlineXMark} from "react-icons/hi2";
+import api from "../../../service/api/api";
 
 function ModalEditarAutor({ onClose, form, setForm }){
 
@@ -17,11 +17,25 @@ function ModalEditarAutor({ onClose, form, setForm }){
     const [loading, setLoading] = useState(false);
     const [erro, setErro] = useState(null);
 
+    
     useEffect(() => {
-        axios.get(`http://127.0.0.1:8000/api/admin/autores/${form?.id}/`)
-        .then(res => setAutor(res.data))
-        .catch(err => console.error('Erro ao buscar os dados pelo ID', err));
-      }, [form]);
+
+        const fetchDados = async() =>  {
+            try {
+                setLoading(true);
+                const res = await api.get(`/admin/autores/${form?.id}/`)
+                setAutor(Array.isArray(res.data.results) ? res.data.results : res.data)
+            } catch (error) {
+                console.error(error);
+                setErro("Erro ao buscar os dados pelo ID");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchDados();
+
+    }, [form]);
 
     const handleChange = (e) => {
         setAutor({
@@ -36,7 +50,7 @@ function ModalEditarAutor({ onClose, form, setForm }){
             setErro(null);
         
         try {
-            await axios.put(`http://127.0.0.1:8000/api/admin/autores/${autor?.id}/`, autor);
+            await api.put(`/admin/autores/${autor?.id}/`, autor);
             setModal({
                 open: true,
                 type: "success",
@@ -85,6 +99,9 @@ function ModalEditarAutor({ onClose, form, setForm }){
                             Cadastrar novao autor
                         </p>
                     </article>
+                    {loading ? (
+                        <div className="py-6 text-center text-black/60 animate-pulse">A carregar...</div>
+                    ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 gap-2">
                             <div className="flex flex-col gap-1">
@@ -105,6 +122,7 @@ function ModalEditarAutor({ onClose, form, setForm }){
                             </button>
                         </div>
                     </form>
+                    )}
                 </div>
             </dialog>
 

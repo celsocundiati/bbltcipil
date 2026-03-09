@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { FaBook } from "react-icons/fa";
+import api from "../../service/api/api";
 
 function EditarLivro() {
 
@@ -25,19 +25,16 @@ function EditarLivro() {
     const hoje = new Date();
     const dataMaximaPermitida = hoje.toISOString().split("T")[0];
 
-    // =============================
-    // FETCH ÚNICO
-    // =============================
     useEffect(() => {
 
-        async function fetchData() {
+        const fetchDados = async() =>  {
             try {
                 setLoadingPage(true);
 
                 const [livroRes, autoresRes, categoriasRes] = await Promise.all([
-                    axios.get(`http://127.0.0.1:8000/api/livros/${id}/`),
-                    axios.get(`http://127.0.0.1:8000/api/autores/`),
-                    axios.get(`http://127.0.0.1:8000/api/categorias/`)
+                    api.get(`livros/livros/${id}/`),
+                    api.get(`livros/autores/`),
+                    api.get(`livros/categorias/`)
                 ]);
 
                 setLivro(livroRes.data);
@@ -62,7 +59,7 @@ function EditarLivro() {
             }
         }
 
-        fetchData();
+        fetchDados();
 
     }, [id]);
 
@@ -86,8 +83,8 @@ function EditarLivro() {
 
         try {
 
-            await axios.put(
-                `http://127.0.0.1:8000/api/livros/${id}/`,
+            await api.put(
+                `livros/livros/${id}/`,
                 livro
             );
 
@@ -125,18 +122,17 @@ function EditarLivro() {
         }
     };
 
-    // =============================
-    // LOADING PAGE
-    // =============================
     if (loadingPage) {
         return (
             <div className="w-full h-screen flex items-center justify-center">
-                <p className="text-xl animate-pulse">Carregando dados...</p>
+                <p className="text-xl animate-pulse text-center">Carregando dados...</p>
             </div>
         );
     }
 
     if (!livro) return null;
+
+    const baseinput = "bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
 
     // =============================
     // JSX
@@ -176,7 +172,7 @@ function EditarLivro() {
                                     value={livro.titulo || ""}
                                     onChange={handleChange}
                                     required
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 />
                             </div>
 
@@ -189,7 +185,7 @@ function EditarLivro() {
                                     onChange={handleChange}
                                     required
                                     maxLength={13}
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 />
                             </div>
 
@@ -200,7 +196,7 @@ function EditarLivro() {
                                     value={livro.autor || ""}
                                     onChange={handleChange}
                                     required
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 >
                                     <option value="">Selecione</option>
                                     {autores.map(aut => (
@@ -218,7 +214,7 @@ function EditarLivro() {
                                     value={livro.categoria || ""}
                                     onChange={handleChange}
                                     required
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 >
                                     <option value="">Selecione</option>
                                     {categorias.map(cat => (
@@ -238,7 +234,7 @@ function EditarLivro() {
                                     max={dataMaximaPermitida}
                                     onChange={handleChange}
                                     required
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 />
                             </div>
 
@@ -250,7 +246,7 @@ function EditarLivro() {
                                     value={livro.editora || ""}
                                     onChange={handleChange}
                                     required
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 />
                             </div>
 
@@ -263,7 +259,7 @@ function EditarLivro() {
                                     min={1}
                                     onChange={handleChange}
                                     required
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 />
                             </div>
 
@@ -276,7 +272,7 @@ function EditarLivro() {
                                     min={1}
                                     onChange={handleChange}
                                     required
-                                    className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className={baseinput}
                                 />
                             </div>
 
@@ -289,7 +285,7 @@ function EditarLivro() {
                                 value={livro.descricao || ""}
                                 onChange={handleChange}
                                 required
-                                className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                className={baseinput}
                             />
                         </div>
 
@@ -300,7 +296,7 @@ function EditarLivro() {
                                 value={livro.sumario || ""}
                                 onChange={handleChange}
                                 required
-                                className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                className={baseinput}
                             />
                         </div>
 
@@ -312,7 +308,7 @@ function EditarLivro() {
                                 value={livro.capa || ""}
                                 onChange={handleChange}
                                 required
-                                className="bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+                                className={baseinput}
                             />
                         </div>
 
@@ -321,7 +317,7 @@ function EditarLivro() {
                             <button
                                 type="button"
                                 onClick={() => navigate("/admin/gestao")}
-                                className="px-6 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
+                                className="px-6 py-2 border border-black/10 rounded-lg focus:ring-2 focus:ring-green-500"
                             >
                                 Cancelar
                             </button>
