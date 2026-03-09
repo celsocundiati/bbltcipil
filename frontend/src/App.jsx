@@ -27,14 +27,9 @@ import AdminAuditLog from './componentes/admin/notificacaoadmin/notificacaoadmin
 import AlunosOficais from './componentes/admin/alunooficial/alunooficial';
 import AlterarSenha from './componentes/auth/alterarsenha/alterarsenha';
 import Privacidade from './componentes/auth/privacidadeuser/privacidade';
+import PrivateRoute from './componentes/auth/rotasprivadas/rotasprivadas';
+import AdminRoute from './componentes/auth/adminrotas/adminrotas';
 
-axios.interceptors.request.use(config => {
-  const token = sessionStorage.getItem("access_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
 
 function App() {
 
@@ -42,38 +37,41 @@ function App() {
         <Router>
           <Routes>
 
-            <Route path='/' element={<Casa />}/>
-            <Route path='/cadastro' element={<CadastroAluno />}/>
-            <Route path='/login' element={<LoginPage />}/>
-            <Route path='/catalogo' element={<Catalogo />}/>
-            <Route path='/reservas' element={<Reservas />}/>
-            <Route path='/exposicao' element={<Exposicao />}/>
-            <Route path='/perfil' element={<Perfil />}/>
-            <Route path='/notificacoes' element={<ListaNotificacoes />}/>
-            <Route path='/alterar-senha' element={<AlterarSenha />}/>
-            <Route path='/privacidade' element={<Privacidade />}/>
+            {/* Rotas públicas */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/cadastro" element={<CadastroAluno />} />
 
-            <Route path='detalhes/:id' element={<Detalhes />}/>
+            {/* Rotas privadas */}
+            <Route path="/" element={<PrivateRoute><Casa /></PrivateRoute>} />
+            <Route path="/catalogo" element={<PrivateRoute><Catalogo /></PrivateRoute>} />
+            <Route path="/reservas" element={<PrivateRoute><Reservas /></PrivateRoute>} />
+            <Route path="/exposicao" element={<PrivateRoute><Exposicao /></PrivateRoute>} />
+            <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
+            <Route path="/notificacoes" element={<PrivateRoute><ListaNotificacoes /></PrivateRoute>} />
+            <Route path="/alterar-senha" element={<PrivateRoute><AlterarSenha /></PrivateRoute>} />
+            <Route path="/privacidade" element={<PrivateRoute><Privacidade /></PrivateRoute>} />
 
-            <Route path='/admin' element={<Admin/>}>
-              <Route index element={<Dashboard />}/>
-              <Route path='dashboard' element={<Dashboard />}/>
-              <Route path='gestao' element={<GestaoLivros />}/>
-              <Route path='addlivro' element={<AddLivro />}/>
-              <Route path='livros/:id' element={<EditarLivro />}/>
-              <Route path='estudantes' element={<Estudantes />}/>
-              <Route path='alunosoficiais' element={<AlunosOficais />}/>
-              <Route path='emprestimos' element={<Emprestimos />}/>
-              <Route path='multas' element={<Multas />}/>
-              <Route path='acervo' element={<Acervo />}/>
-              <Route path='categoriasautores' element={<CategoriasAutores />}/>
-              <Route path='relatorios' element={<Relatorios />}/>
-              <Route path='configuracoesadmin' element={<Configuracoesadmin />}/>
-              <Route path='admins' element={<Admins />}/>
-              <Route path='audit-log' element={<AdminAuditLog />}/>
-              <Route path='' element={<Sair />}/>
+            <Route path="detalhes/:id" element={<PrivateRoute><Detalhes /></PrivateRoute>} />
+
+            {/* Rotas admin */}
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="gestao" element={<GestaoLivros />} />
+              <Route path="addlivro" element={<AddLivro />} />
+              <Route path="livros/:id" element={<EditarLivro />} />
+              <Route path="estudantes" element={<Estudantes />} />
+              <Route path="alunosoficiais" element={<AlunosOficais />} />
+              <Route path="emprestimos" element={<Emprestimos />} />
+              <Route path="multas" element={<Multas />} />
+              <Route path="acervo" element={<Acervo />} />
+              <Route path="categoriasautores" element={<CategoriasAutores />} />
+              <Route path="relatorios" element={<Relatorios />} />
+              <Route path="configuracoesadmin" element={<Configuracoesadmin />} />
+              <Route path="admins" element={<Admins />} />
+              <Route path="audit-log" element={<AdminAuditLog />} />
+              <Route path="" element={<Sair />} />
             </Route>
-
           </Routes>
         </Router>
 

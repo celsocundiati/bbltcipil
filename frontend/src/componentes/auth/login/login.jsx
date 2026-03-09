@@ -1,62 +1,50 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../userAuth/useAuth";
 
 function LoginPage() {
+
   const [n_identificacao, setIdentificacao] = useState("");
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
+
     e.preventDefault();
     setErro("");
     setLoading(true);
 
     try {
-      console.log("Tentando login com:", { n_identificacao, password });
 
-      const res = await axios.post(
-        "http://localhost:8000/api/accounts/login/",
-        { n_identificacao, password }, // dados
-        { headers: { "Content-Type": "application/json" } } // garante JSON
-      );
+      await login(n_identificacao, password);
 
-
-
-      // 🔑 Salva tokens no sessionStorage
-      sessionStorage.setItem("access_token", res.data.access);
-      sessionStorage.setItem("refresh_token", res.data.refresh);
-      sessionStorage.setItem("username", res.data.username); 
-
-      console.log("Login realizado. Tokens:", res.data);
       navigate("/");
 
     } catch (err) {
-       console.error("Erro login:", err.response?.data);
-       setErro(err.response?.data?.detail || "Username ou senha incorretos"); 
 
-      if (err.response?.status === 401) {
-        setErro("Username ou senha incorretos.");
-      } else {
-        const mensagem =
-          err.response?.data?.detail ||
-          err.response?.data?.non_field_errors?.[0] ||
-          "Username ou senha incorretos.";
+      const mensagem =
+        err.response?.data?.detail ||
+        err.response?.data?.non_field_errors?.[0] ||
+        "Username ou senha incorretos.";
 
-        setErro(mensagem);
+      setErro(mensagem);
 
-      }
     } finally {
+
       setLoading(false);
+
     }
   };
 
-
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-100">
+
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm">
+
         <h1 className="text-2xl font-bold mb-6 text-center">
           Acesso à Plataforma
         </h1>
@@ -68,8 +56,9 @@ function LoginPage() {
         )}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
+
           <input
-            type="username"
+            type="text"
             placeholder="Username institucional"
             value={n_identificacao}
             onChange={(e) => setIdentificacao(e.target.value)}
@@ -89,27 +78,24 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-orange-500 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
+            className="bg-orange-500 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50 cursor-pointer"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
+
         </form>
 
-        
         <p className="mt-4 text-center text-gray-600 text-sm">
           Ainda não possui conta?{" "}
           <Link to="/cadastro" className="text-orange-500 font-medium">
             Criar conta
           </Link>
         </p>
+
       </div>
+
     </main>
   );
 }
 
 export default LoginPage;
-
-
-
-
-

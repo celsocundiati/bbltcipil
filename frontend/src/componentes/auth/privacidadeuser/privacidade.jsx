@@ -1,40 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { getPerfilUsuario } from "../../service/usuarioservice/userservice";
-import api from "../../service/api/api"; // Instância centralizada do Axios
+import api from "../../service/api/api";
+import { useAuth } from "../../auth/userAuth/useAuth";
 
 export default function Privacidade() {
-  const [dados, setDados] = useState({});
-  const [email, setEmail] = useState("");
-  const [telefone, setTelefone] = useState("");
+  const { user, setUser } = useAuth(); // pega dados do contexto
+  const [email, setEmail] = useState(user?.user?.email || "");
+  const [telefone, setTelefone] = useState(user?.perfil?.telefone || "");
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchPerfil = async () => {
-      try {
-        const data = await getPerfilUsuario();
-        setDados(data);
-        setEmail(data?.user?.email || "");
-        setTelefone(data?.perfil?.telefone || "");
-      } catch (err) {
-        console.log("Erro ao buscar perfil:", err);
-      }
-    };
-
-    fetchPerfil();
-  }, []);
-
   const baseinput = "w-full border border-gray-300 rounded-lg px-4 py-2";
   const baselabel = "block text-sm font-medium text-gray-700 mb-1";
 
-  // Regex de validação
   const validarEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
   const validarTelefone = (tel) =>
-    /^\d{9,15}$/.test(tel); // entre 8 e 15 dígitos
+    /^\d{9,15}$/.test(tel);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +28,6 @@ export default function Privacidade() {
       setErro("Email inválido.");
       return;
     }
-
     if (!validarTelefone(telefone)) {
       setErro("Telefone inválido. Use apenas números (8-15 dígitos).");
       return;
@@ -53,17 +35,12 @@ export default function Privacidade() {
 
     try {
       setLoading(true);
-
-      const payload = {
-        email: email,
-        telefone: telefone,
-      };
-
+      const payload = { email, telefone };
       await api.patch("/accounts/me/", payload);
 
       setSucesso("Dados atualizados com sucesso!");
-      // Atualiza local state
-      setDados((prev) => ({
+      // Atualiza o user no contexto
+      setUser((prev) => ({
         ...prev,
         user: { ...prev.user, email },
         perfil: { ...prev.perfil, telefone },
@@ -92,45 +69,22 @@ export default function Privacidade() {
       {sucesso && <div className="bg-green-100 text-green-600 p-3 rounded mb-4">{sucesso}</div>}
 
       <form className="space-y-5" onSubmit={handleSubmit}>
-        {/* Username */}
         <div>
           <label className={baselabel}>Username</label>
-          <input
-            type="text"
-            value={dados?.user?.username || ""}
-            readOnly
-            className={baseinput}
-          />
+          <input type="text" value={user?.user?.username || ""} readOnly className={baseinput} />
         </div>
 
-        {/* Email */}
         <div>
           <label className={baselabel}>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={baseinput}
-          />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={baseinput} />
         </div>
 
-        {/* Telefone */}
         <div>
           <label className={baselabel}>Telefone</label>
-          <input
-            type="text"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            className={baseinput}
-          />
+          <input type="text" value={telefone} onChange={(e) => setTelefone(e.target.value)} className={baseinput} />
         </div>
 
-        {/* Botão */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-        >
+        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
           {loading ? "Atualizando..." : "Atualizar dados"}
         </button>
       </form>

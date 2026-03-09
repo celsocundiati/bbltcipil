@@ -26,7 +26,7 @@ api.interceptors.response.use(
 
       sessionStorage.removeItem("access_token");
 
-      window.location.href = "/login"; // redireciona sem hooks
+      // window.location.href = "/login"; // redireciona sem hooks
     }
 
     return Promise.reject(error);
