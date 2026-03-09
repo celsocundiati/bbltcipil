@@ -4,25 +4,17 @@ import { IoCalendarClearOutline } from "react-icons/io5";
 import Estado from "../../estiloEstado/estado";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../service/api/api";
 
 function CardLivro() {
   const [livros, setLivros] = useState([]);
   const navigate = useNavigate();
 
-  const token = sessionStorage.getItem("access_token");
-
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
 
     const fetchLivros = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/api/livros/", {
-          headers: { Authorization: `Bearer ${token}` }, // ⚡ Corrigido: era "Authentization" -> "Authorization"
-        });
+        const res = await api.get("livros/livros/");
         const data = Array.isArray(res.data.results) ? res.data.results : res.data;
         setLivros(data);
       } catch (err) {
@@ -32,7 +24,7 @@ function CardLivro() {
     };
 
     fetchLivros();
-  }, [navigate, token]);
+  }, [navigate]);
 
   
 

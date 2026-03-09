@@ -5,18 +5,24 @@ import Filtragem from "./seccoes/Filtragem";
 import WelcomeCatalogo from "./seccoes/Welcome";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../service/api/api";
 
 
 function Catalogo() {
-
     
     const [livros, setLivros] = useState([]); 
 
     useEffect(() => {
-        axios.get('http://localhost:8000/api/livros/')
-        .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error('Erro ao capturar livros', err))
+        const fetchLivros = async() => {
+            try{
+                const res = await api.get('livros/livros/')
+                setLivros(Array.isArray(res.data.results) ? res.data.results : res.data)
+            }catch(err){
+                console.error('Erro ao capturar livros', err)
+            }
+        }
+
+        fetchLivros()
     }, []);
 
     return(

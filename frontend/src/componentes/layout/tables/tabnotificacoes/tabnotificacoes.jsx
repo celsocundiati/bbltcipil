@@ -1,30 +1,36 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../../../service/api/api";
 
 function ListaNotificacoes() {
   const [notificacoes, setNotificacoes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = sessionStorage.getItem("access_token");
   const navigate = useNavigate();
 
+  
   useEffect(() => {
-    if (!token) return;
 
-    axios
-      .get("http://localhost:8000/api/notificacoes/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setNotificacoes(res.data))
-      .catch((err) => console.error("Erro ao buscar notificações:", err))
-      .finally(() => setLoading(false));
-  }, [token]);
+    const fetchNotificacoes = async() => {
+        try{
+            const res = await api.get("livros/notificacoes/");
+            setNotificacoes(Array.isArray(res.data.results) ? res.data.results : res.data)
+        }catch(err){
+            console.error("Erro ao buscar notificações.", err)
+            if (err.response?.status === 401) navigate("/login");
+        } finally {
+          setLoading(false);
+        }
+    }
+
+    fetchNotificacoes();
+
+   }, [navigate]);
+
+    
+
 
   const marcarLida = (id) => {
-    axios
-      .post(`http://localhost:8000/api/notificacoes/${id}/marcar_lida/`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    api.post(`livros/notificacoes/${id}/marcar_lida/`, null)
       .then(() => {
         setNotificacoes((prev) =>
           prev.map((n) => (n.id === id ? { ...n, lida: true } : n))

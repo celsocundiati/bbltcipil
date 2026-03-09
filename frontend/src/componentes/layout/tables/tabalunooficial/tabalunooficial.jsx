@@ -1,35 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../service/api/api";
 import { obterIniciais } from "../utilitarios/Utils";
 
 function TabALunosOficiais() {
   const [alunos, setAlunos] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = sessionStorage.getItem("access_token");
+    useEffect(() => {
 
-    // 🔐 Redireciona se não houver token
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    // ✅ Requisição com token
-    axios
-      .get("http://localhost:8000/api/admin/alunosoficiais/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) =>
-        setAlunos(Array.isArray(res.data.results) ? res.data.results : res.data)
-      )
-      .catch((err) => {
-        console.error("Erro na captura de Alunos", err);
-        // Redireciona se o token não for válido
-        if (err.response?.status === 401) navigate("/login");
-      });
-  }, [navigate]);
+        const fetchAlunos = async() => {
+            try{
+                const res = await api.get("/admin/alunosoficiais/");
+                setAlunos(Array.isArray(res.data.results) ? res.data.results : res.data);
+            }catch(err){
+                console.error("Erro na captura de Alunos.", err)
+                if (err.response?.status === 401) navigate("/login");
+            }
+        }
+        fetchAlunos();
+    }, [navigate]);
 
   const totalAlunos = alunos.length;
     

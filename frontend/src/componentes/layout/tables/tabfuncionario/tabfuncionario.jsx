@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../service/api/api";
 import { obterIniciais } from "../utilitarios/Utils";
 
 function TabFuncionario() {
@@ -8,40 +8,29 @@ function TabFuncionario() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
   const navigate = useNavigate();
-
-  const fetchPerfis = async () => {
-    const token = sessionStorage.getItem("access_token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const res = await axios.get("http://localhost:8000/api/admin/perfil/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const dados = Array.isArray(res.data.results) ? res.data.results : res.data;
-
-      // 🔹 filtrar apenas funcionários
-      const perfisFuncionarios = dados.filter(
-        (perfil) => perfil.tipo === "funcionario"
-      );
-
-      setFuncionarios(perfisFuncionarios);
-    } catch (err) {
-      console.error("Erro na captura de funcionários", err);
-      setErro("Não foi possível carregar os funcionários.");
-      if (err.response?.status === 401) navigate("/login");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
   useEffect(() => {
+
+    const fetchPerfis = async() => {
+        try{
+            const res = await api.get("/admin/perfil/");
+            const dados = Array.isArray(res.data.results) ? res.data.results : res.data;
+            const perfisFuncionarios = dados.filter(
+              (perfil) => perfil.tipo === "funcionario"
+            );
+            setFuncionarios(perfisFuncionarios);
+        }catch(err){
+            console.error("Erro ao carregar funcionários.", err)
+            setErro("Não foi possível carregar os funcionários.");
+            if (err.response?.status === 401) navigate("/login");
+        } finally {
+          setLoading(false);
+        }
+    }
+
     fetchPerfis();
-  }, []);
+
+   }, [navigate]);
 
   const totalFuncionarios = funcionarios.length;
 

@@ -4,8 +4,8 @@ import { NavLink, Link } from "react-router-dom";
 import { LuBookOpen } from "react-icons/lu";
 import { IoCalendarClearOutline } from "react-icons/io5";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../../../service/api/api";
 
 const configuracoes = [
   { id: 1, titulo: "Alterar Senha", descricao: "Atualize sua senha de acesso", rota: "/alterar-senha" },
@@ -17,38 +17,26 @@ function Configuracoes() {
   const [reservas, setReservas] = useState([]);
   const [emprestimos, setEmprestimos] = useState([]);
   const navigate = useNavigate();
-  const token = sessionStorage.getItem("access_token");
-
+  
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
+
+    const fetchConfiguracoes = async() => {
+      try{
+          const [resReservas, resEmprestimos] = await Promise.all([
+            api.get("livros/reservas/"),
+            api.get("livros/emprestimos/"),
+          ]);
+          setReservas(Array.isArray(resReservas.data.results) ? resReservas.data.results : resReservas.data);
+          setEmprestimos(Array.isArray(resEmprestimos.data.results) ? resEmprestimos.data.results : resEmprestimos.data);
+      }catch(err){
+          console.error("Erro ao carregar dados (reservas e emprestimos).", err)
+          if (err.response?.status === 401) navigate("/login");
+      }
     }
 
-    const fetchData = async () => {
-      try {
-        const [resReservas, resEmprestimos] = await Promise.all([
-          axios.get("http://localhost:8000/api/reservas/", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("http://localhost:8000/api/emprestimos/", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+    fetchConfiguracoes();
 
-        setReservas(Array.isArray(resReservas.data.results) ? resReservas.data.results : resReservas.data);
-        setEmprestimos(Array.isArray(resEmprestimos.data.results) ? resEmprestimos.data.results : resEmprestimos.data);
-
-      } catch (err) {
-        console.log("Erro ao buscar dados", err);
-        if (err.response?.status === 401) {
-          navigate("/login");
-        }
-      }
-    };
-
-    fetchData();
-  }, [navigate, token]);
+   }, [navigate]);
 
   // 🔎 Filtragem real baseada no backend
   const reservasAtivas = reservas.filter(r => r.estado === "reservado" || r.estado === "pendente");
