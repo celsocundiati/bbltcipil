@@ -2,11 +2,11 @@ import BtnAddAdmin from "../../btns01/btnaddmin";
 import ModalAddAutor from "../../modais/modaladdautor/modaladdautor";
 import ModalEditarAutor from "../../modais/autoreditar/autoreditar";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { FiTrash2 } from "react-icons/fi";
 import { LuFilePen } from "react-icons/lu";
 import { MdPersonOutline } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import api from "../../../service/api/api";
 
 function TabAutores() {
   const [showModalAutor, setShowModalAutor] = useState(false);
@@ -17,26 +17,18 @@ function TabAutores() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = sessionStorage.getItem("access_token");
 
-    // 🔐 Redireciona se não houver token
-    if (!token) {
-      navigate("/login");
-      return;
+    const fectAutores = async() => {
+        try{
+            const res = await api.get("/admin/autores/");
+            setAutores(Array.isArray(res.data.results) ? res.data.results : res.data);
+        }catch(err) {
+            console.error("Erro na captura de Autores", err);
+            if (err.response?.status === 401) navigate("/login");
+        }
     }
 
-    // ✅ Requisição com token
-    axios
-      .get("http://localhost:8000/api/admin/autores/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) =>
-        setAutores(Array.isArray(res.data.results) ? res.data.results : res.data)
-      )
-      .catch((err) => {
-        console.error("Erro na captura de Autores", err);
-        if (err.response?.status === 401) navigate("/login");
-      });
+    fectAutores()
   }, [navigate]);
 
 
@@ -55,9 +47,10 @@ function TabAutores() {
     function closeModal(){
         setModal({open:false, type: null, autor: null});
     }
+
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/admin/autores/${modal.autor.id}/`);
+            await api.delete(`/admin/autores/${modal.autor.id}/`);
             setAutores(prev => prev.filter(a => a.id !== modal.autor.id));
             closeModal();
         }

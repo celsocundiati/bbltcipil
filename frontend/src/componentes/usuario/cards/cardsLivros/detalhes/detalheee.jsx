@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import { AiOutlineFileText, AiOutlineBook } from "react-icons/ai";
 import { MdPersonOutline } from "react-icons/md";
@@ -8,38 +8,32 @@ import { IoCalendarClearOutline } from "react-icons/io5";
 import EstadoDetalhes from "./estadoDetalhes/estado";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { useAuth } from "../../../../auth/userAuth/useauth";
+import api from "../../../../service/api/api";
 
 function Detalhes() {
-  const { id } = useParams();
+  const { user, setUser } = useAuth();
   const [livro, setLivro] = useState(null);
-  const [dados, setDados] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Captura livro pelo ID
   useEffect(() => {
-    const token = sessionStorage.getItem("access_token");
-    axios
-      .get(`http://localhost:8000/api/livros/${id}/`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-      .then((res) => setLivro(res.data))
-      .catch((err) => console.error("Erro ao capturar livro", err))
-      .finally(() => setLoading(false));
-  }, [id]);
 
-  // Captura dados logado
-  useEffect(() => {
-    const token = sessionStorage.getItem("access_token");
-    if (!token) return;
+      const fetchLivros = async() => {
+        try{
+            const res = await api.get(`livros/livros/${id}/`);
+            setLivro(Array.isArray(res.data.results) ? res.data.results : res.data)
+        }catch(err){
+            console.error("Erro ao carregar livro.", err)
+            if (err.response?.status === 401) navigate("/login");
+        } finally {
+          setLoading(false);
+        }
+      }
 
-    axios
-      .get("http://localhost:8000/api/accounts/me/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setDados(Array.isArray(res.data.results) ? res.data.results : res.data))
-      .catch((err) => console.error("Erro ao capturar dados", err));
-  }, []);
+      fetchLivros();
+
+  }, [navigate, id]);
 
   if (loading) return <p className="text-center mt-10">Carregando detalhes do livro...</p>;
   if (!livro) return <p className="text-red-600 text-center mt-20">Nenhum livro encontrado.</p>;
@@ -53,17 +47,13 @@ function Detalhes() {
   };
 
   const handleReservar = async () => {
-  if (!dados) {
+  if (!user) {
     alert("Usuário não logado");
     return;
   }
 
   try {
-    await axios.post(
-      "http://127.0.0.1:8000/api/reservas/",
-      { livro: livro.id },
-      { headers: { Authorization: `Bearer ${sessionStorage.getItem("access_token")}` } }
-    );
+    await api.post("livros/reservas/", { livro: livro.id } );
     alert("Reserva realizada com sucesso!");
   } catch (error) {
     // Se houver resposta do backend, mostra a mensagem detalhada

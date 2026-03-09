@@ -4,50 +4,32 @@ import { IoCalendarClearOutline } from "react-icons/io5";
 import EstadoCard from "./estado/estado";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../service/api/api";
 
 function CardReservas() {
   const [reservas, setReservas] = useState([]);
   const [emprestimos, setEmprestimos] = useState([]);
   const navigate = useNavigate();
 
-  // Axios configurado
-  const api = axios.create({
-    baseURL: "http://127.0.0.1:8000/api/",
-    headers: {
-      Authorization: `Bearer ${sessionStorage.getItem("access_token") || ""}`,
-    },
-  });
-
-  // 🔐 Redireciona se não houver token
   useEffect(() => {
-    const token = sessionStorage.getItem("access_token");
-    if (!token) navigate("/login");
-  }, [navigate]);
 
-  // 📌 Buscar Reservas
-  useEffect(() => {
-    api.get("reservas/")
-      .then(res =>
-        setReservas(Array.isArray(res.data.results) ? res.data.results : res.data)
-      )
-      .catch(err => {
-        if (err.response?.status === 401) navigate("/login");
-        else console.error("Erro ao capturar reservas", err);
-      });
-  }, [navigate]);
+    const fetchReservasEmprestimos = async() => {
+      try{
+          const [resReservas, resEmprestimos] = await Promise.all([
+            api.get("livros/reservas/"),
+            api.get("livros/emprestimos/"),
+          ]);
+          setReservas(Array.isArray(resReservas.data.results) ? resReservas.data.results : resReservas.data);
+          setEmprestimos(Array.isArray(resEmprestimos.data.results) ? resEmprestimos.data.results : resEmprestimos.data);
+      }catch(err){
+          console.error("Erro ao carregar dados (reservas e emprestimos).", err)
+          if (err.response?.status === 401) navigate("/login");
+      }
+    }
 
-  // 📌 Buscar Empréstimos
-  useEffect(() => {
-    api.get("emprestimos/")
-      .then(res =>
-        setEmprestimos(Array.isArray(res.data.results) ? res.data.results : res.data)
-      )
-      .catch(err => {
-        if (err.response?.status === 401) navigate("/login");
-        else console.error("Erro ao capturar empréstimos", err);
-      });
-  }, [navigate]);
+    fetchReservasEmprestimos();
+
+   }, [navigate]);
 
   // 📌 Filtrar reservas e empréstimos
   const livrosReservado = reservas.filter(r =>

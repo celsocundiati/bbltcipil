@@ -7,9 +7,10 @@ import {IoCalendarClearOutline} from "react-icons/io5";
 import {GiGreekTemple} from "react-icons/gi";
 import {RiBookShelfLine} from "react-icons/ri"
 import { motion } from "framer-motion";
+import { useAuth } from "../../../auth/userAuth/useAuth";
 
 function Cabecalho() {
-
+   const { user } = useAuth(); // pega o usuário autenticado
     
     {/* header */}
 
@@ -20,7 +21,7 @@ function Cabecalho() {
         { path: "/exposicao", label: "Exposições", icon: IoCalendarClearOutline },
         { path: "/institucional", label: "Institucional", icon: GiGreekTemple },
         { path: "/perfil", label: "Meu Perfil", icon: MdPersonOutline },
-        { path: "/admin", label: "Admin", icon: MdAdminPanelSettings },
+        ...(user?.perfil?.tipo === "admin" ? [{ path: "/admin", label: "Admin", icon: MdAdminPanelSettings }] : []),
         ];
 
 

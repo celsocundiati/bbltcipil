@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { Link , useNavigate} from "react-router-dom";
+import { useNavigate} from "react-router-dom";
 import { LuFilePen } from "react-icons/lu";
-import { FiEye, FiTrash2 } from "react-icons/fi";
+import { FiTrash2 } from "react-icons/fi";
+import api from "../../../service/api/api";
 
 
 function TabelaLivros(){
@@ -14,20 +14,21 @@ function TabelaLivros(){
         livro: null,
     });
     const navigate = useNavigate();
-    
-    useEffect(() => {
-        const token = sessionStorage.getItem("access_token");
 
-        axios.get("http://localhost:8000/api/admin/livros/", {
-            headers: {
-            Authorization: `Bearer ${token}`,
-            },
-        })
-    .then(res => setLivros(Array.isArray(res.data.results) ? res.data.results : res.data))
-    .catch(err => {
-            console.error("Erro na captura livros", err)
-            if (err.response?.status === 401) navigate("/login");
-        });
+    useEffect(() => {
+
+        const fetchLivros = async() => {
+            try{
+                const res = await api.get("/admin/livros/");
+                setLivros(Array.isArray(res.data.results) ? res.data.results : res.data)
+            }catch(err){
+                console.error("Erro ao carregar livros.", err)
+                if (err.response?.status === 401) navigate("/login");
+            }
+        }
+
+        fetchLivros();
+
     }, [navigate]);
 
     function openModal(type, livro){
@@ -36,9 +37,10 @@ function TabelaLivros(){
     function closeModal(){
         setModal({open:false, type: null, livro: null});
     }
+
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/admin/livros/${modal.livro.id}/`);
+            await api.delete(`/admin/livros/${modal.livro.id}/`);
             setLivros(prev => prev.filter(item => item.id !== modal.livro.id));
         }
         if(modal.type === "update"){

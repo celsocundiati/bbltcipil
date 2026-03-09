@@ -1,5 +1,4 @@
-
-    import BtnAddAdmin from "../../btns01/btnaddmin";
+import BtnAddAdmin from "../../btns01/btnaddmin";
 import ModalAddCategoria from "../../modais/modaladdcategoria/modaladdcategoria";
 import CategoriaEditar from "../../modais/categoriaeditar/categoriaeditar";
 import { useState, useEffect } from "react";
@@ -8,7 +7,7 @@ import { FiTrash2 } from "react-icons/fi";
 import { LuFilePen } from "react-icons/lu";
 import { HiOutlineFolder } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
-
+import api from "../../../service/api/api";
 
 function TabCategorias(){
 
@@ -33,27 +32,19 @@ function TabCategorias(){
         setCategoriaSelecionada(null);
     }
 
-  useEffect(() => {
-    const token = sessionStorage.getItem("access_token");
+    useEffect(() => {
 
-    // 🔐 Redireciona se não houver token
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    axios
-      .get("http://localhost:8000/api/admin/categorias/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) =>
-        setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data)
-      )
-      .catch((err) => {
-        console.error("Erro na captura de Categorias", err);
-        if (err.response?.status === 401) navigate("/login");
-      });
-  }, [navigate]);
+        const fetchCategorias = async() => {
+            try{
+                const res = await api.get("/admin/categorias/");
+                setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data);
+            }catch(err){
+                console.error("Erro na captura de Categorias", err)
+                if (err.response?.status === 401) navigate("/login");
+            }
+        }
+        fetchCategorias();
+    }, [navigate]);
 
 
     function handleClick(){

@@ -1,32 +1,10 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import ModalAprovarEmprestimo from "../../modais/modalaprovaremprestimo/modalaprovaremprestimo";
-import { useLocation, useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import api from "../../../service/api/api";
 
 function TabelaReservas() {
-
-    const { hash } = useLocation();
     const [idDestacado, setIdDestacado] = useState(null);
-
-    // useEffect(() => {
-    //     if (hash) {
-    //     const id = hash.replace('#reserva-', '');
-    //     setIdDestacado(id);
-
-    //     // 1. Rolar até o elemento
-    //     const elemento = document.getElementById(`reserva-${id}`);
-    //     if (elemento) {
-    //         elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    //     }
-
-    //     // 2. Timer para remover o destaque após 1 minuto (60000ms)
-    //     const timer = setTimeout(() => {
-    //         setIdDestacado(null);
-    //     }, 60000);
-
-    //     return () => clearTimeout(timer); // Limpa o timer se o componente desmontar
-    //     }
-    // }, [hash]);
 
     const statusConf = {
         aprovada: {
@@ -56,23 +34,23 @@ function TabelaReservas() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        axios.get("http://localhost:8000/api/admin/reservas/")
-            .then(res => {
-                const data = Array.isArray(res.data.results)
-                    ? res.data.results
-                    : res.data;
+        const fetchReservas = async () => {
+            try {
+                const res = await api.get("admin/reservas/");
+                const data = Array.isArray(res.data.results) ? res.data.results : res.data;
                 setReservas(data);
-            })
-            .catch(err => {
-            console.error("Erro na captura reservas", err)
-            if (err.response?.status === 401) navigate("/login");
-        });
+            } catch (err) {
+                console.error("Erro ao buscar reservas", err);
+                if (err.response?.status === 401) navigate("/login");
+            }
+        };
+        fetchReservas();
     }, [navigate]);
 
     const atualizarEstado = async (reserva, novoEstado) => {
         try {
-            await axios.patch(
-                `http://127.0.0.1:8000/api/admin/reservas/${reserva.id}/`,
+            await api.patch(
+                `admin/reservas/${reserva.id}/`,
                 { estado: novoEstado }
             );
 

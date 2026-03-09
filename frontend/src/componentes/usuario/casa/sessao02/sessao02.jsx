@@ -2,7 +2,7 @@ import { LuClock, LuStar } from "react-icons/lu";
 import { HiOutlineTrendingUp } from "react-icons/hi";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../service/api/api";
 
 function Sessao02() {
 
@@ -10,20 +10,21 @@ function Sessao02() {
   const [reservas, setReservas] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/api/livros/")
-      .then(res => {
-        const data = Array.isArray(res.data.results) ? res.data.results : res.data;
-        setLivros(data);
-      })
-      .catch(err => console.error("Erro ao capturar livros", err));
 
-    axios.get("http://localhost:8000/api/reservas/")
-      .then(res => {
-        const data = Array.isArray(res.data.results) ? res.data.results : res.data;
-        setReservas(data);
-      })
-      .catch(err => console.error("Erro ao capturar reservas", err));
+    const fetchLivrosReservas = async() => {
+      try{
+        const [resLivros, resReservas] = await Promise.all([
+          api.get("/livros/livros"),
+          api.get("/livros/reservas"),
+        ]);
+        setLivros(Array.isArray(resLivros.data.results) ? resLivros.data.results : resLivros.data);
+        setReservas(Array.isArray(resReservas.data.results) ? resReservas.data.results : resReservas.data);
+      }catch(err){
+        console.error("Erro ao capturar livros e reservas", err)
+      }
+    }
 
+    fetchLivrosReservas()
   }, []);
 
   // 🔎 Métricas calculadas diretamente
