@@ -7,44 +7,30 @@ import ImagemUpload from "./imgPerfil";
 import { useNavigate, Link } from "react-router-dom";
 
 import ModalEditarPerfil from "../../../layout/modais/modaleditarperfil/modalperfilaluno";
-import { getPerfilUsuario, logoutUsuario } from "../../../service/usuarioservice/userservice";
+import { useAuth } from "../../../auth/userAuth/useAuth";
 
 export default function MeuPerfil() {
 
+  const { user, logout } = useAuth(); // usa o logout do AuthContext
   const [showModal, setShowModal] = useState(false);
-  const [dados, setDados] = useState({});
   const navigate = useNavigate();
-
-    useEffect(() => {
-        const fetchPerfil = async () => {
-        try {
-            const data = await getPerfilUsuario();
-            setDados(data);
-        } catch (err) {
-            console.log("Erro ao buscar perfil:", err);
-            // interceptor do api.js já trata 401 e redireciona
-        }
-        };
-
-        fetchPerfil();
-    }, []);
 
   const handleLogout = async () => {
     try {
-      await logoutUsuario();
+      await logout();
       navigate("/login");
     } catch (error) {
       console.log("Erro no logout", error);
     }
   };
 
-  if (!dados?.user) {
+  if (!user) {
     return <div className="p-10 text-center">Carregando perfil...</div>;
   }
 
-  const perfil = dados?.perfil?.tipo || null;
-  const info = dados?.dados_oficiais || {};
-  const priv = dados?.user || {};
+  const perfil = user?.perfil?.tipo || null;
+  const info = user?.dados_oficiais || {};
+  const priv = user?.user || {};
 
   const nome =
     perfil === "aluno" ? info?.nome_completo
@@ -109,12 +95,12 @@ export default function MeuPerfil() {
           {/* Estatísticas */}
           <div className="flex justify-between mx-auto gap-10 py-3">
             <div className="flex flex-col bg-[#F97B17]/10 text-[#F86417] font-medium py-3 px-6 rounded-lg">
-              <label className="text-center">{dados?.perfil?.n_reservas ?? 0}</label>
+              <label className="text-center">{user?.perfil?.n_reservas ?? 0}</label>
               <label className="text-[#000000]/57 text-sm">Reservado</label>
             </div>
 
             <div className="flex flex-col bg-[#F97B17]/10 text-[#F86417] font-medium py-3 px-6 rounded-lg">
-              <label className="text-center">{dados?.perfil?.n_emprestimos ?? 0}</label>
+              <label className="text-center">{user?.perfil?.n_emprestimos ?? 0}</label>
               <label className="text-[#000000]/57 text-sm">Emprestado</label>
             </div>
           </div>
@@ -125,7 +111,7 @@ export default function MeuPerfil() {
             {perfil && (
               <Link to="/privacidade"
                 // onClick={() => setShowModal(true)}
-                className="w-full bg-[#F86417] text-white flex items-center gap-2 py-3 justify-center rounded-lg"
+                className="w-full bg-[#F86417] text-white flex items-center gap-2 py-3 justify-center rounded-lg cursor-pointer"
               >
                 <LuFilePen size={20} />
                 <p>Editar Perfil</p>
@@ -134,7 +120,7 @@ export default function MeuPerfil() {
 
             <button
               onClick={handleLogout}
-              className="w-full border border-[#000000]/30 flex items-center gap-2 justify-center rounded-lg py-3"
+              className="w-full border border-[#000000]/30 flex items-center gap-2 justify-center rounded-lg py-3 cursor-pointer"
             >
               <HiOutlineLogout size={20} />
               <p>Sair</p>
