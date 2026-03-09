@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import Group
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -143,5 +144,22 @@ class LoginSerializer(serializers.Serializer):
             }
         }
     
+
+class AlterarSenhaSerializer(serializers.Serializer):
+    senha_atual = serializers.CharField(required=True)
+    nova_senha = serializers.CharField(required=True, validators=[validate_password])
+
+    def validate(self, data):
+        user = self.context["request"].user
+
+        if not user.check_password(data["senha_atual"]):
+            raise serializers.ValidationError({
+                "senha_atual": "A senha atual está incorreta."
+            })
+
+        return data
+
+
+
 
 

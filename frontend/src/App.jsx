@@ -25,6 +25,8 @@ import axios from "axios";
 import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
 import AdminAuditLog from './componentes/admin/notificacaoadmin/notificacaoadmin';
 import AlunosOficais from './componentes/admin/alunooficial/alunooficial';
+import AlterarSenha from './componentes/auth/alterarsenha/alterarsenha';
+import Privacidade from './componentes/auth/privacidadeuser/privacidade';
 
 axios.interceptors.request.use(config => {
   const token = sessionStorage.getItem("access_token");
@@ -48,6 +50,8 @@ function App() {
             <Route path='/exposicao' element={<Exposicao />}/>
             <Route path='/perfil' element={<Perfil />}/>
             <Route path='/notificacoes' element={<ListaNotificacoes />}/>
+            <Route path='/alterar-senha' element={<AlterarSenha />}/>
+            <Route path='/privacidade' element={<Privacidade />}/>
 
             <Route path='detalhes/:id' element={<Detalhes />}/>
 
