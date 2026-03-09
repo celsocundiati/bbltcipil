@@ -1,6 +1,7 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../../service/api/api";
 import { motion } from "framer-motion";
+
 
 export default function AlterarSenha() {
 
@@ -29,22 +30,13 @@ export default function AlterarSenha() {
     }
 
     try {
+
       setLoading(true);
 
-      const token = localStorage.getItem("token");
-
-      await axios.post(
-        "http://127.0.0.1:8000/api/usuarios/alterar-senha/",
-        {
-          senha_atual: senhaAtual,
-          nova_senha: novaSenha
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      await api.post("/accounts/alterar-senha/", {
+        senha_atual: senhaAtual,
+        nova_senha: novaSenha
+      });
 
       setSucesso("Senha alterada com sucesso!");
 
@@ -54,10 +46,24 @@ export default function AlterarSenha() {
 
     } catch (error) {
 
-      if (error.response?.data?.detail) {
-        setErro(error.response.data.detail);
+      console.log("Erro completo:", error);
+
+      const data = error?.response?.data;
+
+      if (data?.senha_atual) {
+        setErro(Array.isArray(data.senha_atual) ? data.senha_atual[0] : data.senha_atual);
+
+      } else if (data?.nova_senha) {
+        setErro(Array.isArray(data.nova_senha) ? data.nova_senha[0] : data.nova_senha);
+
+      } else if (data?.detail) {
+        setErro(data.detail);
+
+      } else if (error.response?.status === 500) {
+        setErro("Erro interno do servidor.");
+
       } else {
-        setErro("Erro ao alterar senha. Tente novamente.");
+        setErro("Erro ao alterar senha.");
       }
 
     } finally {
@@ -70,6 +76,7 @@ export default function AlterarSenha() {
       className="max-w-xl mx-auto bg-white shadow-lg rounded-2xl p-8"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
     >
 
       <h2 className="text-2xl font-bold text-gray-800 mb-2">

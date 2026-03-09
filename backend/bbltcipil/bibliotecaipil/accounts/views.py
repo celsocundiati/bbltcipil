@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import SignupSerializer, LoginSerializer
+from .serializers import SignupSerializer, LoginSerializer, AlterarSenhaSerializer
 from .models import Perfil
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -72,7 +72,6 @@ class LogoutView(APIView):
 # ME - Dados do usuário autenticado
 # =====================================================
 
-
 # class MeView(APIView):
 #     permission_classes = [IsAuthenticated]
 
@@ -80,41 +79,55 @@ class LogoutView(APIView):
 
 #         user = request.user
 
-#         try:
-#             perfil = Perfil.objects.select_related(
-#                 "aluno_oficial",
-#                 "funcionario_oficial"
-#             ).get(user=user)
-
-#         except Perfil.DoesNotExist:
-#             return Response(
-#                 {"detail": "Perfil não encontrado."},
-#                 status=404
-#             )
+#         perfil = Perfil.objects.select_related(
+#             "aluno_oficial",
+#             "funcionario_oficial"
+#         ).filter(user=user).first()
 
 #         dados_oficiais = {}
+#         perfil_data = {}
 
-#         if perfil.tipo == "aluno" and perfil.aluno_oficial:
-#             ao = perfil.aluno_oficial
+#         if perfil:
 
-#             dados_oficiais = {
-#                 "n_processo": ao.n_processo,
-#                 "nome_completo": ao.nome_completo,
-#                 "curso": ao.curso,
-#                 "classe": ao.classe,
-#                 "data_nascimento": ao.data_nascimento,
-#                 "idade": ao.idade,
-#                 "n_bilhete": ao.n_bilhete,
+#             if perfil.tipo == "aluno" and perfil.aluno_oficial:
+#                 ao = perfil.aluno_oficial
+
+#                 dados_oficiais = {
+#                     "n_processo": ao.n_processo,
+#                     "nome_completo": ao.nome_completo,
+#                     "curso": ao.curso,
+#                     "classe": ao.classe,
+#                     "data_nascimento": ao.data_nascimento,
+#                     "idade": ao.idade,
+#                     "n_bilhete": ao.n_bilhete,
+#                 }
+
+#             elif perfil.tipo == "funcionario" and perfil.funcionario_oficial:
+#                 fo = perfil.funcionario_oficial
+
+#                 dados_oficiais = {
+#                     "n_agente": fo.n_agente,
+#                     "nome": fo.nome,
+#                     "cargo": fo.cargo,
+#                     "n_bilhete": fo.n_bilhete,
+#                 }
+
+#             perfil_data = {
+#                 "tipo": perfil.tipo,
+#                 "telefone": perfil.telefone,
+#                 "estado": perfil.estado,
+#                 "n_reservas": perfil.n_reservas,
+#                 "n_emprestimos": perfil.n_emprestimos
 #             }
 
-#         elif perfil.tipo == "funcionario" and perfil.funcionario_oficial:
-#             fo = perfil.funcionario_oficial
-
-#             dados_oficiais = {
-#                 "n_agente": fo.n_agente,
-#                 "nome": fo.nome,
-#                 "cargo": fo.cargo,
-#                 "n_bilhete": fo.n_bilhete,
+#         else:
+#             # Caso seja superuser ou usuário sem perfil
+#             perfil_data = {
+#                 "tipo": "admin" if user.is_superuser else None,
+#                 "telefone": None,
+#                 "estado": "ativo",
+#                 "n_reservas": 0,
+#                 "n_emprestimos": 0
 #             }
 
 #         response_data = {
@@ -123,16 +136,11 @@ class LogoutView(APIView):
 #                 "id": user.id,
 #                 "username": user.username,
 #                 "email": user.email,
+#                 "is_superuser": user.is_superuser,
 #                 "grupos": [g.name for g in user.groups.all()]
 #             },
 
-#             "perfil": {
-#                 "tipo": perfil.tipo,
-#                 "telefone": perfil.telefone,
-#                 "estado": perfil.estado,
-#                 "n_reservas": perfil.n_reservas,
-#                 "n_emprestimos": perfil.n_emprestimos
-#             },
+#             "perfil": perfil_data,
 
 #             "dados_oficiais": dados_oficiais
 #         }
@@ -140,14 +148,39 @@ class LogoutView(APIView):
 #         return Response(response_data)
 
 
-
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        return self._get_data(request.user)
 
-        user = request.user
+    def put(self, request):
+        return self._update_user(request.user, request.data)
 
+    def patch(self, request):
+        return self._update_user(request.user, request.data, partial=True)
+
+    def _update_user(self, user, data, partial=False):
+        """
+        Atualiza parcialmente ou totalmente email e telefone
+        """
+        perfil = getattr(user, "perfil", None)
+
+        email = data.get("email")
+        telefone = data.get("telefone")
+
+        # Atualização parcial
+        if email:
+            user.email = email
+            user.save(update_fields=["email"])
+
+        if telefone and perfil:
+            perfil.telefone = telefone
+            perfil.save(update_fields=["telefone"])
+
+        return self._get_data(user)
+
+    def _get_data(self, user):
         perfil = Perfil.objects.select_related(
             "aluno_oficial",
             "funcionario_oficial"
@@ -157,10 +190,8 @@ class MeView(APIView):
         perfil_data = {}
 
         if perfil:
-
             if perfil.tipo == "aluno" and perfil.aluno_oficial:
                 ao = perfil.aluno_oficial
-
                 dados_oficiais = {
                     "n_processo": ao.n_processo,
                     "nome_completo": ao.nome_completo,
@@ -170,10 +201,8 @@ class MeView(APIView):
                     "idade": ao.idade,
                     "n_bilhete": ao.n_bilhete,
                 }
-
             elif perfil.tipo == "funcionario" and perfil.funcionario_oficial:
                 fo = perfil.funcionario_oficial
-
                 dados_oficiais = {
                     "n_agente": fo.n_agente,
                     "nome": fo.nome,
@@ -188,9 +217,7 @@ class MeView(APIView):
                 "n_reservas": perfil.n_reservas,
                 "n_emprestimos": perfil.n_emprestimos
             }
-
         else:
-            # Caso seja superuser ou usuário sem perfil
             perfil_data = {
                 "tipo": "admin" if user.is_superuser else None,
                 "telefone": None,
@@ -199,8 +226,7 @@ class MeView(APIView):
                 "n_emprestimos": 0
             }
 
-        response_data = {
-
+        return Response({
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -208,11 +234,35 @@ class MeView(APIView):
                 "is_superuser": user.is_superuser,
                 "grupos": [g.name for g in user.groups.all()]
             },
-
             "perfil": perfil_data,
-
             "dados_oficiais": dados_oficiais
-        }
+        })
 
-        return Response(response_data)
-    
+
+class AlterarSenhaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        serializer = AlterarSenhaSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        if serializer.is_valid():
+
+            user = request.user
+            nova_senha = serializer.validated_data["nova_senha"]
+
+            user.set_password(nova_senha)
+            user.save()
+
+            return Response(
+                {"detail": "Senha alterada com sucesso."},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
