@@ -9,7 +9,8 @@ from .views import (
     AuditLogViewSet,
     AlunoOficialAdminViewSet,
     FuncionarioOficialAdminViewSet,
-    PerfilAdminViewSet
+    PerfilAdminViewSet,
+    DashboardStatsAdminView
 )
 
 router = DefaultRouter()
@@ -25,4 +26,5 @@ router.register(r'perfil', PerfilAdminViewSet, basename='perfil-admin')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('dashboard/', DashboardStatsAdminView.as_view(), name='dashboard-admin')
 ]

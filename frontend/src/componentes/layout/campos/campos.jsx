@@ -24,18 +24,47 @@ import {livros, emprestimos, alunos} from "../../../dados/db.json";
     ];
 
     
-    const totalLivros = livros.length;
+    // const totalLivros = livros.length;
     const totalEmprestimos = emprestimos.length;
-    const emprestAtivos = emprestimos.length;
-    const totalEstudante = alunos.length;
-    const livrosAtrsados = 10;
 
-    export const dashboardRotulos = [
-        {icone:<HiOutlineBookOpen size={25} />, titulo:"Total de Livros", label:totalLivros, descricao:"+12.5% vs mès anterior"},
-        {icone:<HiOutlineCalendarDays size={25} />, titulo:"Empréstimos Ativos", label:emprestAtivos, descricao:"+8.2% vs mès anterior"},
-        {icone:<HiOutlineExclamationTriangle size={25} />, titulo:"Livros Atrasados", label:livrosAtrsados, descricao:"-3.1% vs mès anterior"},
-        {icone:<HiOutlineUsers size={25} />, titulo:"Total de Estudante", label:totalEstudante, descricao:"+15.3% vs mès anterior"}
+    export const gerarDashboardRotulos = (stats) => [
+        { icone: <HiOutlineBookOpen size={25} />, titulo: "Total de Livros", label: stats.total_livros, descricao: `${stats.crescimento_livros}% vs mês anterior`, crescimento: stats.crescimento_livros },
+        { icone: <HiOutlineCalendarDays size={25} />, titulo: "Empréstimos Ativos", label: stats.emprestimos_ativos, descricao: `${stats.crescimento_emprestimos}% vs mês anterior`, crescimento: stats.crescimento_emprestimos },
+        { icone: <HiOutlineExclamationTriangle size={25} />, titulo: "Livros Atrasados", label: stats.livros_atrasados, descricao: `${stats.crescimento_atrasos}% vs mês anterior`, crescimento: stats.crescimento_atrasos },
+        { icone: <HiOutlineUsers size={25} />, titulo: "Total de Perfis", label: stats.total_perfis, descricao: `${stats.crescimento_perfis}% vs mês anterior`, crescimento: stats.crescimento_perfis },
     ];
+
+    // export const gerarDashboardRotulos = (stats) => [
+
+    //     {
+    //         icone: <HiOutlineBookOpen size={25} />,
+    //         titulo: "Total de Livros",
+    //         label: stats.total_livros,
+    //         descricao: `${stats.crescimento_livros}% vs mês anterior`
+    //     },
+
+    //     {
+    //         icone: <HiOutlineCalendarDays size={25} />,
+    //         titulo: "Empréstimos Ativos",
+    //         label: stats.emprestimos_ativos,
+    //         descricao: `${stats.crescimento_emprestimos}% vs mês anterior`
+    //     },
+
+    //     {
+    //         icone: <HiOutlineExclamationTriangle size={25} />,
+    //         titulo: "Livros Atrasados",
+    //         label: stats.livros_atrasados,
+    //         descricao: `${stats.crescimento_atrasos}% vs mês anterior`
+    //     },
+
+    //     {
+    //         icone: <HiOutlineUsers size={25} />,
+    //         titulo: "Total de Estudantes",
+    //         label: stats.total_estudantes,
+    //         descricao: `${stats.crescimento_estudantes}% vs mês anterior`
+    //     }
+
+    // ];
 
     export const relatoriosRotulos = [
         {icone:<HiOutlineBookOpen size={30} />, titulo:"Empréstimos", label:totalEmprestimos, descricao:"+-16.6%"},
@@ -55,3 +84,4 @@ import {livros, emprestimos, alunos} from "../../../dados/db.json";
         {icone: "", titulo:"Nº Multas Pendentes", label:2},
         {icone: "", titulo:"Nº Multas Pagas", label:1}
     ]
+

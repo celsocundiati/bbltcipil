@@ -55,6 +55,10 @@ class Livro(models.Model):
     quantidade = models.PositiveIntegerField(default=1)
     data = models.DateTimeField(auto_now_add=True)
     capa = models.URLField(max_length=500)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Data de criação do perfil"
+    )
 
     def __str__(self):
         return self.titulo
