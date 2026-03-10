@@ -1,12 +1,15 @@
 import HeaderOutle from "../../layout/outle/headerholte";
 import RotulosOutle from "../../layout/outle/rotulosotles";
 import TitleGrafic from "./seccoes/titulografico";
-import { dataAcervo, dataReserva} from "../../layout/tables/utilitarios/Utils";
+import { useDataAcervo, useDataReserva } from "../../layout/tables/utilitarios/Utils";
 import Grafic from "../../layout/grafics/Grafic";
 import Lembrete from "./seccoes/lembrete";
 
-function Dashboard()
-{
+function Dashboard(){
+
+    const dataReserva = useDataReserva();
+    const dataAcervo = useDataAcervo();
+
     return(
         <main className="space-y-10">
             <section>

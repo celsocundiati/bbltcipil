@@ -16,7 +16,7 @@ function RotulosOutle({page}){
 
         const fetchData = async () => {
 
-            const res = await api.get("admin/dashboard/");
+            const res = await api.get("admin/dashboard/stats/");
             setDashboardData(res.data);
 
         };
