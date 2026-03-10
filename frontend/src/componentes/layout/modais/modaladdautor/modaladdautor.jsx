@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import {HiOutlineXMark} from "react-icons/hi2";
+import api from "../../../service/api/api";
 
 function ModalAddAutor({onClose}){
 
@@ -30,7 +30,7 @@ function ModalAddAutor({onClose}){
       setErro(null);
   
       try {
-        await axios.post("http://127.0.0.1:8000/api/admin/autores/", form);
+        await api.post("/admin/autores/", form);
         setModal({
             open: true,
             type: "success",

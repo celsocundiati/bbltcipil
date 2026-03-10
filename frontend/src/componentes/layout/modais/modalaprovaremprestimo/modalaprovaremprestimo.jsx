@@ -1,17 +1,16 @@
 import { HiOutlineXMark } from "react-icons/hi2";
 import { useState } from "react";
-import axios from "axios";
+import api from "../../../service/api/api";
 
 function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
   const hoje = new Date()
-
   
-    const dataMínimaPermitida = new Date(
-        hoje.getFullYear(),
-        hoje.getMonth(),
-        hoje.getDate()
-    ).toISOString().split("T")[0];
+  const dataMínimaPermitida = new Date(
+      hoje.getFullYear(),
+      hoje.getMonth(),
+      hoje.getDate()
+  ).toISOString().split("T")[0];
 
   const [dataDevolucao, setDataDevolucao] = useState("");
 
@@ -24,8 +23,8 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:8000/api/admin/emprestimos/",
+      const res = await api.post(
+        "/admin/emprestimos/",
         {
           reserva: reserva.id,
           data_devolucao: dataDevolucao
@@ -113,14 +112,14 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
                   <button
                       type="button"
                       onClick={onClose}
-                      className="w-full sm:w-auto border border-black/10 text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
+                      className="w-full sm:w-auto border cursor-pointer border-black/10 text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
                   >
                       Cancelar
                   </button>
 
                   <button
                       type="submit"
-                      className="w-full sm:w-auto bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                      className="w-full sm:w-auto cursor-pointer bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
                   >
                       Confirmar empréstimo
                   </button>

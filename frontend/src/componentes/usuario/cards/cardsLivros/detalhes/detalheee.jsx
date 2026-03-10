@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import { AiOutlineFileText, AiOutlineBook } from "react-icons/ai";
 import { MdPersonOutline } from "react-icons/md";
@@ -7,11 +7,12 @@ import { HiOutlineHashtag } from "react-icons/hi";
 import { IoCalendarClearOutline } from "react-icons/io5";
 import EstadoDetalhes from "./estadoDetalhes/estado";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useAuth } from "../../../../auth/userAuth/useauth";
 import api from "../../../../service/api/api";
 
 function Detalhes() {
+  const { id } = useParams()
   const { user, setUser } = useAuth();
   const [livro, setLivro] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,6 @@ function Detalhes() {
             setLivro(Array.isArray(res.data.results) ? res.data.results : res.data)
         }catch(err){
             console.error("Erro ao carregar livro.", err)
-            if (err.response?.status === 401) navigate("/login");
         } finally {
           setLoading(false);
         }
@@ -33,7 +33,7 @@ function Detalhes() {
 
       fetchLivros();
 
-  }, [navigate, id]);
+  }, [id]);
 
   if (loading) return <p className="text-center mt-10">Carregando detalhes do livro...</p>;
   if (!livro) return <p className="text-red-600 text-center mt-20">Nenhum livro encontrado.</p>;
