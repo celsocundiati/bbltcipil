@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import {HiOutlineXMark} from "react-icons/hi2";
 import api from "../../../service/api/api";
 
@@ -58,7 +57,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
       setModal({
           open: true,
           type: "success",
-          message: "Categória atualizada com sucesso!",
+          message: "Categoria atualizada com sucesso!",
       });
 
       // Atualizar lista sem recarregar tudo
@@ -66,10 +65,8 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
         prev.map(cat => (cat.id === categoria.id ? response.data : cat))
       );
 
-      onClose();
-
     } catch (error) {
-      if (err.response?.data) {
+      if (error.response?.data) {
         const erros = Object.values(error.response.data)
             .flat()
             .join("\n");
@@ -89,7 +86,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
   return (
     <section>
         <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-            <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
+            <div className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black"
@@ -155,34 +152,34 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
             </div>
         </dialog>
         
-            {modal.open && (
-                <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                    <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
-                        <h3 className="text-lg  font-semibold mb-2">
-                            {modal.type === "success" ? "Sucesso" : "Erro"}
-                        </h3>
-                        <p>{modal.message}</p>
-                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (modal.type === "success") {
-                                        setModal({ open: false });
-                                        onClose()
-                                    } else {
-                                        setModal({ ...modal, open: false }); // apenas fecha no erro
-                                    }
-                                }}
-                                className={`cursor-pointer px-6 py-2 rounded-lg border border-black/10 text-white transition ${
-                                    modal.type === "success" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                                }`}
-                            >
-                                {modal.type === "success" ? "Confirmado" : "Tente novamente"}
-                            </button>
-                        </div>
+        {modal.open && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                <div className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative">
+                    <h3 className="text-lg  font-semibold mb-2">
+                        {modal.type === "success" ? "Sucesso" : "Erro"}
+                    </h3>
+                    <p>{modal.message}</p>
+                    <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (modal.type === "success") {
+                                    setModal({ open: false });
+                                    onClose()
+                                } else {
+                                    setModal({ ...modal, open: false }); // apenas fecha no erro
+                                }
+                            }}
+                            className={`cursor-pointer px-6 py-2 rounded-lg border border-black/10 text-white transition ${
+                                modal.type === "success" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                            }`}
+                        >
+                            {modal.type === "success" ? "Confirmado" : "Tente novamente"}
+                        </button>
                     </div>
                 </div>
-            )}
+            </div>
+        )}
     </section>
   );
 }

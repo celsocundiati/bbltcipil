@@ -1,6 +1,6 @@
 import {HiOutlineXMark} from "react-icons/hi2";
 import { useState } from "react";
-import axios from "axios";
+import api from "../../../service/api/api";
 
 function ModalAddCategoria({onClose}){
 
@@ -29,7 +29,8 @@ function ModalAddCategoria({onClose}){
         setErro(null);
     
         try {
-          await axios.post("http://127.0.0.1:8000/api/admin/categorias/", categoria);
+          setLoading(true)
+          await api.post("/admin/categorias/", categoria);
           setModal({
             open: true,
             type: "success",
@@ -94,16 +95,16 @@ function ModalAddCategoria({onClose}){
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="w-full sm:w-auto border border-black/10 text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
+                                className="w-full sm:w-auto border border-black/10 cursor-pointer text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
                             >
                                 Cancelar
                             </button>
 
                             <button
                                 type="submit"
-                                className="w-full sm:w-auto bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                                className="w-full sm:w-auto bg-green-500 cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
                             >
-                                Adicionar Categória
+                                {!loading ? "Adicionar categoria" : "Adicionando categoria..."}
                             </button>
                         </div>
                     </form>
@@ -112,7 +113,7 @@ function ModalAddCategoria({onClose}){
 
             {modal.open && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                    <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
+                    <div className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative">
                         <h3 className="text-lg  font-semibold mb-2">
                             {modal.type === "success" ? "Sucesso" : "Erro"}
                         </h3>

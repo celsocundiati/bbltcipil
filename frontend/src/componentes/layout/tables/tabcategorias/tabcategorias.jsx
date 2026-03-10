@@ -2,7 +2,6 @@ import BtnAddAdmin from "../../btns01/btnaddmin";
 import ModalAddCategoria from "../../modais/modaladdcategoria/modaladdcategoria";
 import CategoriaEditar from "../../modais/categoriaeditar/categoriaeditar";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { FiTrash2 } from "react-icons/fi";
 import { LuFilePen } from "react-icons/lu";
 import { HiOutlineFolder } from "react-icons/hi2";
@@ -59,7 +58,7 @@ function TabCategorias(){
     }
     async function handleConfirm() {
         if(modal.type === "delete"){
-            await axios.delete(`http://127.0.0.1:8000/api/admin/categorias/${modal.categoria.id}/`);
+            await api.delete(`/admin/categorias/${modal.categoria.id}/`);
             setCategorias(prev => prev.filter(c => c.id !== modal.categoria.id));
             closeModal();
         }
@@ -120,7 +119,7 @@ function TabCategorias(){
 
             {modal.open && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                    <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
+                    <div className="w-full max-w-96 md:min-w-lg bg-white shadow-xl rounded-2xl p-6 relative text-start">
                         <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir categoria" : "Editar categoria"}
                         </h3>

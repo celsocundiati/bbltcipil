@@ -111,7 +111,7 @@ function TabAutores() {
 
             {modal.open && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                    <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
+                    <div className="w-full max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative text-start">
                         <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir autor" : "Editar autor"}
                         </h3>
