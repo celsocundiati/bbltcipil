@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions, filters
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count, Sum
+from django.db.models.functions import ExtractMonth
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from datetime import timedelta
@@ -80,23 +82,23 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         emprestimo = serializer.save()
         AuditService.log(user=self.request.user, action="Criou", instance=emprestimo,
-                         extra={"livro": emprestimo.reserva.livro.titulo,
-                                "aluno": emprestimo.reserva.usuario.username,
-                                "data_devolucao": str(emprestimo.data_devolucao),
-                                "estado": emprestimo.acoes})
+            extra={"livro": emprestimo.reserva.livro.titulo,
+                "aluno": emprestimo.reserva.usuario.username,
+                "data_devolucao": str(emprestimo.data_devolucao),
+                "estado": emprestimo.acoes})
 
     def perform_update(self, serializer):
         emprestimo = serializer.save()
         AuditService.log(user=self.request.user, action="Atualizou", instance=emprestimo,
-                         extra={"livro": emprestimo.reserva.livro.titulo,
-                                "aluno": emprestimo.reserva.usuario.username,
-                                "data_devolucao": str(emprestimo.data_devolucao),
-                                "estado": emprestimo.acoes})
+            extra={"livro": emprestimo.reserva.livro.titulo,
+                "aluno": emprestimo.reserva.usuario.username,
+                "data_devolucao": str(emprestimo.data_devolucao),
+                "estado": emprestimo.acoes})
 
     def perform_destroy(self, instance):
         AuditService.log(user=self.request.user, action="Cancelou", instance=instance,
-                         extra={"livro": instance.reserva.livro.titulo,
-                                "aluno": instance.reserva.usuario.username})
+            extra={"livro": instance.reserva.livro.titulo,
+                "aluno": instance.reserva.usuario.username})
         instance.delete()
 
 
@@ -229,36 +231,6 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['-criado_em']
 
 
-# class DashboardStatsAdminView(APIView):
-#     def get(self, request):
-#         hoje = now()
-#         mes_passado = hoje - timedelta(days=30)
-
-#         total_livros = Livro.objects.count()
-#         emprestimos_ativos = Emprestimo.objects.filter(acoes="ativo").count()
-#         livros_atrasados = Emprestimo.objects.filter(acoes="atrasado").count()
-#         total_perfis = Perfil.objects.count()
-
-#         # Crescimento simples de empréstimos
-#         emprestimos_mes_atual = Emprestimo.objects.filter(data_emprestimo__gte=mes_passado).count()
-#         emprestimos_mes_passado = Emprestimo.objects.filter(data_emprestimo__lt=mes_passado).count()
-
-#         crescimento = 0
-#         if emprestimos_mes_passado > 0:
-#             crescimento = ((emprestimos_mes_atual - emprestimos_mes_passado) / emprestimos_mes_passado) * 100
-
-#         data = {
-#             "total_livros": total_livros,
-#             "emprestimos_ativos": emprestimos_ativos,
-#             "livros_atrasados": livros_atrasados,
-#             "total_perfis": total_perfis,
-#             "crescimento_emprestimos": round(crescimento, 2),
-#         }
-
-#         return Response(data)
-    
-
-
 class DashboardStatsAdminView(APIView):
     def get(self, request):
         hoje = now()
@@ -300,6 +272,107 @@ class DashboardStatsAdminView(APIView):
         }
 
         return Response(data)
-    
 
-    
+
+class EstatisticasMensaisAdminView(APIView):
+    def get(self, request):
+        meses = [
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        ]
+
+        # Inicializa estatísticas
+        estatisticas = {
+            i: {"emprestimos": 0, "devolucoes": 0, "perfil": 0, "multas": 0, "livros": 0}
+            for i in range(1, 13)
+        }
+
+        # Empréstimos por mês
+        emprestimos_por_mes = Emprestimo.objects.annotate(
+            mes=ExtractMonth("data_emprestimo")
+        ).values("mes").annotate(total=Count("id"))
+
+        for item in emprestimos_por_mes:
+            estatisticas[item["mes"]]["emprestimos"] = item["total"]
+
+        # Devoluções por mês (AuditLog com estado 'devolvido')
+        devolucoes_por_mes = AuditLog.objects.filter(alteracoes__estado="devolvido").annotate(
+            mes=ExtractMonth("criado_em")
+        ).values("mes").annotate(total=Count("id"))
+
+        for item in devolucoes_por_mes:
+            estatisticas[item["mes"]]["devolucoes"] = item["total"]
+
+        # Perfis (qualquer tipo) por mês
+        perfis_por_mes = Perfil.objects.annotate(
+            mes=ExtractMonth("created_at")
+        ).values("mes").annotate(total=Count("id"))
+
+        for item in perfis_por_mes:
+            estatisticas[item["mes"]]["perfil"] = item["total"]
+
+        # Multas por mês (supondo campo 'valor_multa' no Emprestimo)
+        multas_por_mes = Emprestimo.objects.annotate(
+            mes=ExtractMonth("data_emprestimo")
+        ).values("mes").annotate(total=Sum(0))
+
+        for item in multas_por_mes:
+            estatisticas[item["mes"]]["multas"] = 0
+
+        # Livros distintos emprestados por mês
+        livros_por_mes = Emprestimo.objects.annotate(
+            mes=ExtractMonth("data_emprestimo")
+        ).values("mes").annotate(total=Count("reserva__livro", distinct=True))
+
+        for item in livros_por_mes:
+            estatisticas[item["mes"]]["livros"] = item["total"]
+
+        # Transformar para lista
+        data = [
+            {
+                "id": i,
+                "mes": meses[i-1],
+                "emprestimos": estatisticas[i]["emprestimos"],
+                "devolucoes": estatisticas[i]["devolucoes"],
+                "perfil": estatisticas[i]["perfil"],
+                "multas": estatisticas[i]["multas"],
+                "livros": estatisticas[i]["livros"],
+                "cor": "#F86417"
+            } for i in range(1, 13)
+        ]
+
+        return Response(data)
+
+
+class EstatisticasAcervoAdminView(APIView):
+    def get(self, request):
+        # Consulta livros agrupados por categoria
+        categorias = (
+            Livro.objects
+            .values("categoria__nome")  # assume que Livro tem ForeignKey para Categoria
+            .annotate(total=Count("id"))
+            .order_by("-total")
+        )
+
+        # Mapeia cores fixas para categorias (pode ajustar ou gerar dinamicamente)
+        cores = [
+            "#2563eb", "#16a34a", "#9333ea", "#f97316", "#dc2626", "#003366",
+            "#FF9900", "#00CC99", "#9900CC"
+        ]
+
+        # Monta resposta
+        data = [
+            {
+                "id": idx + 1,
+                "categoria": cat["categoria__nome"],
+                "total": cat["total"],
+                "cor": cores[idx % len(cores)]  # recicla cores se houver mais categorias
+            }
+            for idx, cat in enumerate(categorias)
+        ]
+
+        return Response(data)
+
+
+
+

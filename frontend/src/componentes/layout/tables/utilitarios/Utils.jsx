@@ -1,12 +1,84 @@
 import {admins} from "../../../../dados/db.json"
 import {HiOutlineShieldCheck} from "react-icons/hi2"
-import {FiActivity} from "react-icons/fi"
+import {FiActivity} from "react-icons/fi";
+import { useEffect, useState } from "react";
+import api from "../../../service/api/api";
 
 export const obterIniciais = (nome) => {
     if(!nome) return "";
     const partes = nome.trim().split(" ");
     return partes.slice(0, 2).map(parte => parte[0].toUpperCase()).join("");
 };
+
+
+export const useDataReserva = () => {
+    const [dataReserva, setDataReserva] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+        try {
+            const res = await api.get("/admin/dashboard/estatisticas-mensais/"); // URL do Django
+            setDataReserva(res.data.slice(0, 6)); // Pega só os 6 primeiros meses
+        } catch (error) {
+            console.error("Erro ao carregar dados de reservas:", error);
+        }
+        };
+
+        fetchData();
+    }, []);
+
+    return dataReserva;
+};
+
+
+export const useDataAcervo = () => {
+    const [dataAcervo, setDataAcervo] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await api.get("/admin/dashboard/estatisticas-acervo/");
+                setDataAcervo(res.data);
+            } catch (error) {
+                console.error("Erro ao carregar dados do acervo:", error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    return dataAcervo;
+};
+
+
+// export const useDataAcervo = () => {
+//     const [dataAcervo, setDataAcervo] = useState([]);
+
+//     useEffect(() => {
+//         const fetchData = async () => {
+//             try {
+//                 const res = await api.get("/admin/dashboard/estatisticas-acervo/");
+//                 if (res.data && Array.isArray(res.data)) {
+//                     // Mapear para garantir chaves corretas
+//                     const mapped = res.data.map((item, idx) => ({
+//                         id: item.id || idx + 1,
+//                         categoria: item.categoria,
+//                         total: item.total,
+//                         cor: item.cor || "#2563eb",
+//                     }));
+//                     setDataAcervo(mapped);
+//                     console.log(mapped)
+//                 }
+//             } catch (error) {
+//                 console.error("Erro ao carregar dados do acervo:", error);
+//             }
+//         };
+
+//         fetchData();
+//     }, []);
+
+//     return dataAcervo;
+// };
 
 
 export const rowsTableEstrato = [
@@ -34,14 +106,6 @@ export const adminsRotulos = [
     {icone:<HiOutlineShieldCheck size={40} />, label:"Super Admin", value:totalAdminsSuper}
 ];
 
-export const dataReserva = [
-    {id: 1, mes: "Jan", emprestimos: 140, devolucoes: 130},
-    {id: 2, mes: "Fev", emprestimos: 160, devolucoes: 150},
-    {id: 3, mes: "Mar", emprestimos: 180, devolucoes: 170},
-    {id: 4, mes: "Abr", emprestimos: 140, devolucoes: 135},
-    {id: 5, mes: "Mai", emprestimos: 155, devolucoes: 150},
-    {id: 6, mes: "Jun", emprestimos: 170, devolucoes: 165}
-];
 
 export const dataAcervo = [
     {id: 1, categoria: "Tecnologia", total: 240, cor: "#2563eb"},
