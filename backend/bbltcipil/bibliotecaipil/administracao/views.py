@@ -1,6 +1,9 @@
 from rest_framework import viewsets, permissions, filters
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now
+from datetime import timedelta
 from rest_framework.response import Response
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import AlunoOficial, FuncionarioOficial, Perfil
@@ -19,7 +22,6 @@ from .serializers import (
 from .audit_service import AuditService
 
 User = get_user_model()
-
 
 # -----------------------------
 # LIVRO
@@ -226,3 +228,78 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ['criado_em', 'usuario__username', 'acao']
     ordering = ['-criado_em']
 
+
+# class DashboardStatsAdminView(APIView):
+#     def get(self, request):
+#         hoje = now()
+#         mes_passado = hoje - timedelta(days=30)
+
+#         total_livros = Livro.objects.count()
+#         emprestimos_ativos = Emprestimo.objects.filter(acoes="ativo").count()
+#         livros_atrasados = Emprestimo.objects.filter(acoes="atrasado").count()
+#         total_perfis = Perfil.objects.count()
+
+#         # Crescimento simples de empréstimos
+#         emprestimos_mes_atual = Emprestimo.objects.filter(data_emprestimo__gte=mes_passado).count()
+#         emprestimos_mes_passado = Emprestimo.objects.filter(data_emprestimo__lt=mes_passado).count()
+
+#         crescimento = 0
+#         if emprestimos_mes_passado > 0:
+#             crescimento = ((emprestimos_mes_atual - emprestimos_mes_passado) / emprestimos_mes_passado) * 100
+
+#         data = {
+#             "total_livros": total_livros,
+#             "emprestimos_ativos": emprestimos_ativos,
+#             "livros_atrasados": livros_atrasados,
+#             "total_perfis": total_perfis,
+#             "crescimento_emprestimos": round(crescimento, 2),
+#         }
+
+#         return Response(data)
+    
+
+
+class DashboardStatsAdminView(APIView):
+    def get(self, request):
+        hoje = now()
+        mes_passado = hoje - timedelta(days=30)
+
+        # Totais
+        total_livros = Livro.objects.count()
+        emprestimos_ativos = Emprestimo.objects.filter(acoes="ativo").count()
+        livros_atrasados = Emprestimo.objects.filter(acoes="atrasado").count()
+        total_perfis = Perfil.objects.count()
+
+        # Crescimento: comparação mês atual vs mês anterior
+        def calcular_crescimento(model, filtro=None, campo_data=None):
+            filtro = filtro or {}
+            if campo_data:
+                atual = model.objects.filter(**filtro, **{f"{campo_data}__gte": mes_passado}).count()
+                anterior = model.objects.filter(**filtro, **{f"{campo_data}__lt": mes_passado}).count()
+            else:
+                atual = model.objects.filter(**filtro).count()
+                anterior = model.objects.exclude(**filtro).count()
+            if anterior > 0:
+                return round(((atual - anterior) / anterior) * 100, 2)
+            return 0
+
+        crescimento_livros = calcular_crescimento(Livro, campo_data="created_at")
+        crescimento_emprestimos = calcular_crescimento(Emprestimo, campo_data="data_emprestimo")
+        crescimento_atrasos = calcular_crescimento(Emprestimo, filtro={"acoes": "atrasado"}, campo_data="data_emprestimo")
+        crescimento_perfis = calcular_crescimento(Perfil, campo_data="created_at")
+
+        data = {
+            "total_livros": total_livros,
+            "emprestimos_ativos": emprestimos_ativos,
+            "livros_atrasados": livros_atrasados,
+            "total_perfis": total_perfis,
+            "crescimento_livros": crescimento_livros,
+            "crescimento_emprestimos": crescimento_emprestimos,
+            "crescimento_atrasos": crescimento_atrasos,
+            "crescimento_perfis": crescimento_perfis,
+        }
+
+        return Response(data)
+    
+
+    

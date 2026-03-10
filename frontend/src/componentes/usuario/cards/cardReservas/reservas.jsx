@@ -42,7 +42,7 @@ function CardReservas() {
   // 🗑 Cancelar Reserva
   const handleDeletarReserva = async (reserva) => {
     try {
-      await api.delete(`reservas/${reserva.id}/`);
+      await api.delete(`/livros/reservas/${reserva.id}/`);
       setReservas(prev => prev.filter(r => r.id !== reserva.id));
     } catch (error) {
       if (error.response?.status === 401) navigate("/login");

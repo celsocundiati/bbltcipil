@@ -1,10 +1,34 @@
 import {alunos, emprestimos} from "../../../dados/db.json";
-import { dashboardRotulos, relatoriosRotulos, multasRotulos } from "../../layout/campos/campos";
+import { gerarDashboardRotulos, relatoriosRotulos, multasRotulos } from "../../layout/campos/campos";
 import { HiOutlineTrendingUp } from "react-icons/hi";
 import { adminsRotulos } from "../../layout/tables/utilitarios/Utils";
+import api from "../../service/api/api";
+import { useState, useEffect } from "react";
 
-function RotulosOutle({page})
-{
+function RotulosOutle({page}){
+
+
+    const [dashboardData, setDashboardData] = useState(null);
+
+    useEffect(() => {
+
+        if(page !== "dashboard") return;
+
+        const fetchData = async () => {
+
+            const res = await api.get("admin/dashboard/");
+            setDashboardData(res.data);
+
+        };
+
+        fetchData();
+
+    }, [page]);
+
+    const dashboardRotulos = dashboardData
+        ? gerarDashboardRotulos(dashboardData)
+        : [];
+
     const alunosAtivos = alunos.filter(aluno => aluno.estado === "Ativo");
     const alunosSuspensos = alunos.filter(aluno => aluno.estado === "Suspenso");
     const alunosEmprestimos = alunos.filter(aluno => aluno.emprestimos !== 0);

@@ -17,22 +17,22 @@ function Detalhes() {
   const [livro, setLivro] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Captura livro pelo ID
+
+
+  // Buscar livro
+  const fetchLivros = async () => {
+    try {
+      const res = await api.get(`livros/livros/${id}/`);
+      setLivro(res.data);
+    } catch (err) {
+      console.error("Erro ao carregar livro.", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-
-      const fetchLivros = async() => {
-        try{
-            const res = await api.get(`livros/livros/${id}/`);
-            setLivro(Array.isArray(res.data.results) ? res.data.results : res.data)
-        }catch(err){
-            console.error("Erro ao carregar livro.", err)
-        } finally {
-          setLoading(false);
-        }
-      }
-
-      fetchLivros();
-
+    fetchLivros();
   }, [id]);
 
   if (loading) return <p className="text-center mt-10">Carregando detalhes do livro...</p>;
@@ -46,29 +46,42 @@ function Detalhes() {
       : `${base} bg-black/13 text-black/30 cursor-not-allowed`;
   };
 
+
   const handleReservar = async () => {
-  if (!user) {
-    alert("Usuário não logado");
-    return;
-  }
 
-  try {
-    await api.post("livros/reservas/", { livro: livro.id } );
-    alert("Reserva realizada com sucesso!");
-  } catch (error) {
-    // Se houver resposta do backend, mostra a mensagem detalhada
-    if (error.response && error.response.data) {
-      const data = error.response.data;
-      // Caso seja um dict de erros por campo (ex: {"livro": "..."}), pega a primeira mensagem
-      const msg = data.livro || data.non_field_errors || JSON.stringify(data);
-      alert(`Erro ao fazer reserva: ${msg}`);
-    } else {
-      alert("Erro ao fazer reserva. Tente novamente mais tarde.");
+    if (!user) {
+      alert("Usuário não logado");
+      return;
     }
-    console.error(error.response || error);
-  }
-};
 
+    try {
+
+      await api.post("livros/reservas/", { livro: livro.id });
+
+      await fetchLivros(); // atualiza estado
+
+      alert("Reserva realizada com sucesso!");
+
+    } catch (error) {
+
+      if (error.response && error.response.data) {
+
+        const data = error.response.data;
+        const msg = data.livro || data.non_field_errors || JSON.stringify(data);
+
+        alert(`Erro ao fazer reserva: ${msg}`);
+
+      } else {
+
+        alert("Erro ao fazer reserva. Tente novamente mais tarde.");
+
+      }
+
+      console.error(error.response || error);
+
+    }
+
+  };
   // Renderiza sumário
   const renderSumario = () =>
     livro.sumario
