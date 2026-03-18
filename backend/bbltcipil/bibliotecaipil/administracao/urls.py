@@ -12,7 +12,9 @@ from .views import (
     PerfilAdminViewSet,
     DashboardStatsAdminView,
     EstatisticasMensaisAdminView,
-    EstatisticasAcervoAdminView
+    EstatisticasAcervoAdminView,
+    MultaViewSet,
+    DashboardResumoGeralView
 )
 
 router = DefaultRouter()
@@ -25,10 +27,12 @@ router.register(r'auditlog', AuditLogViewSet, basename='audit-admin')
 router.register(r'alunosoficiais', AlunoOficialAdminViewSet, basename='alunosoficiais-admin')
 router.register(r'funcionarios', FuncionarioOficialAdminViewSet, basename='funcionario')
 router.register(r'perfil', PerfilAdminViewSet, basename='perfil-admin')
+router.register(r"multas", MultaViewSet, basename="multas-admin")
 
 urlpatterns = [
     path('', include(router.urls)),
     path('dashboard/stats/', DashboardStatsAdminView.as_view(), name='dashboard-admin-stats'),
     path('dashboard/estatisticas-mensais/', EstatisticasMensaisAdminView.as_view(), name='dashboard-admin-estatisticas'),
     path("dashboard/estatisticas-acervo/", EstatisticasAcervoAdminView.as_view(), name="dashboard-admin-acervo"),
+    path("dashboard/resumo-geral/", DashboardResumoGeralView.as_view(), name="dashboard-admin-acervo"),
 ]

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AuditLog
+from .models import AuditLog, Multa
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
 
@@ -8,7 +8,7 @@ from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
 # --------------------------
 class ReservaAdminSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="livro.titulo", read_only=True)
-    usuario_nome = serializers.CharField(source="usuario.username", read_only=True)
+    usuario_nome = serializers.CharField(source="usuario.first_name", read_only=True)
     data_formatada = serializers.DateTimeField(format="%d/%m/%Y", source='data_reserva', read_only=True)
     hora_formatada = serializers.DateTimeField(format="%H:%M:%S", source='data_reserva', read_only=True)
 
@@ -19,7 +19,7 @@ class ReservaAdminSerializer(serializers.ModelSerializer):
 
 class EmprestimoAdminSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="reserva.livro.titulo", read_only=True)
-    usuario_nome = serializers.CharField(source="reserva.usuario.username", read_only=True)
+    usuario_nome = serializers.CharField(source="reserva.usuario.first_name", read_only=True)
 
     class Meta:
         model = Emprestimo
@@ -166,4 +166,20 @@ class FuncionarioOficialAdminSerializer(serializers.ModelSerializer):
         read_only_fields = ["created_at", "updated_at"]
 
 
-        
+class MultaSerializer(serializers.ModelSerializer):
+    usuario_nome = serializers.ReadOnlyField(source="usuario.first_name")
+
+    class Meta:
+        model = Multa
+        fields = [
+            "id", "usuario", "usuario_nome", "emprestimo",
+            "motivo", "descricao", "valor", "estado",
+            "data_criacao", "data_pagamento", "criado_por", "atualizado_em"
+        ]
+        read_only_fields = ["usuario", "estado", "data_criacao", "data_pagamento", "atualizado_em"]
+
+    def validate_valor(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("O valor da multa deve ser maior que zero.")
+        return value
+

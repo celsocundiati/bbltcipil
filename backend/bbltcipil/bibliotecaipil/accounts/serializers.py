@@ -39,6 +39,7 @@ class SignupSerializer(serializers.Serializer):
                 n_bilhete=n_bilhete
             )
             tipo = "aluno"
+            nome_completo = instance.nome_completo
         except AlunoOficial.DoesNotExist:
             pass
 
@@ -50,6 +51,7 @@ class SignupSerializer(serializers.Serializer):
                     n_bilhete=n_bilhete
                 )
                 tipo = "funcionario"
+                nome_completo = instance.nome
             except FuncionarioOficial.DoesNotExist:
                 raise serializers.ValidationError(
                     "Utilizador não encontrado ou dados incorretos."
@@ -63,6 +65,7 @@ class SignupSerializer(serializers.Serializer):
 
         data["instance"] = instance
         data["tipo"] = tipo
+        data["nome_completo"] = nome_completo
         return data
 
     def create(self, validated_data):
@@ -71,12 +74,14 @@ class SignupSerializer(serializers.Serializer):
         email = validated_data["email"]
         password = validated_data["password"]
         n_identificacao = validated_data["n_identificacao"]
+        nome_completo = validated_data["nome_completo"]
 
         # Cria User
         user = User.objects.create_user(
             username=n_identificacao,
             email=email,
-            password=password
+            password=password,
+            first_name=nome_completo
         )
 
         # Define grupo automaticamente
@@ -98,7 +103,7 @@ class SignupSerializer(serializers.Serializer):
         # Auditoria
         AuditLog.objects.create(
             usuario=user,
-            acao="signup",
+            acao="Sign up",
             modelo="User",
             objeto_id=user.id,
             alteracoes={
