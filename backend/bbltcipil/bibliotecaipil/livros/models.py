@@ -41,7 +41,6 @@ class Livro(models.Model):
         ('Disponível', 'Disponível'),
         ('Indisponível', 'Indisponível'),
     ]
-
     titulo = models.CharField(max_length=120)
     isbn = models.CharField(max_length=13, unique=True)
     autor = models.ForeignKey(Autor, on_delete=models.CASCADE, related_name="livros")

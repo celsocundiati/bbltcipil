@@ -1,8 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    CategoriaViewSet, AutorViewSet, 
-    PerfilViewSet, LivroViewSet, ReservaViewSet, 
+    CategoriaViewSet, AutorViewSet, LivroViewSet, ReservaViewSet, 
     EmprestimoViewSet, NotificacaoViewSet
     )
 
@@ -12,7 +11,7 @@ router.register(r'autores', AutorViewSet)
 router.register(r'categorias', CategoriaViewSet)
 router.register(r'reservas', ReservaViewSet, basename='reserva')
 router.register(r'emprestimos', EmprestimoViewSet, basename='emprestimo')
-router.register(r'perfil', PerfilViewSet, basename='perfil-usuario')
+# router.register(r'perfil', PerfilViewSet, basename='perfil-usuario')
 router.register(r"notificacoes", NotificacaoViewSet, basename="notificacao")
 
 urlpatterns = [

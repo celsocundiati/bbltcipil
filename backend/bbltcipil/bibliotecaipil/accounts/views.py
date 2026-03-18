@@ -231,6 +231,7 @@ class MeView(APIView):
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
+                "first_name": user.first_name,
                 "is_superuser": user.is_superuser,
                 "grupos": [g.name for g in user.groups.all()]
             },

@@ -1,15 +1,17 @@
 from rest_framework import viewsets, permissions, filters
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Sum
+from django.utils import timezone
+from django.db.models import Count, Sum, Q
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
+from rest_framework.decorators import action
 from datetime import timedelta
 from rest_framework.response import Response
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import AlunoOficial, FuncionarioOficial, Perfil
-from .models import AuditLog
+from .models import AuditLog, Multa
 from .serializers import (
     ReservaAdminSerializer,
     EmprestimoAdminSerializer,
@@ -19,7 +21,8 @@ from .serializers import (
     AuditLogSerializer,
     AlunoOficialAdminSerializer,
     FuncionarioOficialAdminSerializer,
-    PerfilAdminSerializer
+    PerfilAdminSerializer,
+    MultaSerializer
 )
 from .audit_service import AuditService
 
@@ -32,6 +35,12 @@ class LivroAdminViewSet(viewsets.ModelViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroAdminSerializer
     permission_classes = [permissions.IsAdminUser]
+    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['estado']
+    search_fields = ['titulo', 'isbn', 'categoria__nome']
+    ordering_fields = ['publicado_em', 'titulo', 'isbn', 'estado']
+    ordering = ['publicado_em']
 
     def perform_create(self, serializer):
         livro = serializer.save()
@@ -53,21 +62,27 @@ class ReservaAdminViewSet(viewsets.ModelViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaAdminSerializer
     permission_classes = [permissions.IsAdminUser]
+    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['estado']
+    search_fields = ['usuario__first_name', 'livro__titulo']
+    ordering_fields = ['data_reserva', 'livro', 'estado']
+    ordering = ['data_reserva']
 
     def perform_create(self, serializer):
         reserva = serializer.save()
         AuditService.log(user=self.request.user, action="Criou", instance=reserva,
-                         extra={"livro": reserva.livro.titulo, "estado": reserva.estado, "data_reserva": str(reserva.data_reserva)})
+            extra={"livro": reserva.livro.titulo,"nome": reserva.usuario.first_name, "estado": reserva.estado, "data_reserva": str(reserva.data_reserva)})
 
     def perform_update(self, serializer):
         reserva = serializer.save()
         acao = "Aprovou" if reserva.estado == "reservado" else "Cancelou"
         AuditService.log(user=self.request.user, action=acao, instance=reserva,
-                         extra={"livro": reserva.livro.titulo, "estado": reserva.estado, "data_reserva": str(reserva.data_reserva)})
+            extra={"livro": reserva.livro.titulo,"nome": reserva.usuario.first_name, "estado": reserva.estado, "data_reserva": str(reserva.data_reserva)})
 
     def perform_destroy(self, instance):
         AuditService.log(user=self.request.user, action="Cancelou", instance=instance,
-                         extra={"livro": instance.livro.titulo, "estado": instance.estado})
+            extra={"livro": instance.livro.titulo,"nome": instance.usuario.first_name, "estado": instance.estado})
         instance.delete()
 
 
@@ -79,11 +94,26 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
     serializer_class = EmprestimoAdminSerializer
     permission_classes = [permissions.IsAdminUser]
 
+    def get_queryset(self):
+        # user = self.request.user
+        hoje = timezone.now().date()
+        # queryset = Emprestimo.objects.filter(reserva__usuario=user)
+        queryset = Emprestimo.objects.all()
+        queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
+        return queryset
+
+    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['acoes']
+    search_fields = ['reserva__usuario__first_name', 'reserva__livro__titulo']
+    ordering_fields = ['data_emprestimo', 'livro__titulo', 'acoes']
+    ordering = ['data_emprestimo']
+
     def perform_create(self, serializer):
         emprestimo = serializer.save()
         AuditService.log(user=self.request.user, action="Criou", instance=emprestimo,
             extra={"livro": emprestimo.reserva.livro.titulo,
-                "aluno": emprestimo.reserva.usuario.username,
+                "nome": emprestimo.reserva.usuario.first_name,
                 "data_devolucao": str(emprestimo.data_devolucao),
                 "estado": emprestimo.acoes})
 
@@ -91,14 +121,13 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
         emprestimo = serializer.save()
         AuditService.log(user=self.request.user, action="Atualizou", instance=emprestimo,
             extra={"livro": emprestimo.reserva.livro.titulo,
-                "aluno": emprestimo.reserva.usuario.username,
+                "nome": emprestimo.reserva.usuario.first_name,
                 "data_devolucao": str(emprestimo.data_devolucao),
                 "estado": emprestimo.acoes})
 
     def perform_destroy(self, instance):
         AuditService.log(user=self.request.user, action="Cancelou", instance=instance,
-            extra={"livro": instance.reserva.livro.titulo,
-                "aluno": instance.reserva.usuario.username})
+            extra={"livro": instance.reserva.livro.titulo, "nome": instance.reserva.usuario.first_name})
         instance.delete()
 
 
@@ -112,14 +141,23 @@ class AutorAdminViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         autor = serializer.save()
-        AuditService.log(user=self.request.user, action="Adicionou", instance=autor)
+        AuditService.log(user=self.request.user, action="Adicionou", instance=autor,
+            extra={"autor": autor.nome,
+                   "nacionalidade": autor.nacionalidade,
+                })
 
     def perform_update(self, serializer):
         autor = serializer.save()
-        AuditService.log(user=self.request.user, action="Atualizou", instance=autor)
+        AuditService.log(user=self.request.user, action="Atualizou", instance=autor,
+            extra={"autor": autor.nome,
+                   "nacionalidade": autor.nacionalidade,
+                })
 
     def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Removeu", instance=instance)
+        AuditService.log(user=self.request.user, action="Removeu", instance=instance,
+            extra={"autor": instance.nome,
+                   "nacionalidade": instance.nacionalidade,
+                })
         instance.delete()
 
 
@@ -133,15 +171,75 @@ class CategoriaAdminViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         categoria = serializer.save()
-        AuditService.log(user=self.request.user, action="Adicionou", instance=categoria)
+        AuditService.log(user=self.request.user, action="Adicionou", instance=categoria,
+            extra={"categoria": categoria.nome,
+                   "descricao": categoria.descricao,
+                })
 
     def perform_update(self, serializer):
         categoria = serializer.save()
-        AuditService.log(user=self.request.user, action="Atualizou", instance=categoria)
-
+        AuditService.log(user=self.request.user, action="Atualizou", instance=categoria,
+            extra={"categoria": categoria.nome,
+                   "descricao": categoria.descricao,
+                })
     def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Removeu", instance=instance)
+        AuditService.log(user=self.request.user, action="Removeu", instance=instance,
+            extra={"categoria": instance.nome,
+                   "descricao": instance.descricao,
+                })
         instance.delete()
+
+
+class MultaViewSet(viewsets.ModelViewSet):
+    queryset = Multa.objects.all().order_by("-data_criacao")
+    serializer_class = MultaSerializer
+
+    def perform_create(self, serializer):
+        """
+        Cria multa e aplica regras automáticas:
+        - Atraso > 7 dias → valor 1200
+        - Dano → valor do livro
+        """
+        emprestimo = serializer.validated_data.get("emprestimo")
+        motivo = serializer.validated_data.get("motivo")
+        valor = serializer.validated_data.get("valor")
+
+        if emprestimo:
+            hoje = timezone.now().date()
+            prazo = emprestimo.data_devolucao
+
+            if motivo == "Atraso":
+                dias_atraso = (hoje - prazo).days
+                if dias_atraso > 7:
+                    valor = 1200
+
+            elif motivo == "Dano":
+                # ⚠️ Ajuste conforme teu model Livro
+                if emprestimo.livro and hasattr(emprestimo.livro, "preco"):
+                    valor = emprestimo.livro.preco
+
+        serializer.save(
+            valor=valor,
+            criado_por=self.request.user
+        )
+
+    # 🔹 Marcar multa como pago
+    @action(detail=True, methods=["post"])
+    def pagar(self, request, pk=None):
+        multa = self.get_object()
+        multa.marcar_como_pago()
+        return Response({"status": "Multa paga com sucesso"}, status=status.HTTP_200_OK)
+
+    # 🔹 Dispensar multa
+    @action(detail=True, methods=["post"])
+    def dispensar(self, request, pk=None):
+        multa = self.get_object()
+        try:
+            multa.dispensar()
+            return Response({"status": "Multa dispensada"}, status=status.HTTP_200_OK)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 # -----------------------------
@@ -199,18 +297,14 @@ class PerfilAdminViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['tipo', 'estado']
+    filterset_fields = ['estado']
     search_fields = [
+        'user__first_name',
         'user__username',
-        'telefone',
-        'aluno_oficial__nome_completo',
-        'aluno_oficial__n_processo',
-        'funcionario_oficial__nome',
-        'funcionario_oficial__n_agente',
         'funcionario_oficial__cargo'
     ]
-    ordering_fields = ['user__username', 'n_reservas', 'n_emprestimos']
-    ordering = ['user__username']
+    ordering_fields = ['user__first_name', 'n_reservas', 'n_emprestimos']
+    ordering = ['user__first_name']
 
 
 # -----------------------------
@@ -260,6 +354,13 @@ class DashboardStatsAdminView(APIView):
         crescimento_atrasos = calcular_crescimento(Emprestimo, filtro={"acoes": "atrasado"}, campo_data="data_emprestimo")
         crescimento_perfis = calcular_crescimento(Perfil, campo_data="created_at")
 
+        # ALERTAS
+        alertas = {
+            "livros_atrasados": livros_atrasados,
+            "reservas_pendentes": Reserva.objects.filter(estado="pendente").count(),
+            "inventario_proximo": "Segunda-feira, 23 Jan."  # pode vir de tabela Inventario se existir
+        }
+
         data = {
             "total_livros": total_livros,
             "emprestimos_ativos": emprestimos_ativos,
@@ -269,9 +370,90 @@ class DashboardStatsAdminView(APIView):
             "crescimento_emprestimos": crescimento_emprestimos,
             "crescimento_atrasos": crescimento_atrasos,
             "crescimento_perfis": crescimento_perfis,
+            "alertas": alertas,
         }
 
         return Response(data)
+
+
+class DashboardResumoGeralView(APIView):
+    def get(self, request):
+        hoje = now().date()
+        proximos_dias = hoje + timedelta(days=3)
+
+        # =======================
+        # 📚 PERFIS (ALUNOS)
+        # =======================
+        total_perfis = Perfil.objects.count()
+        ativos = Perfil.objects.filter(estado__iexact="ativo").count()
+        suspensos = Perfil.objects.filter(estado__iexact="suspenso").count()
+        com_emprestimos = Perfil.objects.filter(n_emprestimos__gt=0).count()
+
+        # =======================
+        # 📦 EMPRÉSTIMOS
+        # =======================
+        emprestimos_ativos = Emprestimo.objects.filter(acoes__iexact="ativo").count()
+        atrasados = Emprestimo.objects.filter(acoes__iexact="atrasado").count()
+
+        devolucoes_hoje = Emprestimo.objects.filter(
+            data_devolucao=hoje
+        ).count()
+
+        vencimento_proximo = Emprestimo.objects.filter(
+            data_devolucao__range=[hoje, proximos_dias]
+        ).count()
+
+        # =======================
+        # 📌 RESERVAS
+        # =======================
+        reservas_pendentes = Reserva.objects.filter(estado__iexact="Pendente").count()
+        reservas_reservadas = Reserva.objects.filter(estado__iexact="Reservado").count()
+        reservas_aprovadas = Reserva.objects.filter(estado__iexact="Aprovada").count()
+        reservas_finalizadas = Reserva.objects.filter(estado__iexact="Finalizada").count()
+
+        # =======================
+        # 💰 MULTAS
+        # =======================
+        total_multas = Multa.objects.count()
+        multas_pendentes = Multa.objects.filter(estado="pendente").count()
+        multas_pagas = Multa.objects.filter(estado="pago").count()
+        valor_total_multas = Multa.objects.aggregate(total=Sum("valor"))["total"] or 0
+
+        # =======================
+        # 📊 RELATÓRIOS (EXEMPLO)
+        # =======================
+        relatorios = {
+            "emprestimos_mes": Emprestimo.objects.filter(data_emprestimo__month=hoje.month).count(),
+            "novos_perfis": Perfil.objects.filter(created_at__month=hoje.month).count(),
+        }
+
+        return Response({
+            "perfis": {
+                "total": total_perfis,
+                "ativos": ativos,
+                "suspensos": suspensos,
+                "com_emprestimos": com_emprestimos
+            },
+            "emprestimos": {
+                "ativos": emprestimos_ativos,
+                "atrasados": atrasados,
+                "devolucoes_hoje": devolucoes_hoje,
+                "vencimento_proximo": vencimento_proximo
+            },
+            "reservas": {
+                "pendentes": reservas_pendentes,
+                "reservadas": reservas_reservadas,
+                "aprovadas": reservas_aprovadas,
+                "finalizadas": reservas_finalizadas
+            },
+            "multas": {
+                "total": total_multas,
+                "pendentes": multas_pendentes,
+                "pagas": multas_pagas,
+                "valor_total": valor_total_multas
+            },
+            "relatorios": relatorios
+        })
 
 
 class EstatisticasMensaisAdminView(APIView):
@@ -372,7 +554,5 @@ class EstatisticasAcervoAdminView(APIView):
         ]
 
         return Response(data)
-
-
 
 

@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -8,8 +9,7 @@ from .serializers import (
     CategoriaSerializer, AutorSerializer, LivroSerializer,
     ReservaSerializer, EmprestimoSerializer, NotificacaoSerializer
 )
-from accounts.models import Perfil
-from .serializers import PerfilSerializer
+from administracao.audit_service import AuditService
 
 
 # ==============================
@@ -56,31 +56,31 @@ class AutorViewSet(BaseDebugViewSet):
 # ==============================
 # Perfis (Alunos + Funcionários)
 # ==============================
-class PerfilViewSet(viewsets.ModelViewSet):
-    queryset = Perfil.objects.select_related('aluno_oficial', 'funcionario_oficial', 'user').all()
-    serializer_class = PerfilSerializer
-    permission_classes = [IsAuthenticated]
+# class PerfilViewSet(viewsets.ModelViewSet):
+#     queryset = Perfil.objects.select_related('aluno_oficial', 'funcionario_oficial', 'user').all()
+#     serializer_class = PerfilSerializer
+#     permission_classes = [IsAuthenticated]
 
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = [
-        'user__username',
-        'telefone',
-        'aluno_oficial__nome_completo',
-        'aluno_oficial__n_processo',
-        'funcionario_oficial__nome',
-        'funcionario_oficial__n_agente',
-        'funcionario_oficial__cargo'
-    ]
-    ordering_fields = ['user__username', 'n_reservas', 'n_emprestimos']
-    ordering = ['user__username']
+#     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+#     search_fields = [
+#         'user__username',
+#         'telefone',
+#         'aluno_oficial__nome_completo',
+#         'aluno_oficial__n_processo',
+#         'funcionario_oficial__nome',
+#         'funcionario_oficial__n_agente',
+#         'funcionario_oficial__cargo'
+#     ]
+#     ordering_fields = ['user__username', 'n_reservas', 'n_emprestimos']
+#     ordering = ['user__username']
 
-    def get_queryset(self):
-        """Admins veem todos, usuários normais só o próprio perfil"""
-        user = self.request.user
-        queryset = super().get_queryset()
-        if not user.is_staff:
-            queryset = queryset.filter(user=user)
-        return queryset
+#     def get_queryset(self):
+#         """Admins veem todos, usuários normais só o próprio perfil"""
+#         user = self.request.user
+#         queryset = super().get_queryset()
+#         if not user.is_staff:
+#             queryset = queryset.filter(user=user)
+#         return queryset
 
 
 # ==============================
@@ -90,6 +90,12 @@ class LivroViewSet(BaseDebugViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroSerializer
     permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['estado']
+    search_fields = ['titulo', 'autor__nome', 'categoria__nome']
+    ordering_fields = ['publicado_em', 'titulo', 'isbn', 'estado']
+    ordering = ['publicado_em']
 
     @action(detail=True, methods=["post"])
     def reservar(self, request, pk=None):
@@ -118,13 +124,14 @@ class ReservaViewSet(BaseDebugViewSet):
     def perform_create(self, serializer):
         reserva = serializer.save(usuario=self.request.user)
         reserva._request = self.request
+        
         return reserva
 
     def perform_update(self, serializer):
         reserva = serializer.save()
         reserva._request = self.request
         return reserva
-
+    
 
 # ==============================
 # Empréstimos

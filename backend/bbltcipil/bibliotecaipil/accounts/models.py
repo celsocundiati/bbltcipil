@@ -113,7 +113,6 @@ class Perfil(models.Model):
         self.save(update_fields=['estado'])
 
 
-
 class FuncionarioOficial(models.Model):
 
     perfil = models.OneToOneField(
