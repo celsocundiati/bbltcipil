@@ -7,6 +7,7 @@ import { LuFilePen } from "react-icons/lu";
 import { HiOutlineFolder } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
+import { motion } from "framer-motion";
 
 function TabCategorias(){
 
@@ -74,11 +75,16 @@ function TabCategorias(){
 
 
     return(
-        <section>
+        <motion.section initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            >
             <div>
                 <BtnAddAdmin tipo="categoria" onClick={handleClick}/>
             </div>
-            <div className="w-full bg-white rounded-2xl px-8 my-25 py-8">
+            <div 
+            transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo   
+            className="w-full bg-white rounded-2xl px-8 my-25 py-8">
                 <table className="w-full table-fixed border-collapse bg-white shadow-md rounded-xl overflow-hidden">
                     <thead className="bg-black/5">
                         <tr>
@@ -118,7 +124,10 @@ function TabCategorias(){
             </div>
 
             {modal.open && (
-                <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+                    viewport={{ once: true }}             // anima apenas uma vez
+                    className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
                     <div className="w-full max-w-96 md:min-w-lg bg-white shadow-xl rounded-2xl p-6 relative text-start">
                         <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir categoria" : "Editar categoria"}
@@ -133,7 +142,7 @@ function TabCategorias(){
                                 <button onClick={handleConfirm}  type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-lg cursor-pointer hover:bg-green-600 transition-all duration-200">Confirmar</button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {showModalCategoria && <ModalAddCategoria onClose={() => setShowModalCategoria(false)}/> }
@@ -145,7 +154,7 @@ function TabCategorias(){
             />
             )}
 
-        </section>
+        </motion.section>
     );
 }
 

@@ -2,6 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FaBook } from "react-icons/fa";
 import api from "../../service/api/api";
+import { motion } from "framer-motion";
+
 
 function EditarLivro() {
 
@@ -32,9 +34,9 @@ function EditarLivro() {
                 setLoadingPage(true);
 
                 const [livroRes, autoresRes, categoriasRes] = await Promise.all([
-                    api.get(`livros/livros/${id}/`),
-                    api.get(`livros/autores/`),
-                    api.get(`livros/categorias/`)
+                    api.get(`/admin/livros/${id}/`),
+                    api.get(`/admin/autores/`),
+                    api.get(`/admin/categorias/`)
                 ]);
 
                 setLivro(livroRes.data);
@@ -138,7 +140,11 @@ function EditarLivro() {
     // JSX
     // =============================
     return (
-        <main className="w-full h-full py-12">
+        <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo 
+            className="w-full h-full py-12">
             <section className="my-12 flex items-center justify-center w-full mx-auto md:w-3/4 border border-black/10 rounded-xl shadow">
 
                 <div className="bg-white rounded-xl p-6 w-full relative">
@@ -362,7 +368,7 @@ function EditarLivro() {
                     </div>
                 </div>
             )}
-        </main>
+        </motion.main>
     );
 }
 

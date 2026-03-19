@@ -62,18 +62,23 @@ function LoginPage() {
             placeholder="Username institucional"
             value={n_identificacao}
             onChange={(e) => setIdentificacao(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="px-4 py-2 border border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
             required
           />
-
           <input
             type="password"
             placeholder="Senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="px-4 py-2 border border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
             required
           />
+
+          <p className="text-gray-600 text-sm">
+            <Link to="/cadastro" className="text-orange-500 font-medium">
+              Esqueceu a sua senha?
+            </Link>
+          </p>
 
           <button
             type="submit"

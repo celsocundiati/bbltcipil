@@ -1,10 +1,11 @@
 import { HiOutlineXMark } from "react-icons/hi2";
-import { useState } from "react";
 import api from "../../../service/api/api";
+import { motion } from "framer-motion";
 
 function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
-  const hoje = new Date()
+  const hoje = new Date();
+  const prazodias = 4;
   
   const dataMínimaPermitida = new Date(
       hoje.getFullYear(),
@@ -12,12 +13,17 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
       hoje.getDate()
   ).toISOString().split("T")[0];
 
-  const [dataDevolucao, setDataDevolucao] = useState("");
+  
+  const dataMaximaPermitida = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth(),
+    hoje.getDate() + prazodias
+  ).toISOString().split("T")[0];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!dataDevolucao) {
+    if (!dataMaximaPermitida) {
       alert("Defina a data de devolução.");
       return;
     }
@@ -27,7 +33,7 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
         "/admin/emprestimos/",
         {
           reserva: reserva.id,
-          data_devolucao: dataDevolucao
+          data_devolucao: dataMaximaPermitida
         }
       );
 
@@ -48,25 +54,31 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
   };
 
   return (
-    <section>
+    <section initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+      whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+      viewport={{ once: true }}             // anima apenas uma vez
+    >
       <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-        <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
+        <motion.div  initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+          whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+          viewport={{ once: true }}             // anima apenas uma vez
+          className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
 
           {/* Fechar */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-black/50 hover:text-black"
+            className="absolute top-4 right-4 text-black/50 hover:text-black cursor-pointer"
           >
             <HiOutlineXMark size={28} />
           </button>
 
           {/* Cabeçalho */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-xl font-medium">
               Aprovar Empréstimo
             </h2>
             <p className="text-black/60">
-              Confirme os dados e defina a data de devolução.
+              Confira os dados e confirme o empréstimo.
             </p>
           </div>
 
@@ -74,7 +86,7 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
             {/* Estudante */}
             <div className="flex flex-col space-y-1">
-              <label className="text-black/70">Usuário</label>
+              <label className="text-black/70">Nome</label>
               <input
                 type="text"
                 value={reserva?.usuario_nome || ""}
@@ -94,16 +106,14 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
               />
             </div>
 
-            {/* Data de Devolução */}
             <div className="flex flex-col space-y-1">
-              <label className="text-black/70">Data de Devolução</label>
+              <label className="text-black/70">Data Devolução</label>
               <input
                 type="date"
-                value={dataDevolucao}
                 min={dataMínimaPermitida}
-                onChange={(e) => setDataDevolucao(e.target.value)}
-                required
-                className="outline-none py-2 px-3 rounded-lg bg-gray-100 focus:ring-2 focus:ring-green-500"
+                value={dataMaximaPermitida || ""}
+                readOnly
+                className="bg-gray-100 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
               />
             </div>
 
@@ -127,7 +137,7 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
           </form>
 
-        </div>
+        </motion.div>
       </div>
     </section>
   );

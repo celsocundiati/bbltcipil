@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import {HiOutlineXMark} from "react-icons/hi2";
+import api from "../../../service/api/api";
 
 function ModalAlunoOficial({onClose}){
 
@@ -51,7 +51,7 @@ function ModalAlunoOficial({onClose}){
             navigate("/login");
             return;
         }
-            await axios.post("http://127.0.0.1:8000/api/admin/alunosoficiais/", form, {
+            await api.post("/admin/alunosoficiais/", form, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setModal({

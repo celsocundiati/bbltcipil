@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { camposBotton, camposMain } from "../campos/campos";
 import { LuBookOpen } from "react-icons/lu";
+import { motion } from "framer-motion";
 
 function Sidebar(){
 
@@ -8,7 +9,11 @@ function Sidebar(){
     const est_Ativo = "bg-[#f97b17]/35 text-[#f97b17]";
 
     return(
-        <aside className="fixed top-0 left-0 bottom-0 flex flex-col border border-b-0 border-t-0 w-82
+        <motion.aside initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo
+            className="fixed top-0 left-0 bottom-0 flex flex-col border border-b-0 border-t-0 w-82
             border-l border-black/15 bg-white z-50 overflow-hidden">
 
         
@@ -49,7 +54,7 @@ function Sidebar(){
                 ))}
             </nav>
 
-        </aside>
+        </motion.aside>
     );
 }
 export default Sidebar;

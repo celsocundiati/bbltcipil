@@ -1,35 +1,52 @@
 import { useState, useEffect } from "react";
-import { useNavigate} from "react-router-dom";
 import { LuFilePen } from "react-icons/lu";
 import { FiTrash2 } from "react-icons/fi";
 import api from "../../../service/api/api";
-
+import { motion } from "framer-motion";
+import {FiSearch} from "react-icons/fi";
 
 function TabelaLivros(){
 
     const [livros, setLivros] = useState([]);
+    const [categorias, setCategorias] = useState([]);
+
     const [modal, setModal] = useState({
         open: false,
         type: null,
         livro: null,
     });
-    const navigate = useNavigate();
+
+    const [search, setSearch] = useState("");
+    const [estadoFilter, setEstadoFilter] = useState("");
+
+    
+    const fetchLivros = async() => {
+        try{
+            const params = {};
+            if (search) params.search = search;
+            if (estadoFilter) params.estado = estadoFilter;
+            
+            const [livroRes, categoriasRes] = await Promise.all([
+                api.get("/admin/livros/", { params }),
+                api.get(`/admin/categorias/`)
+            ]);
+            setLivros(Array.isArray(livroRes.data.results) ? livroRes.data.results : livroRes.data)
+
+            setCategorias(
+                Array.isArray(categoriasRes.data.results)
+                    ? categoriasRes.data.results
+                    : categoriasRes.data
+            );
+        }catch(err){
+            console.error("Erro ao carregar livros.", err)
+        }
+    }
 
     useEffect(() => {
 
-        const fetchLivros = async() => {
-            try{
-                const res = await api.get("/admin/livros/");
-                setLivros(Array.isArray(res.data.results) ? res.data.results : res.data)
-            }catch(err){
-                console.error("Erro ao carregar livros.", err)
-                if (err.response?.status === 401) navigate("/login");
-            }
-        }
-
         fetchLivros();
 
-    }, [navigate]);
+    }, [search, estadoFilter]);
 
     function openModal(type, livro){
         setModal({open: true, type, livro});
@@ -50,7 +67,49 @@ function TabelaLivros(){
     }
     
     return(
-        <main>
+        <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            className="space-y-10"
+        >
+            <section className="flex items-center justify-center gap-8 bg-white px-5 py-8 border border-black/5 rounded-2xl flex-col md:flex-row">
+                
+                <div className="w-full">
+                    <div className="flex items-center bg-black/5 border rounded-xl overflow-hiddenmax-w-md text-[#000000]/57
+                        relative focus-within:ring-2 focus-within:ring-[#f97b17] border-[#E6E6E6] transition
+                    ">
+                        <button className="h-full rounded-l-lg px-2 py-1.5 hover:text-[#f97b17] transition cursor-pointer"> <FiSearch size={22}/> </button>
+        
+                        <input value={search} onChange={(e) => setSearch(e.target.value)} type="text" 
+                        placeholder="Busque por título, isbn, estado e categoria" className="flex-1 px-4 py-1.5 outline-none"/>
+                    </div>
+                </div>
+
+                <div className="flex flex-col w-full md:w-64">
+
+                    <select
+                        value={estadoFilter}
+                        onChange={(e) => setEstadoFilter(e.target.value)}
+                        className="
+                        w-full
+                        px-3
+                        h-10
+                        rounded-xl cursor-pointer
+                        border border-black/10
+                        bg-white
+                        text-sm
+                        focus:ring-2 focus:ring-[#f97b17]
+                        outline-none
+                        "
+                    >
+                        <option value="">Todos os estados</option>
+                        <option value="Disponível">Disponível</option>
+                        <option value="Indisponível">Indisponível</option>
+                    </select>
+                    
+                </div>
+            </section>
+            
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
                 <section className="py-5 flex flex-col">
                     <label className="text-xl font-medium">Lista de Livros</label>
@@ -144,7 +203,10 @@ function TabelaLivros(){
             </section>
 
             {modal.open && (
-                <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+                    viewport={{ once: true }}             // anima apenas uma vez
+                    className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
                     <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                         <h3 className="text-xl font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir livro" : "Editar livro"}
@@ -157,10 +219,12 @@ function TabelaLivros(){
                             <button onClick={handleConfirm} className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 cursor-pointer">Confirmar</button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             )}
-        </main>
+        </motion.main>
     )
 }
 
 export default TabelaLivros;
+
+

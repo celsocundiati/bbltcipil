@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {HiOutlineXMark} from "react-icons/hi2";
 import api from "../../../service/api/api";
+import { motion } from "framer-motion";
 
 function ModalAddAutor({onClose}){
 
@@ -66,7 +67,10 @@ function ModalAddAutor({onClose}){
     return(
         <section>
             <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                <div className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
+                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+                whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+                viewport={{ once: true }}       // anima apenas uma vez 
+                className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative">
                     <button onClick={onClose} className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black">
                         <HiOutlineXMark size={35}/>
                     </button>
@@ -98,11 +102,14 @@ function ModalAddAutor({onClose}){
                             </button>
                         </div>
                     </form>
-                </div>
+                </motion.div>
             </dialog>
 
             {modal.open && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center text-left z-50">
+                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+                    viewport={{ once: true }}             // anima apenas uma vez 
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center text-left z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-sm">
                         <h3 className="text-lg  font-semibold mb-2">
                             {modal.type === "success" ? "Sucesso" : "Erro"}
@@ -127,7 +134,7 @@ function ModalAddAutor({onClose}){
                             </button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             )}
         </section>
     );

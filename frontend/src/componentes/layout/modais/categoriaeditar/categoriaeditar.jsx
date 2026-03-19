@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {HiOutlineXMark} from "react-icons/hi2";
 import api from "../../../service/api/api";
+import { motion } from "framer-motion";
 
 function CategoriaEditar({ categoria ,onClose, setCategorias }) {
 
@@ -86,7 +87,11 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
   return (
     <section>
         <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-            <div className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative">
+            <motion.div  initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+                whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+                viewport={{ once: true }}             // anima apenas uma vez 
+                className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative"
+            >
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black"
@@ -149,11 +154,14 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
                     </div>
                 </form>
                 )}
-            </div>
+            </motion.div>
         </dialog>
         
         {modal.open && (
-            <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+            <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+                whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+                viewport={{ once: true }}             // anima apenas uma vez 
+                className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
                 <div className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative">
                     <h3 className="text-lg  font-semibold mb-2">
                         {modal.type === "success" ? "Sucesso" : "Erro"}
@@ -178,7 +186,7 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
                         </button>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         )}
     </section>
   );

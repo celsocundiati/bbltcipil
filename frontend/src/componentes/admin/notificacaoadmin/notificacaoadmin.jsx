@@ -1,195 +1,288 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { HiCheckCircle, HiPencil, HiTrash, HiShieldCheck } from "react-icons/hi2";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+import api from "../../service/api/api";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
-// Componente para badges de ação
-function Badge({ acao }) {
-  let color, icon;
-
-  switch (acao) {
-    case "Criou":
-    case "Adicionou":
-      color = "bg-blue-100 text-blue-700";
-      icon = <HiCheckCircle size={18} />;
-      break;
-    case "Atualizou":
-      color = "bg-yellow-100 text-yellow-700";
-      icon = <HiPencil size={18} />;
-      break;
-    case "Removeu":
-    case "Cancelou":
-      color = "bg-red-100 text-red-700";
-      icon = <HiTrash size={18} />;
-      break;
-    case "Aprovou":
-      color = "bg-green-100 text-green-700";
-      icon = <HiShieldCheck size={18} />;
-      break;
-    default:
-      color = "bg-gray-100 text-gray-700";
-      icon = null;
-  }
-
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium ${color}`}>
-      {icon} {acao}
-    </span>
-  );
-}
-
-// Componente principal Audit Log
 export default function AdminAuditLog() {
   const [logs, setLogs] = useState([]);
   const [search, setSearch] = useState("");
   const [acaoFilter, setAcaoFilter] = useState("");
   const [modeloFilter, setModeloFilter] = useState("");
+  const [periodoDias, setPeriodoDias] = useState(7);
   const [loading, setLoading] = useState(true);
 
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (search) params.search = search;
-      if (acaoFilter) params.acao = acaoFilter;
-      if (modeloFilter) params.modelo = modeloFilter;
-
-      const token = sessionStorage.getItem("access_token");
-
-      const response = await axios.get("http://127.0.0.1:8000/api/admin/auditlog/", {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setLogs(Array.isArray(response.data.results) 
-      ? response.data.results 
-      : Array.isArray(response.data) 
-        ? response.data 
-        : []);
-    } catch (err) {
-      console.error("Erro ao buscar logs de auditoria", err);
-    } finally {
-      setLoading(false);
-    }
+  // 🔥 CONFIG ESCALÁVEL DE ROTAS
+  const redirectConfig = {
+    Reserva: { path: "/admin/acervo", anchor: (id) => `reserva-${id}` },
+    Emprestimo: { path: "/admin/emprestimos", anchor: (id) => `emprestimo-${id}` },
   };
 
-  useEffect(() => {
+  // 🔥 FUNÇÃO DE REDIRECIONAMENTO DINÂMICO
+  function getRedirectPath(log) {
+    const config = redirectConfig[log.modelo];
+    if (!config) return "#";
+    return `${config.path}#${config.anchor(log.objeto_id)}`;
+  }
+
+    useEffect(() => {
+    const fetchLogs = async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (search) params.search = search;
+        if (acaoFilter) params.acao = acaoFilter;
+        if (modeloFilter) params.modelo = modeloFilter;
+        if (periodoDias) params.days = periodoDias;
+
+        const response = await api.get("admin/auditlog/", { params });
+        setLogs(
+          Array.isArray(response.data.results)
+            ? response.data.results
+            : Array.isArray(response.data)
+            ? response.data
+            : []
+        );
+      } catch (err) {
+        console.error("Erro ao buscar logs de auditoria", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchLogs();
-  }, [search, acaoFilter, modeloFilter]);
+  }, [search, acaoFilter, modeloFilter, periodoDias]);
 
-  // Exportação para PDF
+  // 📄 EXPORTAR PDF
   const exportPDF = () => {
-    const doc = new jsPDF("p", "pt");
-    const tableColumn = ["Usuário", "Ação", "Modelo", "Objeto ID", "Alterações", "Data"];
-    const tableRows = [];
+    if (!logs || logs.length === 0) {
+      alert("Sem dados para exportar neste período.");
+      return;
+    }
 
-    logs.forEach((log) => {
-      const alteracoesFormatadas = JSON.stringify(log.alteracoes, null, 2);
-      tableRows.push([log.usuario_nome, log.acao, log.modelo, log.objeto_id, alteracoesFormatadas, new Date(log.criado_em).toLocaleString()]);
+    const doc = new jsPDF();
+    const dataAtual = new Date().toLocaleString();
+    const totalLogs = logs.length;
+    const filtros = `Pesquisa: ${search || "—"}\nAção: ${acaoFilter || "—"}\nModelo: ${modeloFilter || "—"}\nPeríodo: últimos ${periodoDias} dias`;
+
+    // 🔹 Cabeçalho
+    doc.setFontSize(16);
+    doc.text("BIBLIOTECA IPIL", 14, 15);
+    doc.setFontSize(10);
+    doc.text("Relatório de Auditoria do Sistema", 14, 22);
+    doc.setFontSize(9);
+    doc.text(`Gerado em: ${dataAtual}`, 14, 28);
+
+    doc.setFontSize(10);
+    doc.text(`Total de Registos: ${totalLogs}`, 14, 38);
+    doc.setFontSize(9);
+    doc.text("Filtros Aplicados:", 14, 45);
+    doc.text(filtros, 14, 50);
+
+    // 🔹 Tabela
+    const tableColumn = ["Usuário", "Ação", "Modelo", "ID", "Resumo", "Data"];
+    const tableRows = logs.map((log) => {
+      const resumo =
+        typeof log.alteracoes === "object"
+          ? Object.values(log.alteracoes).join(" - ")
+          : "—";
+
+      return [
+        log.usuario_nome || "—",
+        log.acao || "—",
+        log.modelo || "—",
+        log.objeto_id || "—",
+        resumo,
+        new Date(log.criado_em).toLocaleString(),
+      ];
     });
 
-    doc.text("Audit Log - Sistema", 40, 30);
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 50,
-      styles: { fontSize: 8, cellWidth: "wrap" },
-      columnStyles: { 4: { cellWidth: 150 } } // Alterações podem ser longas
+      startY: 65,
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [249, 123, 23] },
+      columnStyles: { 4: { cellWidth: 70 } },
     });
+
+    // 🔹 Rodapé
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.width - 40,
+        doc.internal.pageSize.height - 10
+      );
+    }
 
     doc.save(`AuditLog_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
+  // 📊 FORMATAR ALTERAÇÕES
+  function logAlteracoes(modelo, alt) {
+    const mensagens = {
+      Emprestimo: (
+        <p className="text-black/70 truncate w-[95%]">
+          {[alt.alteracoes?.nome, alt.alteracoes?.livro, alt.alteracoes?.estado].join(" - ")}
+        </p>
+      ),
+      Reserva: (
+        <p className="text-black/70 truncate w-[95%]">
+          {[alt.alteracoes?.nome, alt.alteracoes?.livro, alt.alteracoes?.estado].join(" - ")}
+        </p>
+      ),
+      User: (
+        <p className="text-black/70 truncate w-[95%]">
+          {[alt.alteracoes?.tipo, alt.alteracoes?.identificacao].join(" - ")}
+        </p>
+      ),
+      Categoria: (
+        <p className="text-black/70 truncate w-[95%]">
+          {[alt.alteracoes?.categoria, alt.alteracoes?.descricao].join(" - ")}
+        </p>
+      ),
+      Autor: (
+        <p className="text-black/70">
+          {[alt.alteracoes?.autor, alt.alteracoes?.nacionalidade].join(" - ")}
+        </p>
+      ),
+    };
+
+    return mensagens[modelo] || (
+      <p className="text-black/70 truncate w-[95%]">Nenhuma ação!</p>
+    );
+  }
+
+  // 🎨 CORES POR AÇÃO
+  function bg(acao) {
+    switch (acao) {
+      case "Criou":
+      case "Adicionou":
+        return "bg-blue-100 text-blue-700";
+      case "Atualizou":
+        return "bg-yellow-100 text-yellow-700";
+      case "Removeu":
+      case "Cancelou":
+        return "bg-red-100 text-red-700";
+      case "Aprovou":
+        return "bg-green-100 text-green-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <p className="text-xl animate-pulse">Carregando dados...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Auditoria do Sistema</h1>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8 }}
+      className="p-6 mt-30"
+    >
+      <main className="w-full grid gap-5">
+        <section className="bg-white border border-black/10 rounded-lg p-5 space-y-6">
+          <div>
+            <h1 className="text-xl">Auditoria do Sistema</h1>
+            <p className="text-black/70">Últimas ações no sistema</p>
+          </div>
 
-      <button
-        onClick={exportPDF}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition mb-4"
-      >
-        Exportar PDF
-      </button>
+          {/* EXPORT PDF */}
+          <button
+            onClick={exportPDF}
+            className="bg-[#F97B17] text-white px-4 py-2 rounded-xl cursor-pointer"
+          >
+            Exportar PDF
+          </button>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Pesquisar por usuário ou modelo"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 flex-1"
-        />
-        <select
-          value={acaoFilter}
-          onChange={(e) => setAcaoFilter(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2"
-        >
-          <option value="">Todas ações</option>
-          <option value="Criou">Criou</option>
-          <option value="Adicionou">Adicionou</option>
-          <option value="Atualizou">Atualizou</option>
-          <option value="Aprovou">Aprovou</option>
-          <option value="Cancelou">Cancelou</option>
-          <option value="Removeu">Removeu</option>
-        </select>
-        <select
-          value={modeloFilter}
-          onChange={(e) => setModeloFilter(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2"
-        >
-          <option value="">Todos modelos</option>
-          <option value="Livro">Livro</option>
-          <option value="Reserva">Reserva</option>
-          <option value="Emprestimo">Empréstimo</option>
-          <option value="LoginAdmin">Login Admin</option>
-        </select>
-      </div>
+          {/* FILTROS */}
+          <div className="flex flex-wrap gap-3">
+            <input
+              type="text"
+              placeholder="Pesquisar..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="border border-black/10 outline-none focus-within:ring-2 focus-within:ring-[#F97B17] rounded-xl px-3 py-2 flex-1"
+            />
 
-      {/* Tabela de logs */}
-      <div className="overflow-x-auto">
-        {loading ? (
-          <p>Carregando...</p>
-        ) : (
-          <table className="min-w-full border border-gray-200 rounded">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-2 text-left">Usuário</th>
-                <th className="px-4 py-2 text-left">Ação</th>
-                <th className="px-4 py-2 text-left">Modelo</th>
-                <th className="px-4 py-2 text-left">Objeto ID</th>
-                <th className="px-4 py-2 text-left">Alterações</th>
-                <th className="px-4 py-2 text-left">Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-4">Nenhum log encontrado</td>
-                </tr>
-              ) : (
-                logs.map((log, index) => (
-                  <tr key={log.id || index} className="border-t border-gray-200">
-                    <td className="px-4 py-2">{log.usuario_nome}</td>
-                    <td className="px-4 py-2"><Badge acao={log.acao} /></td>
-                    <td className="px-4 py-2">{log.modelo}</td>
-                    <td className="px-4 py-2">{log.objeto_id}</td>
-                    <td className="px-4 py-2">
-                      <pre className="text-xs bg-gray-50 p-2 rounded max-h-32 overflow-auto">
-                        {JSON.stringify(log.alteracoes, null, 2)}
-                      </pre>
-                    </td>
-                    <td className="px-4 py-2">{new Date(log.criado_em).toLocaleString()}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+            <select
+              value={acaoFilter}
+              onChange={(e) => setAcaoFilter(e.target.value)}
+              className="border border-black/10 cursor-pointer focus-within:ring-2 focus-within:ring-[#F97B17] rounded-xl px-3 py-2 outline-none"
+            >
+              <option value="">Todas ações</option>
+              <option value="Criou">Criou</option>
+              <option value="Adicionou">Adicionou</option>
+              <option value="Atualizou">Atualizou</option>
+              <option value="Aprovou">Aprovou</option>
+              <option value="Cancelou">Cancelou</option>
+              <option value="Removeu">Removeu</option>
+            </select>
+
+            <select
+              value={modeloFilter}
+              onChange={(e) => setModeloFilter(e.target.value)}
+              className="border border-black/10 cursor-pointer focus-within:ring-2 focus-within:ring-[#F97B17] rounded-xl px-3 py-2 outline-none"
+            >
+              <option value="">Todos modelos</option>
+              <option value="Livro">Livro</option>
+              <option value="Reserva">Reserva</option>
+              <option value="Emprestimo">Empréstimo</option>
+            </select>
+
+            <select
+              value={periodoDias}
+              onChange={(e) => setPeriodoDias(Number(e.target.value))}
+              className="border border-black/10 cursor-pointer focus-within:ring-2 focus-within:ring-[#F97B17] rounded-xl px-3 py-2 outline-none"
+            >
+              <option value={7}>Últimos 7 dias</option>
+              <option value={15}>Últimos 15 dias</option>
+              <option value={30}>Últimos 30 dias</option>
+              <option value={60}>Últimos 60 dias</option>
+            </select>
+          </div>
+
+          {/* LISTA DE LOGS */}
+          <div className="space-y-4">
+            {logs.length === 0 ? (
+              <p>Nenhum log encontrado</p>
+            ) : (
+              logs.map((log) => (
+                <article
+                  key={log.id}
+                  className={`p-4 rounded cursor-pointer ${bg(log.acao)}`}
+                >
+                  <Link to={getRedirectPath(log)}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-[#F97B17] rounded-full"></div>
+                      <h2>{log.acao} {log.modelo}</h2>
+                    </div>
+
+                    <div className="pl-5">
+                      {logAlteracoes(log.modelo, log)}
+                      <p className="text-sm text-black/70">
+                        {log.usuario_nome} - {new Date(log.criado_em).toLocaleString()}
+                      </p>
+                    </div>
+                  </Link>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+      </main>
+    </motion.div>
   );
 }
+

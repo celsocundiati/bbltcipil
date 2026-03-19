@@ -1,10 +1,21 @@
 import { useState, useEffect } from "react";
 import ModalAprovarEmprestimo from "../../modais/modalaprovaremprestimo/modalaprovaremprestimo";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../../service/api/api";
+import { motion } from "framer-motion";
+import { FiSearch } from "react-icons/fi";
 
 function TabelaReservas() {
+
     const [idDestacado, setIdDestacado] = useState(null);
+    const [reservas, setReservas] = useState([]);
+    const [reservaSelecionada, setReservaSelecionada] = useState(null);
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const [search, setSearch] = useState("");
+    const [estadoFilter, setEstadoFilter] = useState("");
 
     const statusConf = {
         aprovada: {
@@ -29,14 +40,15 @@ function TabelaReservas() {
         },
     };
 
-    const [reservas, setReservas] = useState([]);
-    const [reservaSelecionada, setReservaSelecionada] = useState(null);
-    const navigate = useNavigate();
-
+    // 🔹 Buscar reservas
     useEffect(() => {
         const fetchReservas = async () => {
             try {
-                const res = await api.get("admin/reservas/");
+                const params = {};
+                if (search) params.search = search;
+                if (estadoFilter) params.estado = estadoFilter;
+
+                const res = await api.get("admin/reservas/", { params });
                 const data = Array.isArray(res.data.results) ? res.data.results : res.data;
                 setReservas(data);
             } catch (err) {
@@ -44,21 +56,33 @@ function TabelaReservas() {
                 if (err.response?.status === 401) navigate("/login");
             }
         };
-        fetchReservas();
-    }, [navigate]);
 
+        fetchReservas();
+    }, [navigate, search, estadoFilter]);
+
+    // 🔹 Capturar hash da URL (#reserva-10)
+    useEffect(() => {
+        if (location.hash) {
+            const id = location.hash.replace("#reserva-", "");
+            setIdDestacado(id);
+
+            setTimeout(() => {
+                const el = document.getElementById(`reserva-${id}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }, 300); // espera renderizar tabela
+        }
+    }, [location, reservas]);
+
+    // 🔹 Atualizar estado
     const atualizarEstado = async (reserva, novoEstado) => {
         try {
-            await api.patch(
-                `admin/reservas/${reserva.id}/`,
-                { estado: novoEstado }
-            );
+            await api.patch(`admin/reservas/${reserva.id}/`, { estado: novoEstado });
 
             setReservas(prev =>
                 prev.map(r =>
-                    r.id === reserva.id
-                        ? { ...r, estado: novoEstado }
-                        : r
+                    r.id === reserva.id ? { ...r, estado: novoEstado } : r
                 )
             );
         } catch (error) {
@@ -102,32 +126,66 @@ function TabelaReservas() {
                 );
 
             default:
-                return (
-                    <span className="text-gray-500 font-medium">
-                        —
-                    </span>
-                );
+                return <span className="text-gray-500 font-medium">—</span>;
         }
     };
 
     return (
-        <main>
+        <motion.main
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="space-y-10"
+        >
+            {/* 🔍 Filtros */}
+            <section className="flex items-center justify-center gap-8 bg-white px-5 py-8 border border-black/5 rounded-2xl flex-col md:flex-row">
+
+                <div className="w-full">
+                    <div className="flex items-center bg-black/5 border rounded-xl relative focus-within:ring-2 focus-within:ring-[#f97b17] border-[#E6E6E6] transition">
+
+                        <button className="px-2 py-1.5">
+                            <FiSearch size={22} />
+                        </button>
+
+                        <input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            type="text"
+                            placeholder="Busque por livro, usuário, estado..."
+                            className="flex-1 px-4 py-1.5 outline-none"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex flex-col w-full md:w-64">
+                    <select
+                        value={estadoFilter}
+                        onChange={(e) => setEstadoFilter(e.target.value)}
+                        className="w-full px-3 h-10 rounded-xl cursor-pointer border border-black/10 bg-white text-sm focus:ring-2 focus:ring-[#f97b17] outline-none"
+                    >
+                        <option value="">Todos os estados</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="reservado">Reservado</option>
+                        <option value="aprovada">Aprovada</option>
+                        <option value="finalizada">Finalizada</option>
+                    </select>
+                </div>
+            </section>
+
+            {/* 📊 Tabela */}
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
 
-                <section className="py-5 flex flex-col">
+                <div className="py-5">
                     <h2 className="text-xl font-medium">Lista de Reservas</h2>
-                    <span className="text-black/70">
-                        Total: {reservas.length}
-                    </span>
-                </section>
+                    <span className="text-black/70">Total: {reservas.length}</span>
+                </div>
 
-                <section className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <table className="w-full table-fixed border-collapse">
                         <thead className="bg-black/5">
                             <tr>
-                                <th className="px-5 py-3 text-center">ID</th>
                                 <th className="w-[25%] px-5 py-3 text-center">Livro</th>
-                                <th className="w-[12%] px-5 py-3 text-center">Usuário</th>
+                                <th className="w-[20%] px-5 py-3 text-center">Usuário</th>
                                 <th className="px-5 py-3 text-center">Data</th>
                                 <th className="px-5 py-3 text-center">Estado</th>
                                 <th className="px-5 py-3 text-center">Ação</th>
@@ -138,72 +196,70 @@ function TabelaReservas() {
                         <tbody className="divide-y divide-black/10">
                             {reservas.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="text-center py-4 text-red-700">
-                                        Nenhum reserva encontrada.
+                                    <td colSpan={6} className="text-center py-4 text-red-700">
+                                        Nenhuma reserva encontrada.
                                     </td>
                                 </tr>
                             ) : (
                                 [...reservas]
-                                .sort((a, b) => (b.id) - (a.id)) // ordem decrescente
-                                .map((reserva) => {
-                                    const config = statusConf[reserva.estado] || {
-                                    label: reserva.estado,
-                                    style: "bg-gray-100 text-gray-700 border-gray-200",
-                                    };
+                                    .sort((a, b) => b.id - a.id)
+                                    .map((reserva) => {
+                                        const config = statusConf[reserva.estado] || {
+                                            label: reserva.estado,
+                                            style: "bg-gray-100 text-gray-700 border-gray-200",
+                                        };
 
-                                return (
-                                    <tr key={`reserva-${reserva.id}`} id={`reserva-${reserva.id}`}
-                                     className={`hover:bg-black/5 transition-colors ${
-                                        idDestacado === String(reserva.id) 
-                                            ? 'bg-[#f97b17]/25 text-black font-medium' 
-                                            : 'hover:bg-gray-100'
-                                        }`} onClick={() => setIdDestacado(null)}>
-                                        <td className="px-5 py-4 text-center">{reserva.id}</td>
-                                        <td className="px-5 py-4 text-center">{reserva?.livro_nome}</td>
-                                        <td className="px-5 py-4 text-center">{reserva?.usuario_nome || "Nenhum"}</td>
-                                        <td className="px-5 py-4 text-center">{reserva.data_formatada}</td>
-
-                                        <td className="px-5 py-4 text-center">
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config.style}`}>
-                                            {config.label}
-                                        </span>
-                                        </td>
-
-                                        <td className="px-5 py-4 text-center">
-                                        {renderAcaoPrincipal(reserva)}
-                                        </td>
-
-                                        <td className="px-5 py-4 text-center">
-                                        {reserva.estado === "reservado" ? (
-                                            <button
-                                            onClick={() => handleEmprestar(reserva)}
-                                            className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                                                        bg-green-100 text-green-700 border border-green-200
-                                                        hover:bg-green-200 transition-colors"
+                                        return (
+                                            <tr
+                                                key={reserva.id}
+                                                id={`reserva-${reserva.id}`}
+                                                className={`transition-colors ${
+                                                    idDestacado === String(reserva.id)
+                                                        ? "bg-[#f97b17]/20 text-black font-medium"
+                                                        : "hover:bg-gray-100"
+                                                }`} onClick={() => setIdDestacado(null)}
                                             >
-                                            Emprestar
-                                            </button>
-                                        ) : reserva.estado === "pendente" ? (
-                                            <span className="text-yellow-600 font-medium">Aguardando</span>
-                                        ) : (
-                                            <span className="text-gray-500 font-medium">—</span>
-                                        )}
-                                        </td>
-                                    </tr>
-                                    );
-                                })
+                                                <td className="px-5 py-4 text-center truncate">{reserva?.livro_nome}</td>
+                                                <td className="px-5 py-4 text-center truncate">{reserva?.usuario_nome || "Nenhum"}</td>
+                                                <td className="px-5 py-4 text-center">{reserva.data_formatada}</td>
+
+                                                <td className="px-5 py-4 text-center">
+                                                    <span className={`px-3 py-1 rounded-full text-sm font-medium border ${config.style}`}>
+                                                        {config.label}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-5 py-4 text-center">
+                                                    {renderAcaoPrincipal(reserva)}
+                                                </td>
+
+                                                <td className="px-5 py-4 text-center">
+                                                    {reserva.estado === "reservado" ? (
+                                                        <button
+                                                            onClick={() => handleEmprestar(reserva)}
+                                                            className="px-3 py-1 rounded-full text-sm font-medium
+                                                            bg-green-100 text-green-700 border border-green-200
+                                                            hover:bg-green-200 transition"
+                                                        >
+                                                            Emprestar
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-500">—</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                             )}
                         </tbody>
-
                     </table>
-                </section>
+                </div>
 
                 {reservaSelecionada && (
                     <ModalAprovarEmprestimo
                         reserva={reservaSelecionada}
                         onClose={() => setReservaSelecionada(null)}
                         onSave={(emprestimoCriado) => {
-                            // Atualiza apenas o status da reserva para "finalizada"
                             setReservas(prev =>
                                 prev.map(r =>
                                     r.id === emprestimoCriado.reserva_id
@@ -215,9 +271,8 @@ function TabelaReservas() {
                         }}
                     />
                 )}
-
             </section>
-        </main>
+        </motion.main>
     );
 }
 

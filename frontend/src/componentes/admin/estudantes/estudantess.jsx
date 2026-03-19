@@ -1,10 +1,9 @@
 import HeaderOutle from "../../layout/outle/headerholte";
 import RotulosOutle from "../../layout/outle/rotulosotles";
-import InputAdmin from "../../layout/admInput/input";
-import Select from "../../tags/selects/selects";
 import TabAluno from "../../layout/tables/tabaluno/tabaluno";
 import TabFuncionario from "../../layout/tables/tabfuncionario/tabfuncionario";
 import Tabs from "../../layout/tables/tabs/tabs";
+import { motion } from "framer-motion";
 
 function Estudantes(){
     
@@ -14,22 +13,21 @@ function Estudantes(){
     ]
 
     return(
-        <main className=" mt-12 space-y-10">
+        <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo 
+            className=" mt-12 space-y-10">
             <section>
-                <HeaderOutle page="estudantes"/>
+                <HeaderOutle page="perfil"/>
             </section>
             <section>
-                <RotulosOutle page="estudantes" />
-            </section>
-            <section className="flex items-center justify-center gap-8 bg-white px-5 py-8 border border-black/5 rounded-2xl flex-col md:flex-row">
-                <InputAdmin page="catalogo" type="text" placeholder="Busque por estudante, curso..."/>
-                <Select tipo="todos" />
-                <Select tipo="cursos" />
+                <RotulosOutle page="perfil" />
             </section>
             <section>
                 <Tabs tabs={tabs}/>
             </section>
-        </main>
+        </motion.main>
     );
 }
 export default Estudantes;

@@ -6,6 +6,7 @@ import WelcomeCatalogo from "./seccoes/Welcome";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import api from "../../service/api/api";
+import CardLivroCatalogo from "../cards/cardsLivros copy/livro";
 
 
 function Catalogo() {
@@ -34,14 +35,12 @@ function Catalogo() {
                 transition={{ duration: 0.8 }} >
 
                 <WelcomeCatalogo className="pt-16" titulo="Catálogo de Livros" paragrafo="Explore nosso acervo completo"/>
-                <Filtragem/>
-                <section className="p-5 ms-2 me-2 mt-10 bg-branco-100">
+                {/* <Filtragem/> */}
+                {/* <section className="px-5 my-10 ">
                     <h2 className="py-5 text-xl text-[#000000]/57">{livros.length} Livros encontrados</h2>
                     <CardLivro props=""/>
-                    <article className="flex flex-wrap gap-20 ms-5">
-                        {/* mm */}
-                    </article>
-                </section>
+                </section> */}
+                <CardLivroCatalogo/>
             </motion.main>
             <Footer/>
         </div>  
