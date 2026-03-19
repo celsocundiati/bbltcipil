@@ -15,17 +15,19 @@ function TabRelatorios(){
                 <thead className="bg-black/5">
                     <tr>
                         <th className="w-[15%] py-3 px-5 text-center">Meses</th>
+                        <th className="w-[15%] py-3 px-5 text-center">Reservas</th>
                         <th className="w-[15%] py-3 px-5 text-center">Empréstimos</th>
                         <th className="w-[10%] py-3 px-5 text-center">Devoluções</th>
                         <th className="w-[15%] py-3 px-5  text-center">Novos Perfis</th>
                         <th className="w-[10%] py-3 px-5 text-center">Multas (kz)</th>
-                        <th className="w-[15%] py-3 px-5 text-center">Livros Adicionados</th>
+                        <th className="w-[15%] py-3 px-5 text-center">Total de Livros Usados</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-black/10">
                     {rowsTableEstrato.map(row => (
                         <tr className="hover:bg-black/3 transition">
                             <td className="py-4 px-5 truncate text-center text-black/85"> {row.mes} </td>
+                            <td className="py-4 px-5 truncate text-center text-black/85"> {row.reservas} </td>
                             <td className="py-4 px-5 truncate text-center text-black/85"> {row.emprestimos} </td>
                             <td className="py-4 px-5 truncate text-center text-black/85"> {row.devolucoes} </td>
                             <td className="py-4 px-5 truncate text-center text-black/85"> {row.perfil} </td>
