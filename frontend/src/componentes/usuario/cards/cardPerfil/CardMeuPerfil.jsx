@@ -32,10 +32,7 @@ export default function MeuPerfil() {
   const info = user?.dados_oficiais || {};
   const priv = user?.user || {};
 
-  const nome =
-    perfil === "aluno" ? info?.nome_completo
-    : perfil === "funcionario" ? info?.nome
-    : priv?.username;
+  const nome = priv?.first_name;
 
   const subtitulo =
     perfil === "aluno" ? info?.curso
@@ -62,7 +59,7 @@ export default function MeuPerfil() {
 
           {/* Nome e subtitulo */}
           <div>
-            <p className="font-medium text-lg">{nome || "Sem nome definido"}</p>
+            <p className="font-medium text-lg">{nome || user?.user?.username}</p>
             <p className="text-[#000000]/57 text-sm">{subtitulo || "Sem informação adicional"}</p>
           </div>
 

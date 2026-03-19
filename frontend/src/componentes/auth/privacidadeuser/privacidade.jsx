@@ -70,8 +70,8 @@ export default function Privacidade() {
 
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div>
-          <label className={baselabel}>Username</label>
-          <input type="text" value={user?.user?.username || ""} readOnly className={baseinput} />
+          <label className={baselabel}>Nome</label>
+          <input type="text" value={user?.user?.first_name || user?.user?.username} readOnly className={baseinput} />
         </div>
 
         <div>

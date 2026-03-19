@@ -2,18 +2,27 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
 import { obterIniciais } from "../utilitarios/Utils";
+import { motion } from "framer-motion";
+import {FiSearch} from "react-icons/fi";
 
 function TabFuncionario() {
   const [funcionarios, setFuncionarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
   const navigate = useNavigate();
+
+  const [search, setSearch] = useState("");
+  const [estadoFilter, setEstadoFilter] = useState("");
   
   useEffect(() => {
 
     const fetchPerfis = async() => {
         try{
-            const res = await api.get("/admin/perfil/");
+            const params = {};
+            if (search) params.search = search;
+            if (estadoFilter) params.estado = estadoFilter;
+
+            const res = await api.get("/admin/perfil/", {params});
             const dados = Array.isArray(res.data.results) ? res.data.results : res.data;
             const perfisFuncionarios = dados.filter(
               (perfil) => perfil.tipo === "funcionario"
@@ -30,12 +39,54 @@ function TabFuncionario() {
 
     fetchPerfis();
 
-   }, [navigate]);
+   }, [navigate, search, estadoFilter]);
 
   const totalFuncionarios = funcionarios.length;
 
   return (
-    <main className="p-5">
+    <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+      whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+      viewport={{ once: true }}             // anima apenas uma vez
+      className="space-y-10">
+
+      <section className="flex items-center justify-center gap-8 bg-white px-5 py-8 border border-black/5 rounded-2xl flex-col md:flex-row">
+          
+          <div className="w-full">
+              <div className="flex items-center bg-black/5 border rounded-xl overflow-hiddenmax-w-md text-[#000000]/57
+                  relative focus-within:ring-2 focus-within:ring-[#f97b17] border-[#E6E6E6] transition
+              ">
+                  <button className="h-full rounded-l-lg px-2 py-1.5 hover:text-[#f97b17] transition cursor-pointer"> <FiSearch size={22}/> </button>
+  
+                  <input value={search} onChange={(e) => setSearch(e.target.value)} type="text" 
+                  placeholder="Busque por nome, nº de agente e cargo..." className="flex-1 px-4 py-1.5 outline-none"/>
+              </div>
+          </div>
+
+          <div className="flex flex-col w-full md:w-64">
+
+              <select
+                  value={estadoFilter}
+                  onChange={(e) => setEstadoFilter(e.target.value)}
+                  className="
+                  w-full
+                  px-3
+                  h-10
+                  rounded-xl cursor-pointer
+                  border border-black/10
+                  bg-white
+                  text-sm
+                  focus:ring-2 focus:ring-[#f97b17]
+                  outline-none
+                  "
+              >
+                  <option value="">Todos os estados</option>
+                  <option value="Ativo">Ativo</option>
+                  <option value="Suspenso">Suspenso</option>
+              </select>
+
+          </div>
+      </section>
+                    
       <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
         <section className="py-5 flex flex-col">
           <label className="text-xl font-medium">Lista de Funcionários</label>
@@ -139,7 +190,7 @@ function TabFuncionario() {
           </section>
         )}
       </section>
-    </main>
+    </motion.main>
   );
 }
 

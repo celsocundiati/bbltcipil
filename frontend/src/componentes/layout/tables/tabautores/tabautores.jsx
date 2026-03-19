@@ -7,6 +7,7 @@ import { LuFilePen } from "react-icons/lu";
 import { MdPersonOutline } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
+import { motion } from "framer-motion";
 
 function TabAutores() {
   const [showModalAutor, setShowModalAutor] = useState(false);
@@ -64,7 +65,10 @@ function TabAutores() {
     }
 
     return(
-        <section>
+        <motion.section initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            >
             <div>
                 <BtnAddAdmin tipo="autor" onClick={handleClick}/>
             </div>
@@ -110,7 +114,10 @@ function TabAutores() {
 
 
             {modal.open && (
-                <div className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
+                <motion.div  initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+                    viewport={{ once: true }}             // anima apenas uma vez
+                    className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
                     <div className="w-full max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative text-start">
                         <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "delete" ? "Excluir autor" : "Editar autor"}
@@ -125,7 +132,7 @@ function TabAutores() {
                                 <button onClick={handleConfirm}  type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-lg cursor-pointer hover:bg-green-600 transition-all duration-200">Confirmar</button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {showModalAutor && <ModalAddAutor onClose={() => setShowModalAutor(false)}/> }
@@ -133,7 +140,7 @@ function TabAutores() {
                 form={autorSelecionado}
                 setForm={setAutorSelecionado}
                 onClose={() => setEditarAutor(false)}/> }
-        </section>
+        </motion.section>
     );
 }
 

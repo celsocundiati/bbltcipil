@@ -27,26 +27,7 @@ function ModalEditarPerfil({ form, onClose }) {
   });
 
   const [loading, setLoading] = useState(false);
-
-  // Buscar dados do aluno
-    useEffect(() => {
-        if (!form.n_processo) return;
-
-        setLoading(true);
-
-        axios
-            .get(`http://127.0.0.1:8000/api/alunos/${form?.n_processo}/`)
-            .then((res) => {
-            setFormData(res.data);
-            })
-            .catch((error) => {
-            const erros = error.response?.data
-                ? Object.values(error.response.data).flat().join("\n")
-                : "Erro ao buscar dados.";
-            setModal({ open: true, type: "error", message: erros });
-            })
-            .finally(() => setLoading(false));
-    }, [form?.n_processo]);
+  
 
     function handleChange(e) {
         setFormData({

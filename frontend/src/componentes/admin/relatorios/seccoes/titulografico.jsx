@@ -6,7 +6,7 @@ function TituloGrafico({variant}){
             {variant === "line" ?(
                 <article>
                     <h1 className="text-lg">Empréstimos  Mensais</h1>
-                    <p className="text-lg text-black/70">Evoluição ao longo do ano</p>
+                    <p className="text-lg text-black/70">Evolução ao longo do ano</p>
                 </article>
 
             ) : variant === "bar" ?(

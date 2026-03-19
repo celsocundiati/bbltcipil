@@ -13,7 +13,6 @@ import Acervo from './componentes/admin/acervo/Acervo';
 import CategoriasAutores from './componentes/admin/categorias_autores/catautores';
 import Relatorios from './componentes/admin/relatorios/Relatorios';
 import Admins from './componentes/admin/admins/admins';
-import Configuracoesadmin from './componentes/admin/configuracoes/Configuracoes';
 import Sair from './componentes/auth/sair/sair';
 import Admin from './componentes/admin/administrador';
 import Multas from './componentes/admin/multas/multa';
@@ -21,14 +20,13 @@ import Estudantes from './componentes/admin/estudantes/estudantess';
 import EditarLivro from './componentes/admin/editarlivro/editarlivro';
 import CadastroAluno from './componentes/auth/cadastro/cadastro';
 import LoginPage from './componentes/auth/login/login';
-import axios from "axios";
 import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
 import AdminAuditLog from './componentes/admin/notificacaoadmin/notificacaoadmin';
-import AlunosOficais from './componentes/admin/alunooficial/alunooficial';
 import AlterarSenha from './componentes/auth/alterarsenha/alterarsenha';
 import Privacidade from './componentes/auth/privacidadeuser/privacidade';
 import PrivateRoute from './componentes/auth/rotasprivadas/rotasprivadas';
 import AdminRoute from './componentes/auth/adminrotas/adminrotas';
+import Configuracoesadmin from './componentes/admin/configuracoes/configuracoes';
 
 
 function App() {
@@ -60,8 +58,7 @@ function App() {
               <Route path="gestao" element={<GestaoLivros />} />
               <Route path="addlivro" element={<AddLivro />} />
               <Route path="livros/:id" element={<EditarLivro />} />
-              <Route path="estudantes" element={<Estudantes />} />
-              <Route path="alunosoficiais" element={<AlunosOficais />} />
+              <Route path="perfis" element={<Estudantes />} />
               <Route path="emprestimos" element={<Emprestimos />} />
               <Route path="multas" element={<Multas />} />
               <Route path="acervo" element={<Acervo />} />

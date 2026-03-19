@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import {useNavigate} from "react-router-dom";
 import {FaBook} from "react-icons/fa";
+import api from "../../service/api/api";
+import { motion } from "framer-motion";
 
 function AddLivro(){
     
@@ -40,15 +41,24 @@ function AddLivro(){
     });
 
     useEffect(() => {
-        axios.get("http://localhost:8000/api/autores/")
-        .then(res => setAutores(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de Autores", err));
-    }, []);
-    
-    useEffect(() => {
-        axios.get("http://localhost:8000/api/categorias/")
-        .then(res => setCategorias(Array.isArray(res.data.results) ? res.data.results : res.data))
-        .catch(err => console.error("Erro na captura de categorias", err));
+        const fetchAutoresCategorias = async() => {
+            setLoading(true);
+            try{
+                const [resAutores, resCategorias] = await Promise.all([
+                    api.get("/livros/autores/"),
+                    api.get("/livros/categorias/")
+                ])
+
+                setAutores(Array.isArray(resAutores.data.results) ? resAutores.data.results : resAutores.data),
+                setCategorias(Array.isArray(resCategorias.data.results) ? resCategorias.data.results : resCategorias.data)
+            } catch(err) {
+                console.error("Erro na captura de Autores e Categorias ", err)
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        fetchAutoresCategorias()
     }, []);
 
     const handleChange = (e) => {
@@ -80,15 +90,13 @@ function AddLivro(){
         setErro(null);
 
         try {
-            await axios.post("http://127.0.0.1:8000/api/livros/", form);
+            await api.post("/livros/livros/", form);
             setModal({
                 open: true,
                 type: "success",
                 message: "Livro registrado com sucesso!",
             });
             
-            /*alert("Livro registado com sucesso!");
-            navigate("/admin/gestao")*/
 
             setForm({
                 isbn: "",
@@ -126,14 +134,13 @@ function AddLivro(){
         }
     };
 
-    function closeModal(){
-        setModal({open:false});
-        navigate("/admin/gestao");
-    }
-
 
     return(
-        <main className="w-full h-full py-12">
+        <motion.main  initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo
+            className="w-full h-full py-12">
             <section className="my-12 flex items-center justify-center w-full mx-auto md:w-3/4 border border-black/10 rounded-xl shadow">
             
                 <div className="bg-white rounded-xl p-6 w-full h-full relative">
@@ -263,7 +270,7 @@ function AddLivro(){
                             </button>
                             <button type="submit" 
                                 className="cursor-pointer px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition">
-                                Adicionar Livro
+                                {loading ? "Salvando..." : "Adicionar livro"}
                             </button>
                         </div>
                     </form>
@@ -297,7 +304,7 @@ function AddLivro(){
                 </div>
             </div>
         )}
-        </main>
+        </motion.main>
     );
 }
 export default AddLivro;

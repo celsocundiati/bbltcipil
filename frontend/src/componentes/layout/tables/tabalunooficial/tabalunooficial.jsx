@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
 import { obterIniciais } from "../utilitarios/Utils";
+import { motion } from "framer-motion";
+motion
 
 function TabALunosOficiais() {
   const [alunos, setAlunos] = useState([]);
@@ -24,7 +26,10 @@ function TabALunosOficiais() {
   const totalAlunos = alunos.length;
     
     return(
-        <main>
+        <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+        >
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
                 <section className="py-5 flex flex-col">
                     <label className="text-xl font-medium">Lista de ALunos Oficiais do IPIL</label>
@@ -83,7 +88,7 @@ function TabALunosOficiais() {
                         </table>
                     </section>
                 </section>
-        </main>
+        </motion.main>
     );
 }
 export default TabALunosOficiais;

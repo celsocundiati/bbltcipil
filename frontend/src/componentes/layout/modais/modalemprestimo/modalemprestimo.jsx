@@ -1,6 +1,7 @@
 import { HiOutlineXMark } from "react-icons/hi2";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import api from "../../../service/api/api";
 
 function ModalEmprestimo({ emprestimo, onClose, onSave }) {
 
@@ -38,8 +39,7 @@ function ModalEmprestimo({ emprestimo, onClose, onSave }) {
     }
 
     try {
-      const res = await axios.patch(
-        `http://localhost:8000/api/admin/emprestimos/${emprestimo.id}/`,
+      const res = await api.patch(`/admin/emprestimos/${emprestimo.id}/`,
         {
           data_devolucao: formData.data_devolucao
         }
@@ -96,7 +96,7 @@ function ModalEmprestimo({ emprestimo, onClose, onSave }) {
                 <label className="text-black/75 text-lg">Estudante</label>
                 <input
                   type="text"
-                  value={emprestimo?.aluno_nome || ""}
+                  value={emprestimo?.usuario_nome || ""}
                   readOnly
                   className="bg-black/5 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
                 />

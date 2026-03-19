@@ -1,29 +1,26 @@
 import HeaderOutle from "../../layout/outle/headerholte";
 import RotulosOutle from "../../layout/outle/rotulosotles";
-import InputAdmin from "../../layout/admInput/input";
-import Select from "../../tags/selects/selects";
-import Table from "../../layout/tables/Table";
 import TabelaEmprestimos from "../../layout/tables/tabemprestimos/tabemprestimos";
+import { motion } from "framer-motion";
 
-function Emprestimos()
-{
+function Emprestimos(){
+    
     return(
-        <main className="mt-12 space-y-10">
+        <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo 
+            className="mt-12 space-y-10">
             <section>
                 <HeaderOutle page="emprestimos" />
             </section>
             <section>
                 <RotulosOutle page="emprestimos" />
             </section>
-            <section className="flex items-center justify-center gap-8 bg-white px-5 py-8 border border-black/5 rounded-2xl flex-col md:flex-row">
-                <InputAdmin page="catalogo" type="text" placeholder="Pesquisar empréstimos..."/>
-                <Select tipo="todos" />
-                {/* <Select tipo="cursos" /> */}
-            </section>
             <section>
                 <TabelaEmprestimos/>
             </section>
-        </main>
+        </motion.main>
     );
 }
 export default Emprestimos;

@@ -1,10 +1,7 @@
 import {MdPersonOutline} from "react-icons/md";
-import { FiCheckCircle } from "react-icons/fi";
 import {HiOutlineArrowDownTray, HiOutlineCog6Tooth} from "react-icons/hi2";
 import { useState } from "react";
 import Modal from "../modais/modal";
-import ModalLivro from "../modais/modalgestao/modallivro";
-import ModalAluno from "../modais/modalaluno/modalaluno";
 import {Link} from "react-router-dom";
 import ModalAlunoOficial from "../modais/modalalunooficial/modalalunooficial";
 
@@ -55,11 +52,11 @@ function HeaderOutle({page}){
                     </article>
                     <Link to="/admin/addlivro" className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</Link>
                 </section>
-            ) : page === "estudantes" ?(
+            ) : page === "perfil" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
                     <article className="space-y-2">  
-                        <h1 className="text-2xl font-medium">Gestão de Estudantes</h1>
-                        <p className="text-black/70 text-lg">Gerir estudantes registados na biblioteca</p>
+                        <h1 className="text-2xl font-medium">Gestão de Estudantes & Funcionários</h1>
+                        <p className="text-black/70 text-lg">Gerir estudantes e funcionários registados na biblioteca</p>
                     </article>
                 </section>
             ) : page === "alunosoficiais" ?(
@@ -152,7 +149,6 @@ function HeaderOutle({page}){
                 null
             )}
             
-            {showModal && <ModalLivro onClose={() => setShowModal(false)}/> }
             {showModalEmprest && <Modal tipo="emprestimo" onClose={() => setShowModalEmprest(false)}/> }
             {showModalReserva && <Modal tipo="reserva" onClose={() => setShowModalReserva(false)}/> }
             {showModalEstudante && <ModalAlunoOficial  onClose={() => setShowModalEstudante(false)}/> }

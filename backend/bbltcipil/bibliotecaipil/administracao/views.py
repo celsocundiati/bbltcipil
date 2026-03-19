@@ -425,6 +425,7 @@ class DashboardResumoGeralView(APIView):
         relatorios = {
             "emprestimos_mes": Emprestimo.objects.filter(data_emprestimo__month=hoje.month).count(),
             "novos_perfis": Perfil.objects.filter(created_at__month=hoje.month).count(),
+            "livros_adicionados": Livro.objects.filter(created_at__month=hoje.month).count(),
         }
 
         return Response({
@@ -505,6 +506,7 @@ class EstatisticasMensaisAdminView(APIView):
         livros_por_mes = Emprestimo.objects.annotate(
             mes=ExtractMonth("data_emprestimo")
         ).values("mes").annotate(total=Count("reserva__livro", distinct=True))
+        #  Livro.objects.filter(created_at__month=hoje.month).count(),
 
         for item in livros_por_mes:
             estatisticas[item["mes"]]["livros"] = item["total"]

@@ -1,176 +1,217 @@
-import {alunos, emprestimos} from "../../../dados/db.json";
-import { gerarDashboardRotulos, relatoriosRotulos, multasRotulos } from "../../layout/campos/campos";
+// import { HiOutlineTrendingUp } from "react-icons/hi";
+// import { gerarDashboardRotulos } from "../../layout/campos/campos";
+// import { useDataStates, useResumoGeral } from "../../layout/tables/utilitarios/Utils";
+
+// function RotulosOutle({ page }) {
+
+//     const resumo = useResumoGeral();
+//     const dashboardData = useDataStates();
+
+//     const dashboardRotulos = dashboardData
+//         ? gerarDashboardRotulos(dashboardData)
+//         : [];
+
+
+//     if (!resumo || !dashboardData) {
+//         return (
+//         <div className="w-full flex items-center justify-center">
+//             <p className="text-xl animate-pulse">Carregando cards...</p>
+//         </div>
+//         );
+//     }
+
+//     // Exemplo: gerar cards genéricos para dashboard
+//     // const dashboardRotulos = [
+//     //     {
+//     //         titulo: "Total Alunos",
+//     //         label: resumo.alunos.total,
+//     //         descricao: "Crescimento mensal",
+//     //         icone: <HiOutlineShieldCheck size={25} />
+//     //     },
+//     //     {
+//     //         titulo: "Empréstimos Ativos",
+//     //         label: resumo.emprestimos.ativos,
+//     //         descricao: "Crescimento mensal",
+//     //         icone: <FiActivity size={25} />
+//     //     },
+//     //     {
+//     //         titulo: "Reservas Pendentes",
+//     //         label: resumo.reservas.pendentes,
+//     //         descricao: "Novas solicitações",
+//     //         icone: <HiOutlineTrendingUp size={25} />
+//     //     },
+//     //     {
+//     //         titulo: "Multas Pendentes",
+//     //         label: resumo.multas.pendentes,
+//     //         descricao: "A pagar",
+//     //         icone: <HiOutlineTrendingUp size={25} />
+//     //     }
+//     // ];
+
+    
+//     return (
+//         <main>
+//             {page === "dashboard" && (
+//                 <section className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-7">
+//                     {dashboardRotulos.map((card, idx) => (
+//                         <div key={idx} className="bg-white w-full px-4 py-5 border border-black/10 rounded-lg flex justify-between hover:shadow transition">
+//                             <div>
+//                                 <p className="text-black/70">{card.titulo}</p>
+//                                 <label className="text-lg">{card.label}</label>
+//                                 <span className="flex items-center gap-2 text-green-600">
+//                                     <HiOutlineTrendingUp size={20}/> {card.descricao}
+//                                 </span>
+//                             </div>
+//                             <div className="flex items-center justify-center bg-black/5 h-8 text-[#F97B17] px-2 rounded-md">
+//                                 {card.icone}
+//                             </div>
+//                         </div>
+//                     ))}
+//                 </section>
+//             )}
+
+//             {page === "perfil" && (
+//                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+//                     <Card titulo="Total de Perfis" valor={resumo.perfis.total} cor="#F97B17" />
+//                     <Card titulo="Ativos" valor={resumo.perfis.ativos} cor="green" />
+//                     <Card titulo="Com Empréstimos" valor={resumo.perfis.com_emprestimos} cor="blue" />
+//                     <Card titulo="Suspensos" valor={resumo.perfis.suspensos} cor="red" />
+//                 </section>
+//             )}
+
+//             {page === "emprestimos" && (
+//                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+//                     <Card titulo="Ativos" valor={resumo.emprestimos.ativos} cor="#F97B17" />
+//                     <Card titulo="Atrasados" valor={resumo.emprestimos.atrasados} cor="red" />
+//                     <Card titulo="Devoluções Hoje" valor={resumo.emprestimos.devolucoes_hoje} cor="green" />
+//                     <Card titulo="Vencimento Próximo" valor={resumo.emprestimos.vencimento_proximo} cor="blue" />
+//                 </section>
+//             )}
+
+//             {page === "reservas" && (
+//                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+//                     <Card titulo="Pendentes" valor={resumo.reservas.pendentes} cor="#F97B17" />
+//                     <Card titulo="Aprovadas" valor={resumo.reservas.aprovadas} cor="green" />
+//                     <Card titulo="Finalizadas" valor={resumo.reservas.finalizadas} cor="blue" />
+//                     <Card titulo="Reservados" valor={resumo.reservas.aprovadas + resumo.reservas.finalizadas} cor="orange" />
+//                 </section>
+//             )}
+
+//             {page === "multas" && (
+//                 <section className="grid grid-cols-1 md:grid-cols-4 gap-5">
+//                     <Card titulo="Total" valor={resumo.multas.total} cor="#F97B17" />
+//                     <Card titulo="Pendentes" valor={resumo.multas.pendentes} cor="red" />
+//                     <Card titulo="Pagas" valor={resumo.multas.pagas} cor="green" />
+//                     <Card titulo="Valor Total" valor={`$${resumo.multas.valor_total}`} cor="blue" />
+//                 </section>
+//             )}
+//         </main>
+//     );
+// }
+
+// const Card = ({ titulo, valor, cor }) => (
+//     <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
+//         <p className="text-black/60 text-sm">{titulo}</p>
+//         <p className={`text-3xl font-bold ${cor ? `text-[${cor}]` : ""}`}>{valor}</p>
+//     </div>
+// );
+
+// export default RotulosOutle;
+
+
 import { HiOutlineTrendingUp } from "react-icons/hi";
-import { adminsRotulos } from "../../layout/tables/utilitarios/Utils";
-import api from "../../service/api/api";
-import { useState, useEffect } from "react";
+import { gerarDashboardRotulos } from "../../layout/campos/campos";
+import { useDataStates, useResumoGeral } from "../../layout/tables/utilitarios/Utils";
 
-function RotulosOutle({page}){
-
-
-    const [dashboardData, setDashboardData] = useState(null);
-
-    useEffect(() => {
-
-        if(page !== "dashboard") return;
-
-        const fetchData = async () => {
-
-            const res = await api.get("admin/dashboard/stats/");
-            setDashboardData(res.data);
-
-        };
-
-        fetchData();
-
-    }, [page]);
+function RotulosOutle({ page }) {
+    const resumo = useResumoGeral();
+    const dashboardData = useDataStates();
 
     const dashboardRotulos = dashboardData
         ? gerarDashboardRotulos(dashboardData)
         : [];
 
-    const alunosAtivos = alunos.filter(aluno => aluno.estado === "Ativo");
-    const alunosSuspensos = alunos.filter(aluno => aluno.estado === "Suspenso");
-    const alunosEmprestimos = alunos.filter(aluno => aluno.emprestimos !== 0);
+    if (!resumo || !dashboardData) {
+        return (
+            <div className="w-full flex items-center justify-center">
+                <p className="text-xl animate-pulse">Carregando cards...</p>
+            </div>
+        );
+    }
 
-    const emprestimosAtivos = emprestimos.filter(emprest => emprest.estado === "Ativo");
-    const emprestimosAtrasados = emprestimos.filter(emprest => emprest.estado === "Atrasado");
-
-    return(
+    return (
         <main>
-            {page === "dashboard" ?(
+            {page === "dashboard" && (
                 <section className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-7">
-                    {dashboardRotulos.map((admR, index) => (
-                        <div key={index} className="bg-white w-full px-4 py-5 border border-black/10 rounded-lg flex justify-between hover:shadow transition">
+                    {dashboardRotulos.map((card, idx) => (
+                        <div key={idx} className="bg-white w-full px-4 py-5 border border-black/10 rounded-lg flex justify-between hover:shadow transition">
                             <div>
-                                <p className="text-black/70"> {admR.titulo} </p>
-                                <label className="text-lg"> {admR.label} </label>
-                                <span className="flex items-center gap-2 text-green-600"> 
-                                    <HiOutlineTrendingUp size={20}/> <p>{admR.descricao}</p> 
+                                <p className="text-black/70">{card.titulo}</p>
+                                <label className="text-lg">{card.label}</label>
+                                <span className="flex items-center gap-2 text-green-600">
+                                    <HiOutlineTrendingUp size={20}/> {card.descricao}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-center bg-black/5 h-8 text-[#F97B17] px-2 rounded-md"> {admR.icone} </div> 
+                            <div className="flex items-center justify-center bg-black/5 h-8 text-[#F97B17] px-2 rounded-md">
+                                {card.icone}
+                            </div>
                         </div>
                     ))}
                 </section>
+            )}
 
-            ) : page === "estudantes" ?(
-
+            {page === "perfil" && (
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Total de Estudantes</p>
-                        <p className="text-3xl font-bold text-[#F97B17]">
-                            {alunos.length}
-                        </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Ativos</p>
-                        <p className="text-3xl font-bold text-green-600">
-                            {alunosAtivos.length}
-                        </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Com Empréstimos</p>
-                        <p className="text-3xl font-bold text-blue-600">
-                            {alunosEmprestimos.length}
-                        </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Com Atrasos</p>
-                        <p className="text-3xl font-bold text-red-600">
-                            {alunosSuspensos.length}
-                        </p>
-                    </div>
-
+                    <Card titulo="Total de Perfis" valor={resumo.perfis.total} cor="#F97B17" />
+                    <Card titulo="Ativos" valor={resumo.perfis.ativos} cor="#22C55E" />
+                    <Card titulo="Com Empréstimos" valor={resumo.perfis.com_emprestimos} cor="#3B82F6" />
+                    <Card titulo="Suspensos" valor={resumo.perfis.suspensos} cor="#EF4444" />
                 </section>
+            )}
 
-
-            ) : page === "emprestimos" ?(
-
+            {page === "emprestimos" && (
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Total Ativos</p>
-                        <p className="text-3xl font-bold text-[#F97B17]">
-                            {emprestimosAtivos.length}
-                        </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Atrasados</p>
-                        <p className="text-3xl font-bold text-red-600">
-                            {emprestimosAtrasados.length}
-                        </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Devoluções Hoje</p>
-                        <p className="text-3xl font-bold text-green-600">
-                            0
-                        </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-                        <p className="text-black/60 text-sm">Vencimento Próximo</p>
-                        <p className="text-3xl font-bold text-blue-600">
-                            0
-                        </p>
-                    </div>
-
+                    <Card titulo="Ativos" valor={resumo.emprestimos.ativos} cor="#F97B17" />
+                    <Card titulo="Atrasados" valor={resumo.emprestimos.atrasados} cor="#EF4444" />
+                    <Card titulo="Devoluções Hoje" valor={resumo.emprestimos.devolucoes_hoje} cor="#22C55E" />
+                    <Card titulo="Vencimento Próximo" valor={resumo.emprestimos.vencimento_proximo} cor="#3B82F6" />
                 </section>
+            )}
 
-            ) : page === "relatorios" ?(
-                <section className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-7">
-                    {relatoriosRotulos.map((admR, index) => (
-                        <div key={index} className="bg-white w-full p-4 border border-black/10 rounded-lg flex justify-between hover:shadow transition">
-                            <div className="space-y-2">
-                                <div className="bg-black/5 w-15 p-3 text-[#F97B17] flex justify-center items-center rounded-md">
-                                    {admR.icone}
-                                </div>
-                                <div>
-                                    <p className="text-black/70"> {admR.titulo} </p>
-                                    <label className="text-lg"> {admR.label} </label>
-                                </div>
-                            </div>
-                            <span className="flex  gap-2 text-green-600"> 
-                                <HiOutlineTrendingUp size={20}/> <p>{admR.descricao}</p> 
-                            </span>
-                        </div>
-                    ))}
+            {page === "reservas" && (
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card titulo="Pendentes" valor={resumo.reservas.pendentes} cor="#FACC15" />
+                    <Card titulo="Reservados" valor={resumo.reservas.reservadas} cor="#F97B17" />
+                    <Card titulo="Aprovadas" valor={resumo.reservas.aprovadas} cor="#22C55E" />
+                    <Card titulo="Finalizadas" valor={resumo.reservas.finalizadas} cor="#3B82F6" />
                 </section>
-            ) : page === "admins" ?(
-                <section className="w-full grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {adminsRotulos.map((admR, index) => (
-                        <div key={index} className="w-full border border-black/10 rounded-lg p-5 flex gap-4 bg-white hover:shadow transition">
-                            <div className="h-13 flex items-center px-2 py-1 text-[#F97B17] bg-black/3 rounded-md"> {admR.icone} </div>
-                            <div>
-                                <p className="text-lg text-black/57"> {admR.label} </p>
-                                <label className="text-lg"> {admR.value} </label>
-                            </div>
-                        </div>
-                    ))}
-                </section>
-            ) : page === "multas" ?(
-                <section className="w-full grid grid-cols-1 md:grid-cols-4 gap-5">
-                    {multasRotulos.map((admR, index) => (
-                        <div key={index} className="w-full border border-black/10 rounded-lg p-5 flex justify-between bg-white hover:shadow transition">
-                            <div>
-                                <p className="text-lg text-black/57"> {admR.titulo} </p>
-                                <label className="text-lg"> {admR.label} </label>
-                            </div>
-                            <div className="h-13 flex items-center px-2 py-1 text-[#F97B17] bg-black/3 rounded-md"> {admR.icone} </div> 
-                        </div>
-                    ))}
-                </section>
+            )}
 
-            ) : (
-                null
+            {page === "multas" && (
+                <section className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                    <Card titulo="Total" valor={resumo.multas.total} cor="#F97B17" />
+                    <Card titulo="Pendentes" valor={resumo.multas.pendentes} cor="#EF4444" />
+                    <Card titulo="Pagas" valor={resumo.multas.pagas} cor="#22C55E" />
+                    <Card titulo="Valor Total" valor={`$${resumo.multas.valor_total}`} cor="#3B82F6" />
+                </section>
+            )}
+
+            {page === "relatorios" && (
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card titulo="Empréstimos este mês" valor={resumo.relatorios.emprestimos_mes} cor="#F97B17" />
+                    <Card titulo="Novos perfis" valor={resumo.relatorios.novos_perfis} cor="#22C55E" />
+                    <Card titulo="Livros Adicionados" valor={resumo.relatorios.livros_adicionados} cor="#22C55E" />
+                </section>
             )}
         </main>
     );
 }
+
+const Card = ({ titulo, valor, cor }) => (
+    <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
+        <p className="text-black/60 text-sm">{titulo}</p>
+        <p className="text-3xl font-bold" style={{ color: cor }}>{valor}</p>
+    </div>
+);
+
 export default RotulosOutle;
