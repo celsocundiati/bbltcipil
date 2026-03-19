@@ -466,7 +466,7 @@ class EstatisticasMensaisAdminView(APIView):
 
         # Inicializa estatísticas
         estatisticas = {
-            i: {"emprestimos": 0, "devolucoes": 0, "perfil": 0, "multas": 0, "livros": 0}
+            i: {"emprestimos": 0, "devolucoes": 0, "perfil": 0, "multas": 0, "livros": 0, "reservas": 0}
             for i in range(1, 13)
         }
 
@@ -477,6 +477,14 @@ class EstatisticasMensaisAdminView(APIView):
 
         for item in emprestimos_por_mes:
             estatisticas[item["mes"]]["emprestimos"] = item["total"]
+
+        # Reservas por mês
+        reservas_por_mes = Reserva.objects.annotate(
+            mes=ExtractMonth("data_reserva")
+        ).values("mes").annotate(total=Count("id"))
+
+        for item in reservas_por_mes:
+            estatisticas[item["mes"]]["reservas"] = item["total"]
 
         # Devoluções por mês (AuditLog com estado 'devolvido')
         devolucoes_por_mes = AuditLog.objects.filter(alteracoes__estado="devolvido").annotate(
@@ -500,7 +508,7 @@ class EstatisticasMensaisAdminView(APIView):
         ).values("mes").annotate(total=Sum(0))
 
         for item in multas_por_mes:
-            estatisticas[item["mes"]]["multas"] = 0
+            estatisticas[item["mes"]]["multas"] =  item["total"]
 
         # Livros distintos emprestados por mês
         livros_por_mes = Emprestimo.objects.annotate(
@@ -516,6 +524,7 @@ class EstatisticasMensaisAdminView(APIView):
             {
                 "id": i,
                 "mes": meses[i-1],
+                "reservas": estatisticas[i]["reservas"],
                 "emprestimos": estatisticas[i]["emprestimos"],
                 "devolucoes": estatisticas[i]["devolucoes"],
                 "perfil": estatisticas[i]["perfil"],
