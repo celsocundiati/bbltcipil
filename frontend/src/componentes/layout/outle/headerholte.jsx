@@ -4,7 +4,7 @@ import { useState } from "react";
 import Modal from "../modais/modal";
 import {Link} from "react-router-dom";
 import ModalAlunoOficial from "../modais/modalalunooficial/modalalunooficial";
-
+import ModalMultas from "../modais/modalmultas/modalmultas";
 
 function HeaderOutle({page}){
 
@@ -18,28 +18,19 @@ function HeaderOutle({page}){
     const [showModalAdmin, setShowModalAdmin] = useState(false);
     const [showModalMulta, setShowModalMulta] = useState(false);
 
-    
-    function handleClick() {
-        console.log("Eu sou o BBV, e eu sou o Celso Cs");
-        setShowModal(true);
-    }
-    function handleClick2(){
-        setShowModalEmprest(true);
-    }
+    // function fetchMultas() {
+    //     // se ainda não tens API aqui, deixa vazio ou log
+    //     console.log("Atualizar lista de multas");
+    // }
+
     function handleClick3(){
         setShowModalEstudante(true);
-    }
-    function handleClick4(){
-        setShowModalDevol(true);
     }
     function handleClick5(){
         setShowModalAdmin(true);
     }
     function handleClick6(){
         setShowModalMulta(true);
-    }
-    function handleClick7(){
-        setShowModalReserva(true);
     }
 
     return(
@@ -154,7 +145,8 @@ function HeaderOutle({page}){
             {showModalEstudante && <ModalAlunoOficial  onClose={() => setShowModalEstudante(false)}/> }
             {showModalDevol && <Modal tipo="devoluicao" onClose={() => setShowModalDevol(false)}/> }
             {showModalAdmin && <Modal tipo="admins" onClose={() => setShowModalAdmin(false)}/> }
-            {showModalMulta && <Modal tipo="multas" onClose={() => setShowModalMulta(false)}/> }
+            {showModalMulta && ( <ModalMultas onClose={() => setShowModalMulta(false)}/> )}        
+
         </main>
     );
 }

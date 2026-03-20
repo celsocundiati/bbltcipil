@@ -53,35 +53,6 @@ class AutorViewSet(BaseDebugViewSet):
     serializer_class = AutorSerializer
 
 
-# ==============================
-# Perfis (Alunos + Funcionários)
-# ==============================
-# class PerfilViewSet(viewsets.ModelViewSet):
-#     queryset = Perfil.objects.select_related('aluno_oficial', 'funcionario_oficial', 'user').all()
-#     serializer_class = PerfilSerializer
-#     permission_classes = [IsAuthenticated]
-
-#     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-#     search_fields = [
-#         'user__username',
-#         'telefone',
-#         'aluno_oficial__nome_completo',
-#         'aluno_oficial__n_processo',
-#         'funcionario_oficial__nome',
-#         'funcionario_oficial__n_agente',
-#         'funcionario_oficial__cargo'
-#     ]
-#     ordering_fields = ['user__username', 'n_reservas', 'n_emprestimos']
-#     ordering = ['user__username']
-
-#     def get_queryset(self):
-#         """Admins veem todos, usuários normais só o próprio perfil"""
-#         user = self.request.user
-#         queryset = super().get_queryset()
-#         if not user.is_staff:
-#             queryset = queryset.filter(user=user)
-#         return queryset
-
 
 # ==============================
 # Livros
