@@ -1,3 +1,5 @@
+
+
 class AuditService:
     @staticmethod
     def log(user, action, instance, extra=None):

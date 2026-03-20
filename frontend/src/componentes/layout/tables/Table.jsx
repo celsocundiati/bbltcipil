@@ -62,58 +62,6 @@ function Table({tipo}){
                         </table>
                     </section>
                 </section>
-            ) : tipo === "multas" ?(
-                <div className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
-                    
-                    <article className="py-5 flex flex-col">
-                        <h1 className="text-xl">Lista de Multas</h1>
-                        <p className="text-black/70">Exibindo {totalM} multas</p>
-                    </article>
-
-                    <section>
-                        <table className="w-full table-fixed border-collapse bg-white shadow rounded-xl overflow-hidden">
-                            <thead className="bg-black/5">
-                                <tr className="flex gap-10 bg-black/3 transition">
-                                    <th className="w-[10%] px-5 py-3 text-left">Estudante</th>
-                                    <th className="w-[9%] px-5 py-3 text-left">Motivo</th>
-                                    <th className="w-[9%] px-5 py-3 text-left">Descrição</th>
-                                    <th className="w-[9%] px-5 py-3 text-left">Valor</th>
-                                    <th className="w-[10%] px-5 py-3 text-left">Data</th>
-                                    <th className="w-[11%] px-5 py-3 text-center">Estado</th>
-                                    <th className="w-[20%] px-5 py-3 text-center">Acções</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-black/10">
-                                {multas.map(multa => (
-                                    <tr className="w-full grid grid-cols-8  hover:bg-black/3 transition" key={multa.id}>
-                                        <td className="px-5 py-4 truncate text-black/85"> {multa.estudante} </td>
-                                        <td className="px-5 py-4 truncate text-black/85"> {multa.motivo} </td>
-                                        <td className="px-5 py-4 truncate text-black/85"> {multa.descricao} </td>
-                                        <td className="px-5 py-4 truncate text-black/85"> {multa.valor} </td>
-                                        <td className="px-5 py-4 truncate text-black/85"> {multa.data} </td>
-                                        <td className="px-5 py-4 truncate text-black/85 text-center"> 
-                                            <button className={` ${multa.estado === "Pendente" 
-                                                        ? "bg-yellow-100 text-yellow-700 px-4 py-1 rounded-2xl" : multa.estado === "Pago"
-                                                        ? "bg-green-100 text-green-700 px-4 py-1 rounded-2xl" : multa.estado === "Dispensado"
-                                                        ? "bg-blue-100 text-blue-700 px-4 py-1 rounded-2xl" : ""}`}>
-                                                {multa.estado}
-                                            </button>
-                                        </td>
-                                        <td className="px-5 py-4 flex text-black/85 text-center space-x-1"> 
-                                            <button className="px-3 text-nowrap border border-black/10 bg-black/3 hover:bg-black/20 hover:text-white transition duration-200
-                                             rounded-2xl cursor-pointer">
-                                                Marcar Pago
-                                            </button>
-                                            <button className="px-3 py-1 text-blue-700 border border-black/10 bg-black/2 hover:bg-blue-100 rounded-2xl cursor-pointer">
-                                                Dispensar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </section>
-                </div>
             ) : (
                 null
             )}

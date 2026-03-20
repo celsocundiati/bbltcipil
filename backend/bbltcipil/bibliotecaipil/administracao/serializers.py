@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AuditLog, Multa
+from .models import AuditLog, Multa, ConfiguracaoSistema
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
 
@@ -172,14 +172,41 @@ class MultaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Multa
         fields = [
-            "id", "usuario", "usuario_nome", "emprestimo",
-            "motivo", "descricao", "valor", "estado",
-            "data_criacao", "data_pagamento", "criado_por", "atualizado_em"
+            "id",
+            "usuario",
+            "usuario_nome",
+            "emprestimo",
+            "motivo",
+            "valor",
+            "estado",
+            "data_criacao",
+            "data_pagamento",
+            "criado_por",
+            "atualizado_em",
         ]
-        read_only_fields = ["usuario", "estado", "data_criacao", "data_pagamento", "atualizado_em"]
 
-    def validate_valor(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("O valor da multa deve ser maior que zero.")
-        return value
+        read_only_fields = [
+            "usuario",
+            "estado",
+            "data_criacao",
+            "data_pagamento",
+            "atualizado_em",
+            "valor",
+            "criado_por",
+        ]
+        
+
+class ConfiguracaoSistemaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConfiguracaoSistema
+        fields = "__all__"
+
+    def validate(self, data):
+        if data["horario_semana_abertura"] >= data["horario_semana_fecho"]:
+            raise serializers.ValidationError("Horário de semana inválido.")
+
+        if data["horario_fim_semana_abertura"] >= data["horario_fim_semana_fecho"]:
+            raise serializers.ValidationError("Horário de fim de semana inválido.")
+
+        return data
 

@@ -1,7 +1,8 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 from django.db.models import Count, Sum, Q
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth import get_user_model
@@ -11,7 +12,7 @@ from datetime import timedelta
 from rest_framework.response import Response
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import AlunoOficial, FuncionarioOficial, Perfil
-from .models import AuditLog, Multa
+from .models import AuditLog, Multa, ConfiguracaoSistema
 from .serializers import (
     ReservaAdminSerializer,
     EmprestimoAdminSerializer,
@@ -22,7 +23,8 @@ from .serializers import (
     AlunoOficialAdminSerializer,
     FuncionarioOficialAdminSerializer,
     PerfilAdminSerializer,
-    MultaSerializer
+    MultaSerializer,
+    ConfiguracaoSistemaSerializer
 )
 from .audit_service import AuditService
 
@@ -95,9 +97,7 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
-        # user = self.request.user
         hoje = timezone.now().date()
-        # queryset = Emprestimo.objects.filter(reserva__usuario=user)
         queryset = Emprestimo.objects.all()
         queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
         return queryset
@@ -190,57 +190,152 @@ class CategoriaAdminViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 
+# -----------------------------
+# MULTAS POR EMPRÉSTIMOS
+# -----------------------------
+
 class MultaViewSet(viewsets.ModelViewSet):
     queryset = Multa.objects.all().order_by("-data_criacao")
     serializer_class = MultaSerializer
+    permission_classes = [permissions.IsAdminUser]
+    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['estado']
+    search_fields = ['usuario__first_name', 'emprestimo__reserva__livro__titulo']
+    ordering_fields = ['data_criacao', 'emprestimo__reserva__livro__titulo', 'estado']
+    ordering = ['data_criacao']
 
     def perform_create(self, serializer):
-        """
-        Cria multa e aplica regras automáticas:
-        - Atraso > 7 dias → valor 1200
-        - Dano → valor do livro
-        """
         emprestimo = serializer.validated_data.get("emprestimo")
         motivo = serializer.validated_data.get("motivo")
-        valor = serializer.validated_data.get("valor")
 
-        if emprestimo:
+        # 🔥 REGRA 1: Dano/Perda apenas 1 vez por empréstimo
+        if motivo in ["Dano", "Perda"]:
+            if Multa.objects.filter(
+                emprestimo=emprestimo,
+                motivo=motivo
+            ).exists():
+                raise ValidationError(
+                    f"Já existe multa de {motivo} para este empréstimo."
+                )
+
+        # 🔥 REGRA 2: máximo 2 multas totais (exceto atraso)
+        total_multas = Multa.objects.filter(emprestimo=emprestimo).count()
+        if total_multas >= 2:
+            raise ValidationError(
+                "Este empréstimo já atingiu o limite de 2 multas."
+            )
+
+        # 💰 cálculo do valor
+        valor = 0
+
+        if emprestimo and emprestimo.data_devolucao:
             hoje = timezone.now().date()
             prazo = emprestimo.data_devolucao
 
             if motivo == "Atraso":
-                dias_atraso = (hoje - prazo).days
-                if dias_atraso > 7:
-                    valor = 1200
+                if hoje > prazo:
+                    dias_atraso = (hoje - prazo).days
+                    valor = dias_atraso * 500
 
             elif motivo == "Dano":
-                # ⚠️ Ajuste conforme teu model Livro
-                if emprestimo.livro and hasattr(emprestimo.livro, "preco"):
-                    valor = emprestimo.livro.preco
+                valor = 7000
+
+            elif motivo == "Perda":
+                valor = 12000
 
         serializer.save(
             valor=valor,
             criado_por=self.request.user
         )
 
-    # 🔹 Marcar multa como pago
+    # 🔹 EMPRESTIMOS DISPONÍVEIS (SEM DANO/SEM PERDA)
+    @action(detail=False, methods=["get"])
+    def emprestimos_disponiveis(self, request):
+
+        emprestimos = Emprestimo.objects.filter(
+            acoes__in=["ativo", "atrasado"]
+        ).exclude(
+            multas__motivo__in=["Dano", "Perda"]
+        ).select_related(
+            "reserva", "reserva__usuario", "reserva__livro"
+        ).distinct()
+
+        data = [
+            {
+                "id": e.id,
+                "usuario": e.reserva.usuario.first_name,
+                "livro": str(e.reserva.livro),
+                "estado": e.acoes,
+                "data_devolucao": e.data_devolucao,
+                "multas_total": e.multas.count(),
+                "tem_multa_grave": e.multas.filter(
+                    motivo__in=["Dano", "Perda"]
+                ).exists(),
+            }
+            for e in emprestimos
+        ]
+
+        return Response(data)
+
+    # 🔹 PAGAR MULTA
     @action(detail=True, methods=["post"])
     def pagar(self, request, pk=None):
         multa = self.get_object()
-        multa.marcar_como_pago()
-        return Response({"status": "Multa paga com sucesso"}, status=status.HTTP_200_OK)
 
-    # 🔹 Dispensar multa
+        if multa.estado == "Pago":
+            return Response({"status": "Já paga"}, status=400)
+
+        multa.marcar_como_pago()
+        return Response({"status": "Multa paga com sucesso"})
+
+    # 🔹 DISPENSAR MULTA
     @action(detail=True, methods=["post"])
     def dispensar(self, request, pk=None):
         multa = self.get_object()
-        try:
-            multa.dispensar()
-            return Response({"status": "Multa dispensada"}, status=status.HTTP_200_OK)
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if multa.estado == "Pago":
+            return Response({"error": "Não pode dispensar paga"}, status=400)
+
+        multa.dispensar()
+        return Response({"status": "Multa dispensada"})
 
 
+# -----------------------------
+# CONFIGURAÇÕES DO SISTEMA
+# -----------------------------
+
+class ConfiguracaoSistemaViewSet(viewsets.ViewSet):
+
+    def get_object(self):
+        obj, created = ConfiguracaoSistema.objects.get_or_create(id=1)
+        return obj
+
+    def list(self, request):
+        config = self.get_object()
+        serializer = ConfiguracaoSistemaSerializer(config)
+        return Response(serializer.data)
+
+    def create(self, request):
+        config = self.get_object()
+        serializer = ConfiguracaoSistemaSerializer(config, data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        config = self.get_object()
+        serializer = ConfiguracaoSistemaSerializer(config, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 # -----------------------------
 # ALUNO OFICIAL
@@ -284,9 +379,9 @@ class FuncionarioOficialAdminViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 
-# -----------------------------
+# --------------------------------------
 # PERFIL UNIFICADO (ALUNO + FUNCIONÁRIO)
-# -----------------------------
+# --------------------------------------
 class PerfilAdminViewSet(viewsets.ModelViewSet):
     """
     ViewSet unificado para perfis de Aluno e Funcionário.
@@ -307,9 +402,9 @@ class PerfilAdminViewSet(viewsets.ModelViewSet):
     ordering = ['user__first_name']
 
 
-# -----------------------------
+# ----------------------------------
 # AUDIT LOG (READ ONLY) COM PESQUISA
-# -----------------------------
+# ----------------------------------
 class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Permite pesquisa por usuário, ação e modelo.
@@ -324,6 +419,11 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ['criado_em', 'usuario__username', 'acao']
     ordering = ['-criado_em']
 
+
+
+# ----------------------------------------------
+# RELATÓRIOS + DASHBOARD + ESTATÍSTICAS-MENSAIS
+# ---------------------------------------------
 
 class DashboardStatsAdminView(APIView):
     def get(self, request):
@@ -415,8 +515,8 @@ class DashboardResumoGeralView(APIView):
         # 💰 MULTAS
         # =======================
         total_multas = Multa.objects.count()
-        multas_pendentes = Multa.objects.filter(estado="pendente").count()
-        multas_pagas = Multa.objects.filter(estado="pago").count()
+        multas_pendentes = Multa.objects.filter(estado="Pendente").count()
+        multas_pagas = Multa.objects.filter(estado="Pago").count()
         valor_total_multas = Multa.objects.aggregate(total=Sum("valor"))["total"] or 0
 
         # =======================
@@ -503,9 +603,9 @@ class EstatisticasMensaisAdminView(APIView):
             estatisticas[item["mes"]]["perfil"] = item["total"]
 
         # Multas por mês (supondo campo 'valor_multa' no Emprestimo)
-        multas_por_mes = Emprestimo.objects.annotate(
-            mes=ExtractMonth("data_emprestimo")
-        ).values("mes").annotate(total=Sum(0))
+        multas_por_mes = Multa.objects.annotate(
+            mes=ExtractMonth("data_criacao")
+        ).values("mes").annotate(total=Sum("valor"))
 
         for item in multas_por_mes:
             estatisticas[item["mes"]]["multas"] =  item["total"]

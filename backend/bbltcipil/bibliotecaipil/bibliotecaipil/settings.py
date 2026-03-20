@@ -5,6 +5,7 @@ Django settings for bibliotecaipil project.
 from pathlib import Path
 from datetime import timedelta
 import os
+from celery.schedules import crontab
 
 # ==========================================================
 # BASE
@@ -203,3 +204,18 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+
+
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = "Africa/Luanda"
+
+
+CELERY_BEAT_SCHEDULE = {
+    "gerar-multas-diarias": {
+        "task": "administracao.tasks.gerar_multas_atraso",
+        "schedule": crontab(hour=0, minute=0),  # todos os dias à meia-noite
+    }
+}

@@ -154,49 +154,6 @@ class EmprestimoSerializer(serializers.ModelSerializer):
         return value
 
 
-# ==============================
-# PERFIL UNIFICADO (Aluno + Funcionário)
-# ==============================
-# class PerfilSerializer(serializers.ModelSerializer):
-#     nome = serializers.SerializerMethodField()
-#     dados_oficiais = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = Perfil
-#         fields = [
-#             "id", "user", "tipo", "telefone", "estado",
-#             "n_reservas", "n_emprestimos", "nome", "dados_oficiais"
-#         ]
-
-#     def get_nome(self, obj):
-#         if hasattr(obj, "aluno_oficial") and obj.tipo == "aluno":
-#             return obj.aluno_oficial.nome_completo
-#         elif hasattr(obj, "funcionario_oficial") and obj.tipo == "funcionario":
-#             return obj.funcionario_oficial.nome
-#         return obj.user.first_name
-
-#     def get_dados_oficiais(self, obj):
-#         if obj.tipo == "aluno" and hasattr(obj, "aluno_oficial"):
-#             ao = obj.aluno_oficial
-#             return {
-#                 "n_processo": ao.n_processo,
-#                 "nome_completo": ao.nome_completo,
-#                 "curso": ao.curso,
-#                 "classe": ao.classe,
-#                 "data_nascimento": ao.data_nascimento,
-#                 "idade": ao.idade,
-#                 "n_bilhete": ao.n_bilhete,
-#             }
-#         elif obj.tipo == "funcionario" and hasattr(obj, "funcionario_oficial"):
-#             fo = obj.funcionario_oficial
-#             return {
-#                 "n_agente": fo.n_agente,
-#                 "nome": fo.nome,
-#                 "cargo": fo.cargo,
-#                 "n_bilhete": fo.n_bilhete,
-#             }
-#         return {}
-
 
 # ==============================
 # NOTIFICAÇÃO
