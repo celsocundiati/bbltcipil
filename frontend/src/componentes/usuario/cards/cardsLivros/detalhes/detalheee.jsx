@@ -56,7 +56,7 @@ function Detalhes() {
 
     try {
 
-      await api.post("livros/reservas/", { livro: livro.id });
+      await api.post("/livros/reservas/", { livro: livro.id });
 
       await fetchLivros(); // atualiza estado
 

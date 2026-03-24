@@ -124,8 +124,25 @@ class ReservaSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context["request"].user
         livro = data.get("livro")
-        if Reserva.objects.filter(usuario=user, livro=livro, estado__in=["pendente", "reservado"]).exists():
-            raise serializers.ValidationError({"livro": "Você já possui uma reserva ativa para este livro."})
+
+        # 🔥 BLOQUEIO: usuário sem perfil
+        perfil = getattr(user, "perfil", None)
+
+        if not perfil:
+            raise serializers.ValidationError(
+                {"usuario": "Usuário sem perfil associado. Não é permitido realizar reservas."}
+            )
+
+        # 🔥 REGRA EXISTENTE (reserva duplicada)
+        if Reserva.objects.filter(
+            usuario=user,
+            livro=livro,
+            estado__in=["pendente", "reservado"]
+        ).exists():
+            raise serializers.ValidationError(
+                {"livro": "Você já possui uma reserva ativa para este livro."}
+            )
+
         return data
 
     def create(self, validated_data):

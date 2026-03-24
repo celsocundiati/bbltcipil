@@ -1,14 +1,21 @@
 from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
+from datetime import timedelta
 
+from livros.models import Reserva, Livro, Emprestimo
 from .models import Multa
-from livros.models import Emprestimo
 from .audit_service import AuditService
+from .service import calcular_valor_multa
 
 
+
+# =============================
+# MULTAS
+# =============================
 @shared_task
 def gerar_multas_atraso():
+
     hoje = timezone.now().date()
 
     emprestimos = Emprestimo.objects.filter(
@@ -16,61 +23,136 @@ def gerar_multas_atraso():
         acoes__in=["ativo", "atrasado"]
     ).select_related("reserva", "reserva__usuario")
 
-    novas_multas = 0
-    multas_atualizadas = 0
+    novas = 0
+    atualizadas = 0
 
-    for emprestimo in emprestimos:
-        dias_atraso = (hoje - emprestimo.data_devolucao).days
-        valor_calculado = dias_atraso * 500
+    for e in emprestimos:
+
+        valor = calcular_valor_multa(e, "Atraso")
 
         with transaction.atomic():
 
             multa, created = Multa.objects.get_or_create(
-                emprestimo=emprestimo,
+                emprestimo=e,
                 motivo="Atraso",
                 defaults={
-                    "valor": valor_calculado,
+                    "valor": valor,
                     "criado_por": None
                 }
             )
 
-            # 🔥 CASO NOVA MULTA
             if created:
-                novas_multas += 1
+                novas += 1
 
                 AuditService.log(
                     user=None,
                     action="MULTA_ATRASO_CRIADA",
                     instance=multa,
                     extra={
-                        "dias_atraso": dias_atraso,
-                        "valor": float(valor_calculado),
-                        "emprestimo_id": emprestimo.id
+                        "valor": float(valor),
+                        "emprestimo_id": e.id
                     }
                 )
 
-            # 🔥 CASO MULTA JÁ EXISTE → ATUALIZA VALOR
-            else:
-                if multa.valor != valor_calculado:
-                    valor_antigo = multa.valor
-                    multa.valor = valor_calculado
-                    multa.save()
+            elif multa.valor != valor:
+                multa.valor = valor
+                multa.save(update_fields=["valor"])
+                atualizadas += 1
 
-                    multas_atualizadas += 1
+    return {"novas": novas, "atualizadas": atualizadas}
 
-                    AuditService.log(
-                        user=None,
-                        action="MULTA_ATRASO_ATUALIZADA",
-                        instance=multa,
-                        extra={
-                            "valor_antigo": float(valor_antigo),
-                            "valor_novo": float(valor_calculado),
-                            "dias_atraso": dias_atraso
-                        }
-                    )
 
-    return {
-        "novas_multas": novas_multas,
-        "multas_atualizadas": multas_atualizadas
-    }
+# =============================
+# APROVAÇÃO
+# =============================
+
+@shared_task
+def aprovar_reservas_automaticamente():
+    reservas = Reserva.objects.filter(
+        estado="pendente"
+    ).select_related("livro", "usuario").order_by("data_reserva")
+
+    aprovadas = 0
+
+    for r in reservas:
+
+        with transaction.atomic():
+
+            livro = Livro.objects.select_for_update().get(id=r.livro.id)
+
+            if livro.quantidade_disponivel <= 0:
+                continue
+
+            r.estado = "reservado"
+            r.data_aprovacao = timezone.now()
+            r.save(update_fields=["estado", "data_aprovacao"])
+
+            aprovadas += 1
+
+            AuditService.log(
+                user=None,
+                action="RESERVA_APROVADA_AUTOMATICAMENTE",
+                instance=r,
+                extra={
+                    "livro_id": livro.id,
+                    "usuario_id": r.usuario.first_name
+                }
+            )
+
+    return {"aprovadas": aprovadas}
+
+
+# =============================
+# EXPIRAÇÃO
+# =============================
+@shared_task
+def expirar_reservas():
+
+    limite = timezone.now() - timedelta(days=3)
+
+    reservas = Reserva.objects.filter(
+        estado="reservado",
+        data_aprovacao__lt=limite
+    ).select_related("livro", "usuario")
+
+    expiradas = 0
+
+    for r in reservas:
+
+        with transaction.atomic():
+
+            r.estado = "expirada"
+            r.save(update_fields=["estado"])
+
+            expiradas += 1
+
+            AuditService.log(
+                user=None,
+                action="RESERVA_EXPIRADA",
+                instance=r,
+                extra={
+                    "usuario_id": r.usuario.first_name,
+                    "livro_id": r.livro.id
+                }
+            )
+
+    if expiradas > 0:
+        aprovar_reservas_automaticamente.delay()
+
+    return {"expiradas": expiradas}
+
+
+# =============================
+# ORQUESTRADOR
+# =============================
+@shared_task
+def rotina_automatica_sistema():
+
+    gerar_multas_atraso.delay()
+    expirar_reservas.delay()
+    aprovar_reservas_automaticamente.delay()
+
+    return {"status": "ok"}
+
+
 
