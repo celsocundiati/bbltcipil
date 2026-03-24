@@ -111,6 +111,9 @@ class Livro(models.Model):
         if self.reservas.filter(estado='pendente').exists():
             return 'Pendente'
 
+        if self.reservas.filter(estado='em_uso').exists():
+            return 'Em uso'
+
         return 'Disponível'
 
     @property
@@ -118,6 +121,7 @@ class Livro(models.Model):
         return {
             'Disponível': "Livro disponível para reserva",
             'Reservado': "Existe reserva ativa",
+            'Em uso': "Sendo usado atualmente",
             'Emprestado': "Livro atualmente emprestado",
             'Pendente': "Aguardando aprovação",
             'Indisponível': "Sem stock disponível",
@@ -135,38 +139,18 @@ class Reserva(models.Model):
     ESTADOS = [
         ('pendente', 'Pendente'),
         ('reservado', 'Reservado'),
-        ('aprovada', 'Aprovada'),
+        ('em_uso', 'Em Uso'),
         ('finalizada', 'Finalizada'),
         ('expirada', 'Expirada'),
     ]
 
-    usuario = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="reservas"
-    )
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reservas")
+    livro = models.ForeignKey("Livro", on_delete=models.CASCADE, related_name="reservas")
 
-    livro = models.ForeignKey(
-        "Livro",
-        on_delete=models.CASCADE,
-        related_name="reservas"
-    )
-
-    estado = models.CharField(
-        max_length=20,
-        choices=ESTADOS,
-        default='pendente',
-        db_index=True
-    )
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendente', db_index=True)
 
     data_reserva = models.DateTimeField(auto_now_add=True)
-
-    data_aprovacao = models.DateTimeField(
-        null=True,
-        blank=True,
-        db_index=True
-    )
-
+    data_aprovacao = models.DateTimeField(null=True, blank=True, db_index=True)
     aprovada_por = models.ForeignKey(
         User,
         null=True,
@@ -177,51 +161,68 @@ class Reserva(models.Model):
 
     class Meta:
         ordering = ['-data_reserva']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['usuario', 'livro'],
-                condition=models.Q(estado__in=['pendente', 'reservado']),
-                name='unique_active_reserva'
-            )
-        ]
-        indexes = [
-            models.Index(fields=['estado', 'data_aprovacao']),
-        ]
 
-    # 🔥 VALIDAÇÕES DE NEGÓCIO
+    # =========================
+    # VALIDATION ONLY
+    # =========================
     def clean(self):
 
-        # 🔒 usuário precisa de perfil
         if not hasattr(self.usuario, "perfil"):
             raise ValidationError("Usuário sem perfil não pode reservar.")
 
-        # 🔒 evitar duplicação
+        # duplicação ativa
         if Reserva.objects.filter(
             usuario=self.usuario,
             livro=self.livro,
-            estado__in=["pendente", "reservado"]
+            estado__in=["pendente", "reservado", "em_uso"]
         ).exclude(pk=self.pk).exists():
-            raise ValidationError("Já existe uma reserva ativa para este livro.")
+            raise ValidationError("Já existe reserva ativa.")
 
-        # 🔥 REGRA AUTOMÁTICA BASEADA NO STOCK
-        if self.livro.quantidade > 0:
-            self.estado = "reservado"
-            if not self.data_aprovacao:
-                self.data_aprovacao = timezone.now()
-        else:
-            self.estado = "pendente"
-            self.data_aprovacao = None
+        # estoque lógico
+        if self.estado == "reservado" and self.livro.quantidade <= 0:
+            raise ValidationError("Sem estoque disponível.")
 
-        # 🔒 consistência final
-        if self.estado == "reservado" and not self.data_aprovacao:
-            raise ValidationError("Reserva reservada precisa de data de aprovação.")
+        if self.estado == "em_uso" and not self.aprovada_por:
+            raise ValidationError("Aprovação requer administrador.")
 
-        if self.estado == "pendente" and self.data_aprovacao:
-            raise ValidationError("Reserva pendente não pode ter data de aprovação.")
+        # transições seguras
+        if self.pk:
+            original = Reserva.objects.get(pk=self.pk)
 
+            transicoes = {
+                "pendente": ["reservado", "cancelada", "expirada"],
+                "reservado": ["em_uso", "cancelada"],
+                "em_uso": ["finalizada"],
+                "finalizada": [],
+                "expirada": [],
+            }
+
+            if self.estado != original.estado:
+                if self.estado not in transicoes.get(original.estado, []):
+                    raise ValidationError(
+                        f"Transição inválida: {original.estado} → {self.estado}"
+                    )
+
+    # =========================
+    # SAVE ONLY PERSISTENCE
+    # =========================
     def save(self, *args, **kwargs):
+
+        # regra automática só na criação
+        if not self.pk:
+            if self.livro.quantidade > 0:
+                self.estado = "reservado"
+                self.data_aprovacao = timezone.now()
+            else:
+                self.estado = "pendente"
+
+        # consistência de aprovação
+        if self.estado == "em_uso" and not self.data_aprovacao:
+            self.data_aprovacao = timezone.now()
+
         self.full_clean()
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.livro.titulo} - {self.usuario.first_name} - {self.estado}"
@@ -239,14 +240,13 @@ class Reserva(models.Model):
     def informacao(self):
         info_map = {
             'pendente': "Aguardando disponibilidade",
-            'reservado': "Pronta para empréstimo",
-            'aprovada': "Reserva aprovada e pronta para retirada",
-            'finalizada': "Reserva concluída",
-            'expirada': "Reserva expirada"
+            'reservado': "Confirmada para retirada",
+            'em_uso': "Livro em utilização",
+            'finalizada': "Processo concluído",
+            'expirada': "Expirada automaticamente"
         }
         return info_map.get(self.estado, "")
-
-
+    
 
 # =============================
 # EMPRESTIMO (TRANSACTION SAFE)

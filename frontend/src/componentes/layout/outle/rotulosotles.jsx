@@ -182,7 +182,7 @@ function RotulosOutle({ page }) {
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Card titulo="Pendentes" valor={resumo.reservas.pendentes} cor="#FACC15" />
                     <Card titulo="Reservados" valor={resumo.reservas.reservadas} cor="#F97B17" />
-                    <Card titulo="Aprovadas" valor={resumo.reservas.aprovadas} cor="#22C55E" />
+                    <Card titulo="Em uso" valor={resumo.reservas.aprovadas} cor="#22C55E" />
                     <Card titulo="Finalizadas" valor={resumo.reservas.finalizadas} cor="#3B82F6" />
                 </section>
             )}

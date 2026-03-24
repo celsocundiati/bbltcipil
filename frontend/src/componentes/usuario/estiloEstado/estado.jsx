@@ -25,6 +25,8 @@ function Estado({estado}){
         <span className={estiloEstado(estado)}>
             {estado === "Disponível" ? (
                     <FiCheckCircle size={20}/>
+                ) : estado === "Em uso" ? (
+                    <FiCheckCircle size={20}/>
                 ) : estado === "Reservado" ? (
                     <LuClock size={20}/>
                 ) : estado === "Pendente" ? (

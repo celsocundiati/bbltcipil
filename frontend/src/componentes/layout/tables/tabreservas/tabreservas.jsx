@@ -17,30 +17,19 @@ function TabelaReservas() {
     const [search, setSearch] = useState("");
     const [estadoFilter, setEstadoFilter] = useState("");
 
+    // ==========================
+    // 🔥 STATUS UI
+    // ==========================
     const statusConf = {
-        aprovada: {
-            label: "Aprovada",
-            style: "bg-green-100 text-green-600 border-green-200",
-        },
-        reservado: {
-            label: "Reservado",
-            style: "bg-orange-100 text-orange-700 border-orange-200",
-        },
-        pendente: {
-            label: "Pendente",
-            style: "bg-yellow-100 text-yellow-800 border-yellow-200",
-        },
-        finalizada: {
-            label: "Finalizada",
-            style: "bg-gray-100 text-gray-700 border-gray-200",
-        },
-        cancelado: {
-            label: "Cancelado",
-            style: "bg-red-100 text-red-600 border-red-200",
-        },
+        em_uso: { label: "Em uso", style: "bg-green-100 text-green-600 border-green-200" },
+        reservado: { label: "Reservado", style: "bg-orange-100 text-orange-700 border-orange-200" },
+        pendente: { label: "Pendente", style: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+        finalizada: { label: "Finalizada", style: "bg-gray-100 text-gray-700 border-gray-200" },
     };
 
-    // 🔹 Buscar reservas
+    // ==========================
+    // 🔥 BUSCAR RESERVAS
+    // ==========================
     useEffect(() => {
         const fetchReservas = async () => {
             try {
@@ -49,8 +38,14 @@ function TabelaReservas() {
                 if (estadoFilter) params.estado = estadoFilter;
 
                 const res = await api.get("admin/reservas/", { params });
-                const data = Array.isArray(res.data.results) ? res.data.results : res.data;
+
+                const data = Array.isArray(res.data.results)
+                    ? res.data.results
+                    : res.data;
+
                 setReservas(data);
+                console.log(reservas.usuario_perfil)
+
             } catch (err) {
                 console.error("Erro ao buscar reservas", err);
                 if (err.response?.status === 401) navigate("/login");
@@ -58,9 +53,11 @@ function TabelaReservas() {
         };
 
         fetchReservas();
-    }, [navigate, search, estadoFilter]);
+    }, [search, estadoFilter, navigate]);
 
-    // 🔹 Capturar hash da URL (#reserva-10)
+    // ==========================
+    // 🔥 HASH SCROLL
+    // ==========================
     useEffect(() => {
         if (location.hash) {
             const id = location.hash.replace("#reserva-", "");
@@ -71,24 +68,59 @@ function TabelaReservas() {
                 if (el) {
                     el.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
-            }, 300); // espera renderizar tabela
+            }, 300);
         }
     }, [location, reservas]);
 
-    // 🔹 Atualizar estado
-    const atualizarEstado = async (reserva, novoEstado) => {
-        try {
-            await api.patch(`admin/reservas/${reserva.id}/`, { estado: novoEstado });
+    // ==========================
+    // 🔥 PROMISE ACTIONS (BACKEND)
+    // ==========================
+    const aprovarReserva = (id) => {
+        return api.post(`admin/reservas/${id}/aprovar/`);
+    };
 
-            setReservas(prev =>
-                prev.map(r =>
-                    r.id === reserva.id ? { ...r, estado: novoEstado } : r
-                )
-            );
-        } catch (error) {
-            console.error("Erro ao atualizar estado", error);
-            alert("Erro ao atualizar estado.");
-        }
+    const finalizarReserva = (id) => {
+        return api.post(`admin/reservas/${id}/finalizar/`);
+    };
+
+    const podeEmprestar = (reserva) => {
+        return (
+            reserva?.estado === "reservado" &&
+            reserva?.usuario_perfil === "funcionario"
+        );
+    };
+
+    // ==========================
+    // 🔥 HANDLERS
+    // ==========================
+    const handleAprovar = (id) => {
+        aprovarReserva(id)
+            .then(() => {
+                setReservas(prev =>
+                    prev.map(r =>
+                        r.id === id ? { ...r, estado: "aprovada" } : r
+                    )
+                );
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro ao aprovar reserva");
+            });
+    };
+
+    const handleFinalizar = (id) => {
+        finalizarReserva(id)
+            .then(() => {
+                setReservas(prev =>
+                    prev.map(r =>
+                        r.id === id ? { ...r, estado: "finalizada" } : r
+                    )
+                );
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro ao finalizar reserva");
+            });
     };
 
     const handleEmprestar = (reserva) => {
@@ -99,39 +131,41 @@ function TabelaReservas() {
         setReservaSelecionada(reserva);
     };
 
+    // ==========================
+    // 🔥 RENDER ACTIONS
+    // ==========================
     const renderAcaoPrincipal = (reserva) => {
         switch (reserva.estado) {
+
             case "pendente":
-                return (
-                    <span className="text-gray-500">—</span>
-                );
+                return <span className="text-gray-500">—</span>;
 
             case "reservado":
                 return (
                     <button
-                        onClick={() => atualizarEstado(reserva, "aprovada")}
+                        onClick={() => handleAprovar(reserva.id)}
                         className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
                         bg-blue-100 text-blue-600 border border-blue-200
-                        hover:bg-blue-200 transition-colors"
+                        hover:bg-blue-200 transition"
                     >
-                        Aprovar
+                        Aprovar Uso
                     </button>
                 );
 
-            case "aprovada":
+            case "em_uso":
                 return (
                     <button
-                        onClick={() => atualizarEstado(reserva, "finalizada")}
+                        onClick={() => handleFinalizar(reserva.id)}
                         className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                        bg-blue-100 text-blue-600 border border-blue-200
-                        hover:bg-blue-200 transition-colors"
+                        bg-green-100 text-green-600 border border-green-200
+                        hover:bg-green-200 transition"
                     >
                         Finalizar
                     </button>
                 );
 
             default:
-                return <span className="text-gray-500 font-medium">—</span>;
+                return <span className="text-gray-500">—</span>;
         }
     };
 
@@ -239,12 +273,24 @@ function TabelaReservas() {
                                                 </td>
 
                                                 <td className="px-5 py-4 text-center">
-                                                    {reserva.estado === "reservado" ? (
+                                                    {/* {reserva.estado === "reservado" && reserva.usuario_perfil === "funcionario" ? (
                                                         <button
                                                             onClick={() => handleEmprestar(reserva)}
                                                             className="px-3 py-1 rounded-full text-sm font-medium
                                                             bg-green-100 text-green-700 border border-green-200
-                                                            hover:bg-green-200 transition"
+                                                            hover:bg-green-200 transition cursor-pointer"
+                                                        >
+                                                            Emprestar
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-500">—</span>
+                                                    )} */}
+                                                    {podeEmprestar(reserva) ? (
+                                                        <button
+                                                            onClick={() => handleEmprestar(reserva)}
+                                                            className="px-3 py-1 rounded-full text-sm font-medium
+                                                            bg-green-100 text-green-700 border border-green-200
+                                                            hover:bg-green-200 transition cursor-pointer"
                                                         >
                                                             Emprestar
                                                         </button>
@@ -282,3 +328,5 @@ function TabelaReservas() {
 }
 
 export default TabelaReservas;
+
+

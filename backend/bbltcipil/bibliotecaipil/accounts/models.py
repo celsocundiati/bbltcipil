@@ -250,4 +250,3 @@ class AlunoOficial(models.Model):
         return idade
     
 
-    

@@ -50,6 +50,13 @@ class LivroSerializer(serializers.ModelSerializer):
             estado="pendente"
         ).exists():
             return "Pendente"
+        
+        if Reserva.objects.filter(
+            livro=obj,
+            usuario=user,
+            estado="em_uso"
+        ).exists():
+            return "Em uso"
 
         return estado_global
 
@@ -59,6 +66,7 @@ class LivroSerializer(serializers.ModelSerializer):
             "Disponível": "Este livro está disponível para reserva",
             "Indisponível": "Livro indisponível no estoque",
             "Reservado": "Você possui uma reserva ativa",
+            "Em uso": "Livro sendo utilizado",
             "Pendente": "Aguardando aprovação",
             "Emprestado": "Livro emprestado a si",
         }
@@ -96,12 +104,16 @@ class ReservaSerializer(serializers.ModelSerializer):
     estado_label = serializers.CharField(source="get_estado_display", read_only=True)
     informacao = serializers.ReadOnlyField()
     autor_nome = serializers.CharField(source='livro.autor.nome', read_only=True)
+    usuario_perfil = serializers.SerializerMethodField()
 
     class Meta:
         model = Reserva
         fields = '__all__'
         read_only_fields = ["usuario"]
 
+    def get_usuario_perfil(self, obj):
+        perfil = Perfil.objects.filter(user=obj.usuario).first()
+        return perfil.tipo if perfil else None
 
     def get_usuario_nome(self, obj):
         # Tenta pegar o perfil; se não existir, retorna username
@@ -137,7 +149,7 @@ class ReservaSerializer(serializers.ModelSerializer):
         if Reserva.objects.filter(
             usuario=user,
             livro=livro,
-            estado__in=["pendente", "reservado"]
+            estado__in=["pendente", "reservado", "em_uso"]
         ).exists():
             raise serializers.ValidationError(
                 {"livro": "Você já possui uma reserva ativa para este livro."}
