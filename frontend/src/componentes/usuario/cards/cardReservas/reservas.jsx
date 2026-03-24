@@ -33,7 +33,7 @@ function CardReservas() {
 
   // 📌 Filtrar reservas e empréstimos
   const livrosReservado = reservas.filter(r =>
-    r.estado_label === "Reservado" || r.estado_label === "Pendente"
+    r.estado_label === "Reservado" || r.estado_label === "Pendente" || r.estado_label === "Em uso"
   );
   const livrosEmprestimo = emprestimos.filter(e =>
     e.acoes === "ativo" || e.acoes === "atrasado"
@@ -80,9 +80,6 @@ function CardReservas() {
               <Link to={`/detalhes/${emprestimo.livro_id}`} className="bg-[#F86417] text-white px-4 py-2 rounded-lg cursor-pointer">
                 Ver Detalhes
               </Link>
-              {/* <button className="py-2 px-5 text-black/70 border border-black/17 rounded-lg cursor-pointer">
-                Cancelar Reserva
-              </button> */}
             </div>
           </div>
         </div>

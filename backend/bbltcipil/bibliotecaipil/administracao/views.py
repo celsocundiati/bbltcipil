@@ -63,32 +63,125 @@ class LivroAdminViewSet(viewsets.ModelViewSet):
 # RESERVA
 # -----------------------------
 class ReservaAdminViewSet(viewsets.ModelViewSet):
-    queryset = Reserva.objects.all()
+    queryset = Reserva.objects.select_related("usuario", "livro")
     serializer_class = ReservaAdminSerializer
     permission_classes = [permissions.IsAdminUser]
-    
+
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['estado']
     search_fields = ['usuario__first_name', 'livro__titulo']
     ordering_fields = ['data_reserva', 'livro', 'estado']
-    ordering = ['data_reserva']
+    ordering = ['-data_reserva']
 
-    def perform_create(self, serializer):
-        reserva = serializer.save()
-        AuditService.log(user=self.request.user, action="Criou", instance=reserva,
-            extra={"livro": reserva.livro.titulo,"nome": reserva.usuario.first_name, "estado": reserva.estado, "data_reserva": str(reserva.data_reserva)})
+    #  BLOQUEAR UPDATE GENÉRICO
+    def update(self, request, *args, **kwargs):
+        raise ValidationError("Use ações específicas (aprovar, finalizar, cancelar).")
 
-    def perform_update(self, serializer):
-        reserva = serializer.save()
-        acao = "Aprovou" if reserva.estado == "reservado" else "Cancelou"
-        AuditService.log(user=self.request.user, action=acao, instance=reserva,
-            extra={"livro": reserva.livro.titulo,"nome": reserva.usuario.first_name, "estado": reserva.estado, "data_reserva": str(reserva.data_reserva)})
+    def partial_update(self, request, *args, **kwargs):
+        raise ValidationError("Use ações específicas (aprovar, finalizar, cancelar).")
 
-    def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Cancelou", instance=instance,
-            extra={"livro": instance.livro.titulo,"nome": instance.usuario.first_name, "estado": instance.estado})
-        instance.delete()
+    # -----------------------------
+    #  APROVAR RESERVA
+    # -----------------------------
+    @action(detail=True, methods=["post"])
+    def aprovar(self, request, pk=None):
 
+        reserva = self.get_object()
+
+        if reserva.estado != "reservado":
+            raise ValidationError("Apenas reservas 'reservado' podem ser usadas.")
+
+        reserva.estado = "em_uso"
+        reserva.aprovada_por = request.user
+        reserva.save(update_fields=["estado", "aprovada_por"])
+
+        AuditService.log(
+            user=request.user,
+            action="Aprovou",
+            instance=reserva,
+            extra={
+                "livro": reserva.livro.titulo,
+                "usuario": reserva.usuario.first_name
+            }
+        )
+
+        return Response({"status": "Uso aprovado com sucesso"})
+
+    # -----------------------------
+    #  FINALIZAR RESERVA
+    # -----------------------------
+    @action(detail=True, methods=["post"])
+    def finalizar(self, request, pk=None):
+
+        reserva = self.get_object()
+
+        if reserva.estado != "em_uso":
+            raise ValidationError("Apenas reservas 'em_uso' podem ser finalizadas.")
+
+        reserva.estado = "finalizada"
+        reserva.save(update_fields=["estado"])
+
+        AuditService.log(
+            user=request.user,
+            action="Finalizou",
+            instance=reserva,
+            extra={
+                "livro": reserva.livro.titulo,
+                "usuario": reserva.usuario.first_name
+            }
+        )
+
+        return Response({"status": "Reserva finalizada com sucesso"})
+
+    # -----------------------------
+    #  CANCELAR RESERVA
+    # -----------------------------
+    @action(detail=True, methods=["post"])
+    def cancelar(self, request, pk=None):
+
+        reserva = self.get_object()
+
+        if reserva.estado not in ["pendente", "reservado"]:
+            raise ValidationError("Só pode cancelar reservas ativas.")
+
+        reserva.estado = "expirada"
+        reserva.save(update_fields=["estado"])
+
+        AuditService.log(
+            user=request.user,
+            action="Cancelou",
+            instance=reserva,
+            extra={
+                "livro": reserva.livro.titulo,
+                "usuario": reserva.usuario.first_name
+            }
+        )
+
+        return Response({"status": "Reserva cancelada com sucesso"})
+
+    # -----------------------------
+    # 🗑️ DELETE CONTROLADO
+    # -----------------------------
+    def destroy(self, request, *args, **kwargs):
+
+        reserva = self.get_object()
+
+        if reserva.estado not in ["pendente", "reservado"]:
+            raise ValidationError("Só pode remover reservas não processadas.")
+
+        AuditService.log(
+            user=request.user,
+            action="Removeu",
+            instance=reserva,
+            extra={
+                "livro": reserva.livro.titulo,
+                "usuario": reserva.usuario.first_name
+            }
+        )
+
+        reserva.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # -----------------------------
 # EMPRÉSTIMO
@@ -541,7 +634,7 @@ class DashboardResumoGeralView(APIView):
         # =======================
         reservas_pendentes = Reserva.objects.filter(estado__iexact="Pendente").count()
         reservas_reservadas = Reserva.objects.filter(estado__iexact="Reservado").count()
-        reservas_aprovadas = Reserva.objects.filter(estado__iexact="Aprovada").count()
+        reservas_aprovadas = Reserva.objects.filter(estado__iexact="em_uso").count()
         reservas_finalizadas = Reserva.objects.filter(estado__iexact="Finalizada").count()
 
         # =======================

@@ -25,6 +25,8 @@ function EstadoDetalhes({estado, label}){
         <span className={estiloEstado(estado)}>
             {estado === "Reservado" ? (
                     <FiCheckCircle size={25}/>
+                ) : estado === "Em uso" ? (
+                    <FiCheckCircle size={25}/>
                 ) : estado === "Pendente" ? (
                     <LuClock size={25}/>
                 ) : estado === "Emprestado" ? (
