@@ -17,13 +17,41 @@ class ReservaAdminSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
 class EmprestimoAdminSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="reserva.livro.titulo", read_only=True)
     usuario_nome = serializers.CharField(source="reserva.usuario.first_name", read_only=True)
 
     class Meta:
         model = Emprestimo
-        fields = '__all__'
+        fields = "__all__"
+        extra_kwargs = {
+            "data_devolucao": {"required": False}
+        }
+
+    def validate(self, data):
+        reserva = data.get("reserva")
+
+        if not reserva:
+            raise serializers.ValidationError("Reserva é obrigatória.")
+
+        usuario = reserva.usuario
+
+        # 🔥 PEGAR PERFIL
+        perfil = getattr(usuario, "perfil", None)
+
+        if not perfil:
+            raise serializers.ValidationError(
+                "Usuário sem perfil associado. Contacte o administrador."
+            )
+
+        # 🔥 REGRA DE NEGÓCIO
+        if perfil.tipo != "funcionario":
+            raise serializers.ValidationError(
+                "Apenas funcionários podem realizar empréstimos. Usuários comuns devem permanecer em reservas."
+            )
+
+        return data   
 
 
 # --------------------------

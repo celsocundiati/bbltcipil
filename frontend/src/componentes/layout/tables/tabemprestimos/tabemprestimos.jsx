@@ -16,6 +16,7 @@ function TabelaEmprestimos() {
     const [search, setSearch] = useState("");
     const [estadoFilter, setEstadoFilter] = useState("");
     const [idDestacado, setIdDestacado] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -28,6 +29,7 @@ function TabelaEmprestimos() {
                 if (search) params.search = search;
                 if (estadoFilter) params.acoes = estadoFilter;
 
+                setLoading(true)
                 const res = await api.get("/admin/emprestimos/", { params });
 
                 setEmprestimos(
@@ -89,18 +91,6 @@ function TabelaEmprestimos() {
         setModal({ open: false, type: null, emprestimo: null });
     }
 
-    // async function handleConfirm() {
-    //     if (modal.type === "delete") {
-    //         await api.delete(`/admin/emprestimos/${modal.emprestimo.id}/`);
-
-    //         setEmprestimos(prev =>
-    //             prev.filter(item => item.id !== modal.emprestimo.id)
-    //         );
-
-    //         closeModal();
-    //     }
-    // }
-
     return (
         <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -146,9 +136,12 @@ function TabelaEmprestimos() {
 
             {/* 📊 Tabela */}
             <section className="w-full bg-white rounded-2xl px-8 py-5">
-                <h2 className="text-xl font-medium mb-4">
-                    Lista de Empréstimos ({emprestimos.length})
-                </h2>
+                <article className="py-5 flex flex-col">
+                    <h1 className="text-xl">Lista de Empréstimos</h1>
+                    <p className="text-black/70">
+                        {!loading ? "Carregando..." : `Exibindo ${emprestimos.length} empréstimos`}
+                    </p>
+                </article>
 
                 <table className="w-full border rounded-xl overflow-hidden">
                     <thead className="bg-black/5">

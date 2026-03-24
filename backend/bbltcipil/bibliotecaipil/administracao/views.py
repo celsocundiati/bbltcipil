@@ -2,7 +2,9 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
+from django.db import transaction
 from rest_framework.exceptions import ValidationError
+from .service import calcular_valor_multa, criar_emprestimo
 from django.db.models import Count, Sum, Q
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth import get_user_model
@@ -91,43 +93,84 @@ class ReservaAdminViewSet(viewsets.ModelViewSet):
 # -----------------------------
 # EMPRÉSTIMO
 # -----------------------------
+
 class EmprestimoAdminViewSet(viewsets.ModelViewSet):
+
     queryset = Emprestimo.objects.all()
     serializer_class = EmprestimoAdminSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
-        hoje = timezone.now().date()
-        queryset = Emprestimo.objects.all()
-        queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
-        return queryset
-
-    
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['acoes']
-    search_fields = ['reserva__usuario__first_name', 'reserva__livro__titulo']
-    ordering_fields = ['data_emprestimo', 'livro__titulo', 'acoes']
-    ordering = ['data_emprestimo']
+        # 🔥 APENAS leitura
+        return Emprestimo.objects.all()
 
     def perform_create(self, serializer):
-        emprestimo = serializer.save()
-        AuditService.log(user=self.request.user, action="Criou", instance=emprestimo,
-            extra={"livro": emprestimo.reserva.livro.titulo,
-                "nome": emprestimo.reserva.usuario.first_name,
-                "data_devolucao": str(emprestimo.data_devolucao),
-                "estado": emprestimo.acoes})
+
+        reserva = serializer.validated_data.get("reserva")
+
+        with transaction.atomic():
+
+            try:
+                emprestimo = criar_emprestimo(
+                    reserva=reserva,
+                    admin_user=self.request.user
+                )
+            except Exception as e:
+                raise ValidationError(str(e))
+
+            AuditService.log(
+                user=self.request.user,
+                action="Criou",
+                instance=emprestimo,
+                extra={
+                    "livro": emprestimo.reserva.livro.titulo,
+                    "nome": emprestimo.reserva.usuario.first_name,
+                    "data_devolucao": str(emprestimo.data_devolucao),
+                    "estado": emprestimo.acoes
+                }
+            )
 
     def perform_update(self, serializer):
+
+        instance = self.get_object()
+
+        nova_acao = serializer.validated_data.get("acoes")
+
+        # 🔒 regras de negócio
+        if instance.acoes == "devolvido":
+            raise ValidationError("Empréstimo já devolvido não pode ser alterado.")
+
+        if nova_acao == "devolvido":
+            from administracao.service import devolver_emprestimo
+            devolver_emprestimo(instance)
+            return
+
         emprestimo = serializer.save()
-        AuditService.log(user=self.request.user, action="Atualizou", instance=emprestimo,
-            extra={"livro": emprestimo.reserva.livro.titulo,
+
+        AuditService.log(
+            user=self.request.user,
+            action="Atualizou",
+            instance=emprestimo,
+            extra={
+                "livro": emprestimo.reserva.livro.titulo,
                 "nome": emprestimo.reserva.usuario.first_name,
                 "data_devolucao": str(emprestimo.data_devolucao),
-                "estado": emprestimo.acoes})
+                "estado": emprestimo.acoes
+            }
+        )
 
     def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Cancelou", instance=instance,
-            extra={"livro": instance.reserva.livro.titulo, "nome": instance.reserva.usuario.first_name})
+
+        AuditService.log(
+            user=self.request.user,
+            action="Cancelou",
+            instance=instance,
+            extra={
+                "livro": instance.reserva.livro.titulo,
+                "nome": instance.reserva.usuario.first_name
+            }
+        )
+
         instance.delete()
 
 
@@ -198,18 +241,22 @@ class MultaViewSet(viewsets.ModelViewSet):
     queryset = Multa.objects.all().order_by("-data_criacao")
     serializer_class = MultaSerializer
     permission_classes = [permissions.IsAdminUser]
-    
+
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['estado']
     search_fields = ['usuario__first_name', 'emprestimo__reserva__livro__titulo']
     ordering_fields = ['data_criacao', 'emprestimo__reserva__livro__titulo', 'estado']
-    ordering = ['data_criacao']
+    ordering = ['-data_criacao']
 
+    # 🔥 CRIAR MULTA
     def perform_create(self, serializer):
         emprestimo = serializer.validated_data.get("emprestimo")
         motivo = serializer.validated_data.get("motivo")
 
-        # 🔥 REGRA 1: Dano/Perda apenas 1 vez por empréstimo
+        if not emprestimo:
+            raise ValidationError("Empréstimo é obrigatório")
+
+        # 🔥 REGRA 1: evitar duplicação de Dano/Perda
         if motivo in ["Dano", "Perda"]:
             if Multa.objects.filter(
                 emprestimo=emprestimo,
@@ -219,37 +266,23 @@ class MultaViewSet(viewsets.ModelViewSet):
                     f"Já existe multa de {motivo} para este empréstimo."
                 )
 
-        # 🔥 REGRA 2: máximo 2 multas totais (exceto atraso)
-        total_multas = Multa.objects.filter(emprestimo=emprestimo).count()
+        # 🔥 REGRA 2: limite de multas (exceto atraso)
+        total_multas = Multa.objects.filter(emprestimo=emprestimo).exclude(motivo="Atraso").count()
+
         if total_multas >= 2:
             raise ValidationError(
-                "Este empréstimo já atingiu o limite de 2 multas."
+                "Este empréstimo já atingiu o limite de multas."
             )
 
-        # 💰 cálculo do valor
-        valor = 0
-
-        if emprestimo and emprestimo.data_devolucao:
-            hoje = timezone.now().date()
-            prazo = emprestimo.data_devolucao
-
-            if motivo == "Atraso":
-                if hoje > prazo:
-                    dias_atraso = (hoje - prazo).days
-                    valor = dias_atraso * 500
-
-            elif motivo == "Dano":
-                valor = 7000
-
-            elif motivo == "Perda":
-                valor = 12000
+        # 💰 VALOR DINÂMICO (CONFIG)
+        valor = calcular_valor_multa(emprestimo, motivo)
 
         serializer.save(
             valor=valor,
             criado_por=self.request.user
         )
 
-    # 🔹 EMPRESTIMOS DISPONÍVEIS (SEM DANO/SEM PERDA)
+    # 🔹 EMPRESTIMOS DISPONÍVEIS
     @action(detail=False, methods=["get"])
     def emprestimos_disponiveis(self, request):
 
@@ -299,7 +332,7 @@ class MultaViewSet(viewsets.ModelViewSet):
 
         multa.dispensar()
         return Response({"status": "Multa dispensada"})
-
+    
 
 # -----------------------------
 # CONFIGURAÇÕES DO SISTEMA

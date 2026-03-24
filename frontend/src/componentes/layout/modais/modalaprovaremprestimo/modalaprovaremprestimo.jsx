@@ -3,42 +3,18 @@ import api from "../../../service/api/api";
 import { motion } from "framer-motion";
 
 function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
-
-  const hoje = new Date();
-  const prazodias = 4;
   
-  const dataMínimaPermitida = new Date(
-      hoje.getFullYear(),
-      hoje.getMonth(),
-      hoje.getDate()
-  ).toISOString().split("T")[0];
-
-  
-  const dataMaximaPermitida = new Date(
-    hoje.getFullYear(),
-    hoje.getMonth(),
-    hoje.getDate() + prazodias
-  ).toISOString().split("T")[0];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!dataMaximaPermitida) {
-      alert("Defina a data de devolução.");
-      return;
-    }
-
     try {
-      const res = await api.post(
-        "/admin/emprestimos/",
-        {
-          reserva: reserva.id,
-          data_devolucao: dataMaximaPermitida
-        }
-      );
+      const res = await api.post("/admin/emprestimos/", {
+        reserva: reserva.id
+      });
 
       onSave(res.data);
       onClose();
+
     } catch (error) {
       if (error.response?.data) {
         const erros = Object.values(error.response.data)
@@ -105,18 +81,7 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
                 className="bg-gray-100 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
               />
             </div>
-
-            <div className="flex flex-col space-y-1">
-              <label className="text-black/70">Data Devolução</label>
-              <input
-                type="date"
-                min={dataMínimaPermitida}
-                value={dataMaximaPermitida || ""}
-                readOnly
-                className="bg-gray-100 cursor-not-allowed outline-none py-2 px-3 rounded-lg"
-              />
-            </div>
-
+            
             {/* Botões */}
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
                   <button

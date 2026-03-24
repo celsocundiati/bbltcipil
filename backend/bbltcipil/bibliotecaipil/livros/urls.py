@@ -11,7 +11,6 @@ router.register(r'autores', AutorViewSet)
 router.register(r'categorias', CategoriaViewSet)
 router.register(r'reservas', ReservaViewSet, basename='reserva')
 router.register(r'emprestimos', EmprestimoViewSet, basename='emprestimo')
-# router.register(r'perfil', PerfilViewSet, basename='perfil-usuario')
 router.register(r"notificacoes", NotificacaoViewSet, basename="notificacao")
 
 urlpatterns = [

@@ -1,5 +1,5 @@
 import {MdPersonOutline} from "react-icons/md";
-import {HiOutlineArrowDownTray, HiOutlineCog6Tooth} from "react-icons/hi2";
+import {HiOutlineArrowDownTray, HiOutlineCurrencyDollar} from "react-icons/hi2";
 import { useState } from "react";
 import Modal from "../modais/modal";
 import {Link} from "react-router-dom";
@@ -132,7 +132,7 @@ function HeaderOutle({page}){
                         <p className="text-black/70 text-lg">Gerir multas e configurar regras.</p>
                     </article>
                     <button onClick={handleClick6} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg cursor-pointer rounded-lg gap-2">
-                        <HiOutlineCog6Tooth size={25}/> Configurar Regras
+                        <HiOutlineCurrencyDollar size={25}/> Aplicar multa
                     </button>
                 </section>
 

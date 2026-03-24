@@ -24,7 +24,7 @@ function TabelaReservas() {
         },
         reservado: {
             label: "Reservado",
-            style: "bg-blue-100 text-blue-600 border-blue-200",
+            style: "bg-orange-100 text-orange-700 border-orange-200",
         },
         pendente: {
             label: "Pendente",
@@ -103,25 +103,30 @@ function TabelaReservas() {
         switch (reserva.estado) {
             case "pendente":
                 return (
+                    <span className="text-gray-500">—</span>
+                );
+
+            case "reservado":
+                return (
                     <button
-                        onClick={() => atualizarEstado(reserva, "reservado")}
+                        onClick={() => atualizarEstado(reserva, "aprovada")}
                         className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                        bg-blue-100 text-blue-700 border border-blue-200
+                        bg-blue-100 text-blue-600 border border-blue-200
                         hover:bg-blue-200 transition-colors"
                     >
                         Aprovar
                     </button>
                 );
 
-            case "reservado":
+            case "aprovada":
                 return (
                     <button
-                        onClick={() => atualizarEstado(reserva, "pendente")}
+                        onClick={() => atualizarEstado(reserva, "finalizada")}
                         className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                        bg-red-100 text-red-600 border border-red-200
-                        hover:bg-red-200 transition-colors"
+                        bg-blue-100 text-blue-600 border border-blue-200
+                        hover:bg-blue-200 transition-colors"
                     >
-                        Cancelar
+                        Finalizar
                     </button>
                 );
 
@@ -188,7 +193,7 @@ function TabelaReservas() {
                                 <th className="w-[20%] px-5 py-3 text-center">Usuário</th>
                                 <th className="px-5 py-3 text-center">Data</th>
                                 <th className="px-5 py-3 text-center">Estado</th>
-                                <th className="px-5 py-3 text-center">Ação</th>
+                                <th className="px-5 py-3 text-center">Retirada</th>
                                 <th className="px-5 py-3 text-center">Emprestar</th>
                             </tr>
                         </thead>

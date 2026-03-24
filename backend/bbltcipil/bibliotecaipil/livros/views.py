@@ -3,33 +3,32 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
+from rest_framework.exceptions import PermissionDenied, ValidationError
+
+from django.contrib.auth import get_user_model
+
 from .models import Categoria, Autor, Livro, Reserva, Emprestimo, Notificacao
 from .serializers import (
     CategoriaSerializer, AutorSerializer, LivroSerializer,
     ReservaSerializer, EmprestimoSerializer, NotificacaoSerializer
 )
-from administracao.audit_service import AuditService
+
+from .service import criar_reserva
+
+User = get_user_model()
+
 
 
 # ==============================
-# Base ViewSet para DRY
+# BASE VIEWSET (SEGURANÇA)
 # ==============================
 class BaseDebugViewSet(viewsets.ModelViewSet):
-    """Base ViewSet com tratamento padrão de erros"""
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
+        raise PermissionDenied("Edição não permitida.")
+
+    def partial_update(self, request, *args, **kwargs):
+        raise PermissionDenied("Edição não permitida.")
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -38,26 +37,27 @@ class BaseDebugViewSet(viewsets.ModelViewSet):
 
 
 # ==============================
-# Categorias
+# CATEGORIAS (READ ONLY)
 # ==============================
-class CategoriaViewSet(BaseDebugViewSet):
+class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
+    permission_classes = [IsAuthenticated]
 
 
 # ==============================
-# Autores
+# AUTORES (READ ONLY)
 # ==============================
-class AutorViewSet(BaseDebugViewSet):
+class AutorViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Autor.objects.all()
     serializer_class = AutorSerializer
-
+    permission_classes = [IsAuthenticated]
 
 
 # ==============================
-# Livros
+# LIVROS
 # ==============================
-class LivroViewSet(BaseDebugViewSet):
+class LivroViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Livro.objects.all()
     serializer_class = LivroSerializer
     permission_classes = [IsAuthenticated]
@@ -65,72 +65,100 @@ class LivroViewSet(BaseDebugViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['estado']
     search_fields = ['titulo', 'autor__nome', 'categoria__nome']
-    ordering_fields = ['publicado_em', 'titulo', 'isbn', 'estado']
-    ordering = ['publicado_em']
+    ordering_fields = ['publicado_em', 'titulo']
+    ordering = ['-publicado_em']
 
     @action(detail=True, methods=["post"])
     def reservar(self, request, pk=None):
+
         livro = self.get_object()
-        user = request.user
-        if livro.estado_atual != "Disponível":
-            return Response({"erro": "Livro não disponível"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            reserva = Reserva.objects.create(usuario=user, livro=livro, estado='pendente')
-        except Exception as e:
-            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"mensagem": "Reserva enviada com sucesso", "reserva_id": reserva.pk})
+            reserva = criar_reserva(
+                usuario=request.user,
+                livro=livro
+            )
+
+            return Response({
+                "mensagem": "Reserva criada com sucesso",
+                "reserva_id": reserva.id,
+                "estado": reserva.estado
+            }, status=status.HTTP_201_CREATED)
+
+        except ValidationError as e:
+            return Response({"erro": e.messages}, status=400)
 
 
 # ==============================
-# Reservas
+# RESERVAS
 # ==============================
-class ReservaViewSet(BaseDebugViewSet):
-    queryset = Reserva.objects.all()
+class ReservaViewSet(viewsets.ModelViewSet):
     serializer_class = ReservaSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return self.queryset.filter(usuario=self.request.user)
+        return Reserva.objects.filter(usuario=self.request.user)
 
-    def perform_create(self, serializer):
-        reserva = serializer.save(usuario=self.request.user)
-        reserva._request = self.request
-        
-        return reserva
+    def create(self, request, *args, **kwargs):
 
-    def perform_update(self, serializer):
-        reserva = serializer.save()
-        reserva._request = self.request
-        return reserva
-    
+        livro_id = request.data.get("livro")
+
+        if not livro_id:
+            return Response({"erro": "Livro é obrigatório"}, status=400)
+
+        try:
+            livro = Livro.objects.get(id=livro_id)
+
+            reserva = criar_reserva(
+                usuario=request.user,
+                livro=livro
+            )
+
+            serializer = self.get_serializer(reserva)
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Livro.DoesNotExist:
+            return Response({"erro": "Livro não encontrado"}, status=404)
+
+        except ValidationError as e:
+            return Response({"erro": e.messages}, status=400)
+
+    def update(self, request, *args, **kwargs):
+        raise PermissionDenied("Usuário não pode editar reservas.")
+
+    def partial_update(self, request, *args, **kwargs):
+        raise PermissionDenied("Usuário não pode editar reservas.")
+
+    def destroy(self, request, *args, **kwargs):
+
+        reserva = self.get_object()
+
+        if reserva.usuario_id != request.user.id:
+            raise PermissionDenied("Sem permissão para cancelar esta reserva.")
+
+        if reserva.estado not in ["pendente", "reservado"]:
+            raise PermissionDenied("Só pode cancelar reservas ativas.")
+
+        reserva.delete()
+
+        return Response({"mensagem": "Reserva cancelada com sucesso"})
+
+
 
 # ==============================
-# Empréstimos
+# EMPRÉSTIMOS (READ ONLY)
 # ==============================
-class EmprestimoViewSet(BaseDebugViewSet):
+class EmprestimoViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = EmprestimoSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        hoje = timezone.now().date()
-        queryset = Emprestimo.objects.filter(reserva__usuario=user)
-        queryset.filter(acoes='ativo', data_devolucao__lt=hoje).update(acoes='atrasado')
-        return queryset
-
-    def perform_create(self, serializer):
-        emprestimo = serializer.save()
-        emprestimo._request = self.request
-        return emprestimo
-
-    def perform_update(self, serializer):
-        emprestimo = serializer.save()
-        emprestimo._request = self.request
-        return emprestimo
+        return Emprestimo.objects.filter(reserva__usuario=self.request.user)
 
 
 # ==============================
-# Notificações
+# NOTIFICAÇÕES
 # ==============================
 class NotificacaoViewSet(viewsets.ModelViewSet):
     serializer_class = NotificacaoSerializer
@@ -140,20 +168,24 @@ class NotificacaoViewSet(viewsets.ModelViewSet):
     ordering = ['-criada_em']
 
     def get_queryset(self):
-        queryset = Notificacao.objects.filter(usuario=self.request.user)
-        lidas = self.request.query_params.get('lidas')
-        if lidas is not None:
-            queryset = queryset.filter(lida=(lidas.lower() == 'true'))
-        return queryset
+        return Notificacao.objects.filter(usuario=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user)
 
     @action(detail=True, methods=["post"])
     def marcar_lida(self, request, pk=None):
+
         notif = self.get_object()
         notif.lida = True
         notif.save(update_fields=['lida'])
+
         return Response({"status": "ok"})
     
 
+
+
+
+
+
+    
