@@ -33,10 +33,10 @@ function CardReservas() {
 
   // 📌 Filtrar reservas e empréstimos
   const livrosReservado = reservas.filter(r =>
-    r.estado_label === "Reservado" || r.estado_label === "Pendente" || r.estado_label === "Em uso"
+    r.estado_label !== "Finalizada"
   );
   const livrosEmprestimo = emprestimos.filter(e =>
-    e.acoes === "ativo" || e.acoes === "atrasado"
+    e.acoes !== "devolvido"
   );
 
   // 🗑 Cancelar Reserva
@@ -49,6 +49,10 @@ function CardReservas() {
       else alert("Erro ao cancelar a reserva: " + JSON.stringify(error.response?.data || error));
     }
   };
+
+  function capitalizar(palavra) {
+    return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+  }
 
   return (
     <motion.div
@@ -65,7 +69,7 @@ function CardReservas() {
           <div className="flex flex-col gap-2 lg:gap-3">
             <p className="text-lg">{emprestimo.livro_nome}</p>
             <p className="text-black/57">{emprestimo.autor_nome}</p>
-            <EstadoCard estado="Emprestado" label="Livro emprestado atualmente"/>
+            <EstadoCard estado={capitalizar(emprestimo.acoes)} label="Livro emprestado atualmente"/>
             <div className="flex justify-between flex-col gap-2 lg:flex-row lg:gap-80">
               <div className="text-black/57 flex gap-2">
                 <IoCalendarClearOutline size={25} />
@@ -100,7 +104,14 @@ function CardReservas() {
               </div>
               <div className="text-black/57 flex gap-2">
                 <LuClock size={25} />
-                <p>Pendente</p>
+                <p>
+                  {new Date(reserva.data_aprovacao).toLocaleString("pt-PT", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric"
+                    }) 
+                    || "Pendente"}
+                </p>
               </div>
             </div>
             <div className="flex gap-2 flex-col lg:flex-row lg:gap-10">

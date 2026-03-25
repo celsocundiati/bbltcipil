@@ -213,9 +213,11 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = "Africa/Luanda"
 
 
+
 CELERY_BEAT_SCHEDULE = {
-    "gerar-multas-diarias": {
-        "task": "administracao.tasks.gerar_multas_atraso",
-        "schedule": crontab(hour=0, minute=0),  # todos os dias à meia-noite
-    }
+    # 🔥 ORQUESTRADOR (opcional)
+    "rotina-geral": {
+        "task": "administracao.tasks.rotina_automatica_sistema",
+        "schedule": crontab(minute="*/30"),
+    },
 }

@@ -25,6 +25,7 @@ function TabelaReservas() {
         reservado: { label: "Reservado", style: "bg-orange-100 text-orange-700 border-orange-200" },
         pendente: { label: "Pendente", style: "bg-yellow-100 text-yellow-800 border-yellow-200" },
         finalizada: { label: "Finalizada", style: "bg-gray-100 text-gray-700 border-gray-200" },
+        expirada: { label: "Expirada", style: "bg-gray-100 text-gray-700 border-gray-200" },
     };
 
     // ==========================
@@ -44,7 +45,6 @@ function TabelaReservas() {
                     : res.data;
 
                 setReservas(data);
-                console.log(reservas.usuario_perfil)
 
             } catch (err) {
                 console.error("Erro ao buscar reservas", err);
@@ -87,6 +87,13 @@ function TabelaReservas() {
         return (
             reserva?.estado === "reservado" &&
             reserva?.usuario_perfil === "funcionario"
+        );
+    };
+
+    const podeFinalizar = (reserva) => {
+        return (
+            reserva.estado === "em_uso" &&
+            reserva.usuario_perfil === "funcionario"
         );
     };
 
@@ -134,6 +141,41 @@ function TabelaReservas() {
     // ==========================
     // 🔥 RENDER ACTIONS
     // ==========================
+    // const renderAcaoPrincipal = (reserva) => {
+    //     switch (reserva.estado) {
+
+    //         case "pendente":
+    //             return <span className="text-gray-500">—</span>;
+
+    //         case "reservado":
+    //             return (
+    //                 <button
+    //                     onClick={() => handleAprovar(reserva.id)}
+    //                     className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+    //                     bg-blue-100 text-blue-600 border border-blue-200
+    //                     hover:bg-blue-200 transition"
+    //                 >
+    //                     Aprovar Uso
+    //                 </button>
+    //             );
+
+    //         case "em_uso":
+    //             case podeEmprestar():
+    //             return (
+    //                 <button
+    //                     onClick={() => handleFinalizar(reserva.id)}
+    //                     className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+    //                     bg-green-100 text-green-600 border border-green-200
+    //                     hover:bg-green-200 transition"
+    //                 >
+    //                     Finalizar
+    //                 </button>
+    //             );
+
+    //         default:
+    //             return <span className="text-gray-500">—</span>;
+    //     }
+    // };
     const renderAcaoPrincipal = (reserva) => {
         switch (reserva.estado) {
 
@@ -153,7 +195,7 @@ function TabelaReservas() {
                 );
 
             case "em_uso":
-                return (
+                return podeFinalizar(reserva) ? (
                     <button
                         onClick={() => handleFinalizar(reserva.id)}
                         className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
@@ -162,6 +204,8 @@ function TabelaReservas() {
                     >
                         Finalizar
                     </button>
+                ) : (
+                    <span className="text-gray-500">—</span>
                 );
 
             default:
@@ -273,18 +317,6 @@ function TabelaReservas() {
                                                 </td>
 
                                                 <td className="px-5 py-4 text-center">
-                                                    {/* {reserva.estado === "reservado" && reserva.usuario_perfil === "funcionario" ? (
-                                                        <button
-                                                            onClick={() => handleEmprestar(reserva)}
-                                                            className="px-3 py-1 rounded-full text-sm font-medium
-                                                            bg-green-100 text-green-700 border border-green-200
-                                                            hover:bg-green-200 transition cursor-pointer"
-                                                        >
-                                                            Emprestar
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-gray-500">—</span>
-                                                    )} */}
                                                     {podeEmprestar(reserva) ? (
                                                         <button
                                                             onClick={() => handleEmprestar(reserva)}

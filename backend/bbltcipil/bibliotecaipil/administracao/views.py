@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
-from .service import calcular_valor_multa, criar_emprestimo
+from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo
 from django.db.models import Count, Sum, Q
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth import get_user_model
@@ -48,14 +48,14 @@ class LivroAdminViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         livro = serializer.save()
-        AuditService.log(user=self.request.user, action="Adicionou", instance=livro, extra={"titulo": livro.titulo})
+        AuditService.log(user=self.request.user, action="Adicionou", instance=livro, extra={"titulo": livro.titulo, "autor": livro.autor.nome})
 
     def perform_update(self, serializer):
         livro = serializer.save()
-        AuditService.log(user=self.request.user, action="Atualizou", instance=livro, extra={"titulo": livro.titulo})
+        AuditService.log(user=self.request.user, action="Atualizou", instance=livro, extra={"titulo": livro.titulo, "autor": livro.autor.nome})
 
     def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Removeu", instance=instance, extra={"titulo": instance.titulo})
+        AuditService.log(user=self.request.user, action="Removeu", instance=instance, extra={"titulo": instance.titulo, "autor": instance.autor.nome})
         instance.delete()
 
 
@@ -101,7 +101,8 @@ class ReservaAdminViewSet(viewsets.ModelViewSet):
             instance=reserva,
             extra={
                 "livro": reserva.livro.titulo,
-                "usuario": reserva.usuario.first_name
+                "nome": reserva.usuario.first_name,
+                "estado": reserva.estado,
             }
         )
 
@@ -127,7 +128,8 @@ class ReservaAdminViewSet(viewsets.ModelViewSet):
             instance=reserva,
             extra={
                 "livro": reserva.livro.titulo,
-                "usuario": reserva.usuario.first_name
+                "nome": reserva.usuario.first_name,
+                "estado": reserva.estado,
             }
         )
 
@@ -186,30 +188,31 @@ class ReservaAdminViewSet(viewsets.ModelViewSet):
 # -----------------------------
 # EMPRÉSTIMO
 # -----------------------------
-
 class EmprestimoAdminViewSet(viewsets.ModelViewSet):
-
     queryset = Emprestimo.objects.all()
     serializer_class = EmprestimoAdminSerializer
     permission_classes = [permissions.IsAdminUser]
+    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['acoes']
+    search_fields = ['reserva__usuario__first_name', 'reserva__livro__titulo']
+    ordering_fields = ['data_emprestimo', 'acoes']
+    ordering = ['-data_emprestimo']
 
-    def get_queryset(self):
-        # 🔥 APENAS leitura
-        return Emprestimo.objects.all()
-
+    # 🔥 CREATE
     def perform_create(self, serializer):
 
         reserva = serializer.validated_data.get("reserva")
 
+        if not reserva:
+            raise ValidationError("Reserva é obrigatória.")
+
         with transaction.atomic():
 
-            try:
-                emprestimo = criar_emprestimo(
-                    reserva=reserva,
-                    admin_user=self.request.user
-                )
-            except Exception as e:
-                raise ValidationError(str(e))
+            emprestimo = criar_emprestimo(
+                reserva=reserva,
+                admin_user=self.request.user
+            )
 
             AuditService.log(
                 user=self.request.user,
@@ -223,20 +226,13 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
                 }
             )
 
+    # 🔥 UPDATE (SEM DEVOLUÇÃO AQUI)
     def perform_update(self, serializer):
 
         instance = self.get_object()
 
-        nova_acao = serializer.validated_data.get("acoes")
-
-        # 🔒 regras de negócio
         if instance.acoes == "devolvido":
             raise ValidationError("Empréstimo já devolvido não pode ser alterado.")
-
-        if nova_acao == "devolvido":
-            from administracao.service import devolver_emprestimo
-            devolver_emprestimo(instance)
-            return
 
         emprestimo = serializer.save()
 
@@ -252,6 +248,43 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
             }
         )
 
+    # 🔥 ACTION EXCLUSIVA: DEVOLUÇÃO (CORE DO NEGÓCIO)
+    @action(detail=True, methods=["post"])
+    def devolver(self, request, pk=None):
+
+        emprestimo = self.get_object()
+
+        if emprestimo.acoes == "devolvido":
+            return Response(
+                {"detail": "Este empréstimo já foi devolvido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+
+            devolver_emprestimo(emprestimo)
+
+            AuditService.log(
+                user=request.user,
+                action="Devolveu",
+                instance=emprestimo,
+                extra={
+                    "livro": emprestimo.reserva.livro.titulo,
+                    "nome": emprestimo.reserva.usuario.first_name,
+                    "estado": emprestimo.acoes,
+                }
+            )
+
+        return Response(
+            {
+                "success": True,
+                "message": "Devolução realizada com sucesso.",
+                "id": emprestimo.id
+            },
+            status=status.HTTP_200_OK
+        )
+
+    # 🔥 DELETE
     def perform_destroy(self, instance):
 
         AuditService.log(

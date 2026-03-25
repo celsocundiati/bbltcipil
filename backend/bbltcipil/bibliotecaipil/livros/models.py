@@ -114,6 +114,9 @@ class Livro(models.Model):
         if self.reservas.filter(estado='em_uso').exists():
             return 'Em uso'
 
+        if self.reservas.filter(estado='expirada').exists():
+            return 'Expirada'
+
         return 'Disponível'
 
     @property
@@ -182,7 +185,7 @@ class Reserva(models.Model):
         if self.estado == "reservado" and self.livro.quantidade <= 0:
             raise ValidationError("Sem estoque disponível.")
 
-        if self.estado == "em_uso" and not self.aprovada_por:
+        if self.estado == "finalizada" and not self.aprovada_por:
             raise ValidationError("Aprovação requer administrador.")
 
         # transições seguras
@@ -190,8 +193,8 @@ class Reserva(models.Model):
             original = Reserva.objects.get(pk=self.pk)
 
             transicoes = {
-                "pendente": ["reservado", "cancelada", "expirada"],
-                "reservado": ["em_uso", "cancelada"],
+                "pendente": ["reservado", "cancelada"],
+                "reservado": ["em_uso", "cancelada", "expirada", "finalizada"],
                 "em_uso": ["finalizada"],
                 "finalizada": [],
                 "expirada": [],
@@ -289,16 +292,20 @@ class Emprestimo(models.Model):
 
 
     def clean(self):
+        
+        # 🔥 validação só na criação do empréstimo
+        if self.pk is None:
+            if self.reserva.estado != "reservado":
+                raise ValidationError("Reserva deve estar no estado 'reservado'.")
 
-        if self.reserva.estado != "reservado":
-            raise ValidationError("Reserva deve estar aprovada (reservado).")
-
-        if self.data_devolucao and self.data_devolucao <= timezone.now().date():
+        if self.data_devolucao and self.data_devolucao < timezone.now().date():
             raise ValidationError("Data de devolução inválida.")
 
     def save(self, *args, **kwargs):
 
         is_new = self.pk is None
+
+        self.full_clean()
 
         with transaction.atomic():
 
@@ -312,22 +319,8 @@ class Emprestimo(models.Model):
                 livro.quantidade -= 1
                 livro.save(update_fields=["quantidade"])
 
-                self.reserva.estado = "aprovada"
-                self.reserva.save(update_fields=["estado"])
-
-            self.full_clean()
             super().save(*args, **kwargs)
 
-            if not is_new and self.acoes == "devolvido":
-
-                livro = Livro.objects.select_for_update().get(id=self.reserva.livro.id)
-
-                livro.quantidade += 1
-                livro.save(update_fields=["quantidade"])
-
-                self.reserva.estado = "finalizada"
-                self.reserva.save(update_fields=["estado"])
-                
 
 # =============================
 # NOTIFICAÇÃO

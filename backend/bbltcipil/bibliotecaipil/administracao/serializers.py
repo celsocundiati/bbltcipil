@@ -11,10 +11,16 @@ class ReservaAdminSerializer(serializers.ModelSerializer):
     usuario_nome = serializers.CharField(source="usuario.first_name", read_only=True)
     data_formatada = serializers.DateTimeField(format="%d/%m/%Y", source='data_reserva', read_only=True)
     hora_formatada = serializers.DateTimeField(format="%H:%M:%S", source='data_reserva', read_only=True)
+    usuario_perfil = serializers.SerializerMethodField()
 
     class Meta:
         model = Reserva
         fields = '__all__'
+
+        
+    def get_usuario_perfil(self, obj):
+        perfil = Perfil.objects.filter(user=obj.usuario).first()
+        return perfil.tipo if perfil else None
 
 
 

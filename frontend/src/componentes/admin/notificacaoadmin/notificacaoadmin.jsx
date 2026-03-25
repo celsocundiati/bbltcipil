@@ -135,6 +135,11 @@ export default function AdminAuditLog() {
           {[alt.alteracoes?.nome, alt.alteracoes?.livro, alt.alteracoes?.estado].join(" - ")}
         </p>
       ),
+      Livro: (
+        <p className="text-black/70 truncate w-[95%]">
+          {[alt.alteracoes?.titulo, alt.alteracoes?.autor].join(" - ")}
+        </p>
+      ),
       User: (
         <p className="text-black/70 truncate w-[95%]">
           {[alt.alteracoes?.tipo, alt.alteracoes?.identificacao].join(" - ")}
@@ -226,7 +231,7 @@ export default function AdminAuditLog() {
               <option value="Adicionou">Adicionou</option>
               <option value="Atualizou">Atualizou</option>
               <option value="Aprovou">Aprovou</option>
-              <option value="Cancelou">Cancelou</option>
+              <option value="Finalizou">Finalizou</option>
               <option value="Removeu">Removeu</option>
             </select>
 

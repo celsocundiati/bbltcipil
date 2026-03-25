@@ -89,7 +89,7 @@ class Perfil(models.Model):
         # Contar reservas ativas do usuário
         self.n_reservas = Reserva.objects.filter(
             usuario=self.user,
-            estado__in=['pendente', 'reservado']
+            estado__in=['pendente', 'reservado', 'em_uso']
         ).count()
 
         # Contar empréstimos ativos do usuário
