@@ -80,13 +80,14 @@ function EditarLivro() {
     // =============================
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         setLoadingSubmit(true);
         setErro(null);
 
         try {
 
             await api.put(
-                `livros/livros/${id}/`,
+                `/admin/livros/${id}/`,
                 livro
             );
 
@@ -134,7 +135,7 @@ function EditarLivro() {
 
     if (!livro) return null;
 
-    const baseinput = "bg-black/5 py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
+    const baseinput = "bg-black/5 outline-none py-2 px-3 rounded-lg focus:ring-2 focus:ring-green-500"
 
     // =============================
     // JSX
@@ -331,7 +332,7 @@ function EditarLivro() {
                             <button
                                 type="submit"
                                 disabled={loadingSubmit}
-                                className="px-6 py-2 bg-green-500 text-white rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                                className="px-6 py-2 bg-green-500 text-white rounded-lg focus:ring-2 focus:ring-green-500 disabled:opacity-50 cursor-pointer"
                             >
                                 {loadingSubmit ? "Salvando..." : "Atualizar Livro"}
                             </button>
@@ -356,7 +357,7 @@ function EditarLivro() {
                                         ? navigate("/admin/gestao")
                                         : setModal({ ...modal, open: false })
                                 }
-                                className={`px-6 py-2 text-white rounded-lg focus:ring-2 focus:ring-green-500 ${
+                                className={`px-6 py-2 text-white rounded-lg focus:ring-2 focus:ring-green-500 cursor-pointer ${
                                     modal.type === "success"
                                         ? "bg-green-500"
                                         : "bg-red-500"

@@ -14,7 +14,7 @@ class AuditLog(models.Model):
         ("Criou", "Criou"),
         ("Atualizou", "Atualizou"),
         ("Removeu", "Removeu"),
-        ("Cancelou", "Cancelou"),
+        ("Finalizou", "Finalizou"),
         ("Aprovou", "Aprovou"),
     ]
 

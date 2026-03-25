@@ -80,14 +80,23 @@ def notificar_reserva(sender, instance, created, **kwargs):
             link=link
         )
     else:
-        if instance.estado == "aprovada":
+        if instance.estado == "em_uso":
             Notificacao.objects.create(
                 usuario=usuario,
                 titulo="Reserva aprovada",
-                descricao=f"Sua reserva do livro '{instance.livro.titulo}' foi aprovada e está pronta para empréstimo.",
+                descricao=f"Sua reserva do livro '{instance.livro.titulo}' foi aprovada e está em uso actualmentte.",
                 tipo="Reserva",
                 link=link
             )
+        else:
+            if instance.estado == "finalizada":
+                Notificacao.objects.create(
+                    usuario=usuario,
+                    titulo="Reserva concluída",
+                    descricao=f"Sua reserva do livro '{instance.livro.titulo}' foi finalizada.",
+                    tipo="Reserva",
+                    link=link
+                )
 
 
 @receiver(post_delete, sender=Reserva)

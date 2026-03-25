@@ -8,7 +8,9 @@ function EstadoCard({estado, label}){
 
         const base = "flex justify-start items-center gap-2 py-2 px-5 rounded-lg border w-full lg:max-w-80";
 
-        if (status.includes("emprestado")) {
+        if (status.includes("atrasado")) {
+            return `${base} bg-red-100 text-[#EF4444] border-[#EF4444]/30`;
+        } else if (status.includes("expirada")) {
             return `${base} bg-red-100 text-[#EF4444] border-[#EF4444]/30`;
         } else if (status.includes("pendente")) {
             return `${base} bg-[#f97b27]/10 text-[#F97B17] border-[#F97B17]/30`;
@@ -25,7 +27,9 @@ function EstadoCard({estado, label}){
                     <FiCheckCircle size={22}/>
                 ) : estado === "Pendente" ? (
                     <LuClock size={22}/>
-                ) : estado === "Emprestado" ? (
+                ) : estado === "Atrasado" ? (
+                    <FiXCircle size={22}/>
+                ) : estado === "Expirada" ? (
                     <FiXCircle size={22}/>
                 ) : null
             } 

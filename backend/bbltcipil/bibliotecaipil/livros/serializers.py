@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.apps import apps
 from django.utils import timezone
 from .models import Livro, Autor, Categoria, Reserva, Emprestimo, Notificacao
-from accounts.models import Perfil
 
 
 # ==============================
@@ -104,16 +103,11 @@ class ReservaSerializer(serializers.ModelSerializer):
     estado_label = serializers.CharField(source="get_estado_display", read_only=True)
     informacao = serializers.ReadOnlyField()
     autor_nome = serializers.CharField(source='livro.autor.nome', read_only=True)
-    usuario_perfil = serializers.SerializerMethodField()
 
     class Meta:
         model = Reserva
         fields = '__all__'
         read_only_fields = ["usuario"]
-
-    def get_usuario_perfil(self, obj):
-        perfil = Perfil.objects.filter(user=obj.usuario).first()
-        return perfil.tipo if perfil else None
 
     def get_usuario_nome(self, obj):
         # Tenta pegar o perfil; se não existir, retorna username

@@ -1,47 +1,42 @@
 from django.utils import timezone
 from django.db import transaction
 from datetime import timedelta
-
+from rest_framework.exceptions import ValidationError
 from administracao.utils import get_config
 from livros.models import Livro, Emprestimo
 from administracao.models import ConfiguracaoSistema
 
 
-
 def criar_emprestimo(reserva, admin_user=None):
-
-    usuario = reserva.usuario
 
     if reserva.estado != "reservado":
         raise Exception("A reserva precisa estar 'reservado'.")
 
     config = ConfiguracaoSistema.objects.first()
-
     if not config:
         raise Exception("Configuração do sistema não definida")
 
     emprestimos_ativos = Emprestimo.objects.filter(
-        reserva__usuario=usuario,
+        reserva__usuario=reserva.usuario,
         acoes__in=["ativo", "atrasado"]
     ).count()
 
     if emprestimos_ativos >= config.limite_livros_estudante:
-        raise Exception(
-            f"Limite de {config.limite_livros_estudante} empréstimos atingido"
-        )
+        raise Exception("Limite de empréstimos atingido")
 
     with transaction.atomic():
 
         data_devolucao = timezone.now().date() + timedelta(days=config.dias_emprestimo)
 
+        # 1. cria empréstimo
         emprestimo = Emprestimo.objects.create(
             reserva=reserva,
             data_devolucao=data_devolucao,
             acoes="ativo"
         )
 
-        # 🔥 atualiza estado da reserva
-        reserva.estado = "aprovada"
+        # 2. atualiza reserva (APENAS AQUI)
+        reserva.estado = "finalizada"
         reserva.aprovada_por = admin_user
         reserva.save(update_fields=["estado", "aprovada_por"])
 
@@ -72,39 +67,20 @@ def calcular_valor_multa(emprestimo, motivo):
     return 0
 
 
-def atualizar_emprestimos_atrasados():
-
-    hoje = timezone.now().date()
-
-    return Emprestimo.objects.filter(
-        acoes="ativo",
-        data_devolucao__lt=hoje
-    ).update(acoes="atrasado")
-
-
 def devolver_emprestimo(emprestimo):
 
     with transaction.atomic():
 
         if emprestimo.acoes == "devolvido":
-            return
+            raise ValidationError("Já devolvido.")
 
-        emprestimo.acoes = "devolvido"
-        emprestimo.save(update_fields=["acoes"])
-
-        # 🔒 LOCK REAL
-        livro = Livro.objects.select_for_update().get(
-            id=emprestimo.reserva.livro.id
-        )
+        livro = Livro.objects.select_for_update().get(id=emprestimo.reserva.livro.id)
 
         livro.quantidade += 1
         livro.save(update_fields=["quantidade"])
 
-        reserva = emprestimo.reserva
-        reserva.estado = "finalizada"
-        reserva.save(update_fields=["estado"])
-
-        atualizar_perfil(reserva.usuario)
+        emprestimo.acoes = "devolvido"
+        emprestimo.save(update_fields=["acoes"])
 
 
 def atualizar_perfil(usuario):

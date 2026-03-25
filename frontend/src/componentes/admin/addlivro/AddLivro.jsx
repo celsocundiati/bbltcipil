@@ -27,7 +27,7 @@ function AddLivro(){
     descricao: "",
     sumario: "",
     editora: "",
-    nPaginas: 1,
+    n_paginas: 1,
     publicado_em: "",
     quantidade: 1,
   });
@@ -45,8 +45,8 @@ function AddLivro(){
             setLoading(true);
             try{
                 const [resAutores, resCategorias] = await Promise.all([
-                    api.get("/livros/autores/"),
-                    api.get("/livros/categorias/")
+                    api.get("/admin/autores/"),
+                    api.get("/admin/categorias/")
                 ])
 
                 setAutores(Array.isArray(resAutores.data.results) ? resAutores.data.results : resAutores.data),
@@ -86,11 +86,27 @@ function AddLivro(){
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const paginas = Number(form.n_paginas);
+
+        if (paginas === 0) {
+            const msg = "O número de páginas não pode ser 0.";
+
+            setErro(msg);
+            setModal({
+                open: true,
+                type: "error",
+                message: msg,
+            });
+
+            return; // 🚫 bloqueia o envio
+        }
+
         setLoading(true);
         setErro(null);
 
         try {
-            await api.post("/livros/livros/", form);
+            await api.post("/admin/livros/", form);
             setModal({
                 open: true,
                 type: "success",
