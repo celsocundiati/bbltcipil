@@ -2,22 +2,22 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import api from "../../service/api/api";
 import { useAuth } from "../../auth/userAuth/useAuth";
+import { Link } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi"
 
 export default function Privacidade() {
-  const { user, setUser } = useAuth(); // pega dados do contexto
+  const { user, setUser } = useAuth();
   const [email, setEmail] = useState(user?.user?.email || "");
   const [telefone, setTelefone] = useState(user?.perfil?.telefone || "");
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const baseinput = "w-full border border-gray-300 rounded-lg px-4 py-2";
-  const baselabel = "block text-sm font-medium text-gray-700 mb-1";
+  const baseinput = "w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400 transition";
+  const baselabel = "block text-sm font-semibold text-gray-700 mb-1";
 
-  const validarEmail = (email) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validarTelefone = (tel) =>
-    /^\d{9,15}$/.test(tel);
+  const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validarTelefone = (tel) => /^\d{8,15}$/.test(tel);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +39,6 @@ export default function Privacidade() {
       await api.patch("/accounts/me/", payload);
 
       setSucesso("Dados atualizados com sucesso!");
-      // Atualiza o user no contexto
       setUser((prev) => ({
         ...prev,
         user: { ...prev.user, email },
@@ -55,39 +54,65 @@ export default function Privacidade() {
 
   return (
     <motion.div
-      className="max-w-xl mx-auto bg-white shadow-lg rounded-2xl p-8"
-      initial={{ opacity: 0, y: 20 }}
+      className="min-h-screen flex relative items-center justify-center p-4"
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
     >
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Dados da conta</h2>
-      <p className="text-gray-500 mb-6">
-        Atualize seus dados para manter sua conta atualizada.
-      </p>
+      <div className="absolute top-4 left-3 gap-4">
+        <Link to="/perfil">
+          <FiArrowLeft size={30} />
+        </Link>
+      </div>
 
-      {erro && <div className="bg-red-100 text-red-600 p-3 rounded mb-4">{erro}</div>}
-      {sucesso && <div className="bg-green-100 text-green-600 p-3 rounded mb-4">{sucesso}</div>}
+      <section className="max-w-lg mx-auto bg-white shadow-xl rounded-3xl p-8 sm:p-10 mt-10">
+        <h2 className="text-2xl font-medium text-gray-800 mb-1">Dados da Conta</h2>
+        <p className="text-gray-500 mb-6">Atualize seus dados para manter sua conta segura e atualizada.</p>
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
-        <div>
-          <label className={baselabel}>Nome</label>
-          <input type="text" value={user?.user?.first_name || user?.user?.username} readOnly className={baseinput} />
-        </div>
+        {erro && <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl mb-4">{erro}</div>}
+        {sucesso && <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-xl mb-4">{sucesso}</div>}
 
-        <div>
-          <label className={baselabel}>Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={baseinput} />
-        </div>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <label className={baselabel}>Nome</label>
+            <input
+              type="text"
+              value={user?.user?.first_name || user?.user?.username}
+              readOnly
+              className={`${baseinput} bg-gray-100 cursor-not-allowed`}
+            />
+          </div>
 
-        <div>
-          <label className={baselabel}>Telefone</label>
-          <input type="text" value={telefone} onChange={(e) => setTelefone(e.target.value)} className={baseinput} />
-        </div>
+          <div>
+            <label className={baselabel}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={baseinput}
+            />
+          </div>
 
-        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-          {loading ? "Atualizando..." : "Atualizar dados"}
-        </button>
-      </form>
+          <div>
+            <label className={baselabel}>Telefone</label>
+            <input
+              type="text"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              className={baseinput}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-orange-500 text-white font-semibold py-3 rounded-xl hover:bg-orange-600 transition disabled:opacity-50"
+          >
+            {loading ? "Atualizando..." : "Atualizar Dados"}
+          </button>
+        </form>
+      </section>
+      
     </motion.div>
   );
 }

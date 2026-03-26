@@ -20,13 +20,15 @@ import Estudantes from './componentes/admin/estudantes/estudantess';
 import EditarLivro from './componentes/admin/editarlivro/editarlivro';
 import CadastroAluno from './componentes/auth/cadastro/cadastro';
 import LoginPage from './componentes/auth/login/login';
-import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
 import AdminAuditLog from './componentes/admin/notificacaoadmin/notificacaoadmin';
 import AlterarSenha from './componentes/auth/alterarsenha/alterarsenha';
 import Privacidade from './componentes/auth/privacidadeuser/privacidade';
 import PrivateRoute from './componentes/auth/rotasprivadas/rotasprivadas';
 import AdminRoute from './componentes/auth/adminrotas/adminrotas';
 import Configuracoesadmin from './componentes/admin/configuracoes/configuracoes';
+import PasswordResetForm from './componentes/auth/recuperacaosenhas/recuperacaosenhas';
+import ResetPasswordPage from './componentes/auth/recuperacaoconfirme/resetsenha';
+import Notificacoes from './componentes/usuario/notificacoes/notificacoes';
 
 
 function App() {
@@ -38,6 +40,8 @@ function App() {
             {/* Rotas públicas */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/cadastro" element={<CadastroAluno />} />
+            <Route path="/recuperacaosenha" element={<PasswordResetForm />} />
+            <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
 
             {/* Rotas privadas */}
             <Route path="/" element={<PrivateRoute><Casa /></PrivateRoute>} />
@@ -45,7 +49,7 @@ function App() {
             <Route path="/reservas" element={<PrivateRoute><Reservas /></PrivateRoute>} />
             <Route path="/exposicao" element={<PrivateRoute><Exposicao /></PrivateRoute>} />
             <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
-            <Route path="/notificacoes" element={<PrivateRoute><ListaNotificacoes /></PrivateRoute>} />
+            <Route path="/notificacoes" element={<PrivateRoute><Notificacoes /></PrivateRoute>} />
             <Route path="/alterar-senha" element={<PrivateRoute><AlterarSenha /></PrivateRoute>} />
             <Route path="/privacidade" element={<PrivateRoute><Privacidade /></PrivateRoute>} />
 
