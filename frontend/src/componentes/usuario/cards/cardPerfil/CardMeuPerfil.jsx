@@ -7,7 +7,7 @@ import ImagemUpload from "./imgPerfil";
 import { useNavigate, Link } from "react-router-dom";
 
 import ModalEditarPerfil from "../../../layout/modais/modaleditarperfil/modalperfilaluno";
-import { useAuth } from "../../../auth/userAuth/useAuth";
+import { useAuth } from "../../../auth/userAuth/useauth"; 
 
 export default function MeuPerfil() {
 

@@ -7,6 +7,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import SignupSerializer, LoginSerializer, AlterarSenhaSerializer
 from .models import Perfil
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
@@ -41,40 +43,98 @@ class SignupView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+class RefreshTokenView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get("refresh_token")
+        if not refresh_token:
+            return Response({"error": "Não autenticado"}, status=401)
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            user_id = refresh["user_id"]
+            user = User.objects.filter(id=user_id).first()
+
+            # 🔐 Rotacionar refresh token
+            response = Response({
+                "access": access_token,
+                "user": {
+                    "id": user.id if user else None,
+                    "username": user.username if user else None
+                }
+            })
+
+            # Atualiza cookie refresh
+            response.set_cookie(
+                key="refresh_token",
+                value=str(refresh),
+                httponly=True,
+                secure=False,  # True em produção
+                samesite="Lax",
+                max_age=7*24*60*60
+            )
+
+            return response
+
+        except Exception:
+            return Response({"error": "Token inválido"}, status=401)   
+
+
 # =====================================================
 # LOGIN - n_processo + senha
 # =====================================================
+# class LoginAlunoView(APIView):
+#     permission_classes = [AllowAny]
+#     authentication_classes = []
 
-class LoginAlunoView(APIView):
+#     def post(self, request):
+#         serializer = LoginSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+
+#         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        refresh = serializer.validated_data["refresh"]
 
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        response = Response({
+            "message": "Login efetuado com sucesso",
+            "user": serializer.validated_data["user"]
+        }, status=200)
 
+        # Cookie HttpOnly para cross-domain
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh,
+            httponly=True,
+            secure=False,   # True em produção com HTTPS
+            samesite="Lax", # 🔥 cross-domain
+            max_age=7*24*60*60
+        )
+
+        return response
+    
 
 # =====================================================
 # LOGOUT
 # =====================================================
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        try:
-            refresh_token = request.data.get("refresh")
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-        except Exception:
-            pass
-
-        return Response(
-            {"detail": "Logout realizado com sucesso."},
-            status=status.HTTP_200_OK
-        )
+        response = Response({"message": "Logout efetuado"})
+        response.delete_cookie("refresh_token")
+        return response
 
 
 # =====================================================
@@ -197,87 +257,6 @@ class AlterarSenhaView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# @csrf_exempt
-# def password_reset_request(request):
-#     if request.method != "POST":
-#         return JsonResponse({"error": "Método não permitido"}, status=405)
-
-#     try:
-#         data = json.loads(request.body)
-#         email = data.get("email")
-#     except Exception:
-#         return JsonResponse({"error": "JSON inválido"}, status=400)
-
-#     if not email:
-#         return JsonResponse({"error": "Email é obrigatório"}, status=400)
-
-#     try:
-#         user = User.objects.get(email=email)
-#     except User.DoesNotExist:
-#         return JsonResponse({"error": "Email não encontrado"}, status=404)
-
-#     token = default_token_generator.make_token(user)
-#     uid = user.pk
-#     reset_link = f"http://localhost:3000/reset-password/{uid}/{token}"
-
-#     send_mail(
-#         subject="Recuperação de senha - Biblioteca IPIL",
-#         message="",
-#         from_email=settings.DEFAULT_FROM_EMAIL,
-#         recipient_list=[email],
-#         html_message=f"""
-#         <h2>Recuperação de senha</h2>
-#         <p>Clique no botão abaixo para redefinir sua senha:</p>
-#         <a href="{reset_link}" style="
-#             padding:10px 20px;
-#             background:#2563eb;
-#             color:white;
-#             text-decoration:none;
-#             border-radius:5px;
-#         ">Redefinir senha</a>
-#         """
-#     )
-
-#     return JsonResponse({"message": "Email de recuperação enviado"})
-
-# def password_reset_request(request):
-#     email = request.POST.get("email")
-#     if not email:
-#         return JsonResponse({"error": "Email é obrigatório"}, status=400)
-    
-#     try:
-#         user = User.objects.get(email=email)
-#     except User.DoesNotExist:
-#         return JsonResponse({"error": "Email não encontrado"}, status=404)
-
-#     token = default_token_generator.make_token(user)
-#     uid = user.pk
-
-#     reset_link = f"http://localhost:3000/reset-password/{uid}/{token}"
-
-#     # Enviar email
-#     send_mail(
-#         subject="Recuperação de senha - Biblioteca IPIL",
-#         message="",
-#         from_email=settings.DEFAULT_FROM_EMAIL,
-#         recipient_list=[email],
-#         html_message=f"""
-#         <h2>Recuperação de senha</h2>
-#         <p>Clique no botão abaixo para redefinir sua senha:</p>
-#         <a href="{reset_link}" style="
-#             padding:10px 20px;
-#             background:#2563eb;
-#             color:white;
-#             text-decoration:none;
-#             border-radius:5px;
-#         ">Redefinir senha</a>
-#         """
-#     )
-
-#     return JsonResponse({"message": "Email de recuperação enviado"})
-# accounts/views.py
 
 
 @csrf_exempt

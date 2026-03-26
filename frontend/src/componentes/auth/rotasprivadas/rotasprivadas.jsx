@@ -1,12 +1,26 @@
+// import { Navigate } from "react-router-dom";
+// import { useAuth } from "../userAuth/useauth";
+
+// export default function PrivateRoute({ children }) {
+//   const { user, loading } = useAuth();
+
+//   if (loading) return <div className="text-center">Carregando...</div>; // opcional: spinner
+
+//   if (!user) return <Navigate to="/login" replace />; // redireciona se não logado
+
+//   return children;
+// }
+
+
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../userAuth/useAuth";
+import { useAuth } from "../userAuth/useauth";
 
 export default function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
 
-  if (loading) return <div className="text-center">Carregando...</div>; // opcional: spinner
+  if (loading) return <div className="text-center">Carregando...</div>;
 
-  if (!user) return <Navigate to="/login" replace />; // redireciona se não logado
+  if (!user) return <Navigate to="/login" replace />;
 
   return children;
 }
