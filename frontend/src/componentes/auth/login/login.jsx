@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../userAuth/useAuth";
+import { useAuth } from "../userAuth/useauth"; 
 
 function LoginPage() {
 
@@ -32,6 +32,7 @@ function LoginPage() {
         "Username ou senha incorretos.";
 
       setErro(mensagem);
+      console.log(mensagem)
 
     } finally {
 
