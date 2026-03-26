@@ -574,9 +574,25 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['acao', 'modelo']
-    search_fields = ['usuario__username']
+    search_fields = ['usuario__username', 'usuario__first_name']
     ordering_fields = ['criado_em', 'usuario__username', 'acao']
     ordering = ['-criado_em']
+
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        days = self.request.query_params.get('days')
+
+        if days:
+            try:
+                days = int(days)
+                data_limite = timezone.now() - timedelta(days=days)
+                queryset = queryset.filter(criado_em__gte=data_limite)
+            except ValueError:
+                pass  # ignora se não for número
+
+        return queryset
 
 
 
