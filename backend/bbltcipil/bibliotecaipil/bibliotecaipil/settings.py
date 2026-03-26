@@ -221,3 +221,13 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute="*/30"),
     },
 }
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp-relay.brevo.com"  # ou smtp.sendinblue.com
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "celsocundiati@gmail.com"  # geralmente seu email de conta Brevo
+EMAIL_HOST_PASSWORD = os.getenv("BREVO_API_KEY")
+# print(EMAIL_HOST_PASSWORD)
+DEFAULT_FROM_EMAIL = "Biblioteca IPIL <celsocundiati@gmail.com>"
