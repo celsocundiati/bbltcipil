@@ -45,7 +45,7 @@ function LoginPage() {
 
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm">
 
-        <h1 className="text-2xl font-bold mb-6 text-center">
+        <h1 className="text-2xl mb-6 font-bold text-center text-[#F97B17]">
           Acesso à Plataforma
         </h1>
 
@@ -75,7 +75,7 @@ function LoginPage() {
           />
 
           <p className="text-gray-600 text-sm">
-            <Link to="/cadastro" className="text-orange-500 font-medium">
+            <Link to="/recuperacaosenha" className="text-orange-500 font-medium">
               Esqueceu a sua senha?
             </Link>
           </p>

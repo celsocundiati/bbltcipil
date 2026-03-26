@@ -27,31 +27,30 @@ export default function AdminAuditLog() {
   }
 
     useEffect(() => {
-    const fetchLogs = async () => {
-      setLoading(true);
-      try {
-        const params = {};
-        if (search) params.search = search;
-        if (acaoFilter) params.acao = acaoFilter;
-        if (modeloFilter) params.modelo = modeloFilter;
-        if (periodoDias) params.days = periodoDias;
+      const fetchLogs = async () => {
+        setLoading(true);
+        try {
+          const params = {};
+          if (search) params.search = search;
+          if (acaoFilter) params.acao = acaoFilter;
+          if (modeloFilter) params.modelo = modeloFilter;
+          if (periodoDias) params.days = periodoDias;
 
-        const response = await api.get("admin/auditlog/", { params });
-        setLogs(
-          Array.isArray(response.data.results)
-            ? response.data.results
-            : Array.isArray(response.data)
-            ? response.data
-            : []
-        );
-      } catch (err) {
-        console.error("Erro ao buscar logs de auditoria", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+          const response = await api.get("admin/auditlog/", { params });
+          setLogs(
+            Array.isArray(response.data.results)
+              ? response.data.results
+              : Array.isArray(response.data)
+              ? response.data
+              : []
+          );
+        } catch (err) {
+          console.error("Erro ao buscar logs de auditoria", err);
+        }
+      };
 
-    fetchLogs();
+      fetchLogs();
+
   }, [search, acaoFilter, modeloFilter, periodoDias]);
 
   // 📄 EXPORTAR PDF
@@ -215,7 +214,7 @@ export default function AdminAuditLog() {
           <div className="flex flex-wrap gap-3">
             <input
               type="text"
-              placeholder="Pesquisar..."
+              placeholder="Pesquisar pelo nome completo ou nome de usuário..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="border border-black/10 outline-none focus-within:ring-2 focus-within:ring-[#F97B17] rounded-xl px-3 py-2 flex-1"
