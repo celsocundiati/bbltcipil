@@ -11,17 +11,18 @@ class ReservaAdminSerializer(serializers.ModelSerializer):
     usuario_nome = serializers.CharField(source="usuario.first_name", read_only=True)
     data_formatada = serializers.DateTimeField(format="%d/%m/%Y", source='data_reserva', read_only=True)
     hora_formatada = serializers.DateTimeField(format="%H:%M:%S", source='data_reserva', read_only=True)
-    usuario_perfil = serializers.SerializerMethodField()
+    usuario_grupos = serializers.SerializerMethodField()
 
     class Meta:
         model = Reserva
         fields = '__all__'
 
-        
-    def get_usuario_perfil(self, obj):
-        perfil = Perfil.objects.filter(user=obj.usuario).first()
-        return perfil.tipo if perfil else None
-
+    def get_usuario_grupos(self, obj):
+        """Retorna os grupos do usuário da reserva"""
+        user = getattr(obj, "usuario", None)
+        if not user:
+            return []
+        return list(user.groups.values_list("name", flat=True))
 
 
 class EmprestimoAdminSerializer(serializers.ModelSerializer):
@@ -37,43 +38,40 @@ class EmprestimoAdminSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         reserva = data.get("reserva")
-
         if not reserva:
             raise serializers.ValidationError("Reserva é obrigatória.")
 
         usuario = reserva.usuario
+        if not usuario:
+            raise serializers.ValidationError("Reserva sem usuário associado.")
 
-        # 🔥 PEGAR PERFIL
-        perfil = getattr(usuario, "perfil", None)
+        # 🔥 PEGAR GRUPOS DO USUÁRIO
+        grupos = list(usuario.groups.values_list("name", flat=True))
 
-        if not perfil:
+        if "Funcionario" not in grupos:
             raise serializers.ValidationError(
-                "Usuário sem perfil associado. Contacte o administrador."
+                "Apenas usuários do grupo 'Funcionario' podem realizar empréstimos. Usuários comuns devem permanecer em reservas."
             )
 
-        # 🔥 REGRA DE NEGÓCIO
-        if perfil.tipo != "funcionario":
-            raise serializers.ValidationError(
-                "Apenas funcionários podem realizar empréstimos. Usuários comuns devem permanecer em reservas."
-            )
-
-        return data   
+        return data
 
 
 # --------------------------
 # Perfil unificado
 # --------------------------
+
 class PerfilAdminSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     nome = serializers.SerializerMethodField()
     dados_oficiais = serializers.SerializerMethodField()
+    grupos = serializers.SerializerMethodField()
 
     class Meta:
         model = Perfil
         fields = [
             "id",
             "user",
-            "tipo",
+            "grupos",
             "telefone",
             "estado",
             "n_reservas",
@@ -83,15 +81,16 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
         ]
 
     def get_nome(self, obj):
-        if hasattr(obj, "aluno_oficial"):
+        if hasattr(obj, "aluno_oficial") and obj.aluno_oficial:
             return obj.aluno_oficial.nome_completo
-        if hasattr(obj, "funcionario_oficial"):
+        elif hasattr(obj, "funcionario_oficial") and obj.funcionario_oficial:
             return obj.funcionario_oficial.nome
-        return obj.user.username
+        return getattr(obj.user, "username", None)
 
     def get_user(self, obj):
-        user = obj.user
-
+        user = getattr(obj, "user", None)
+        if not user:
+            return {}
         return {
             "username": user.username,
             "email": user.email,
@@ -99,26 +98,37 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
             "last_name": user.last_name,
         }
 
+    def get_grupos(self, obj):
+        """Retorna uma lista com os nomes dos grupos do usuário"""
+        user = getattr(obj, "user", None)
+        if not user:
+            return []
+        return list(user.groups.values_list("name", flat=True))
+
     def get_dados_oficiais(self, obj):
-        if obj.tipo == "aluno" and hasattr(obj, "aluno_oficial"):
-            ao = obj.aluno_oficial
-            return {
-                "n_processo": ao.n_processo,
-                "nome_completo": ao.nome_completo,
-                "curso": ao.curso,
-                "classe": ao.classe,
-                "data_nascimento": ao.data_nascimento,
-                "idade": ao.idade,
-                "n_bilhete": ao.n_bilhete
-            }
-        elif obj.tipo == "funcionario" and hasattr(obj, "funcionario_oficial"):
-            fo = obj.funcionario_oficial
-            return {
-                "n_agente": fo.n_agente,
-                "nome": fo.nome,
-                "cargo": fo.cargo,
-                "n_bilhete": fo.n_bilhete
-            }
+        grupos = self.get_grupos(obj)
+        try:
+            if "Aluno" in grupos and hasattr(obj, "aluno_oficial") and obj.aluno_oficial:
+                ao = obj.aluno_oficial
+                return {
+                    "n_processo": ao.n_processo,
+                    "nome_completo": ao.nome_completo,
+                    "curso": ao.curso,
+                    "classe": ao.classe,
+                    "data_nascimento": ao.data_nascimento,
+                    "idade": ao.idade,
+                    "n_bilhete": ao.n_bilhete
+                }
+            elif "Funcionario" in grupos and hasattr(obj, "funcionario_oficial") and obj.funcionario_oficial:
+                fo = obj.funcionario_oficial
+                return {
+                    "n_agente": fo.n_agente,
+                    "nome": fo.nome,
+                    "cargo": fo.cargo,
+                    "n_bilhete": fo.n_bilhete
+                }
+        except Exception as e:
+            return {"erro": str(e)}
         return {}
 
 
@@ -156,7 +166,6 @@ class LivroAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Livro
         fields = '__all__'
-
 
 
 # --------------------------

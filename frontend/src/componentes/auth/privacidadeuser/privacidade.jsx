@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import api from "../../service/api/api";
-import { useAuth } from "../../auth/userAuth/useAuth";
+import { useAuth } from "../userAuth/useauth";
 import { Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi"
 

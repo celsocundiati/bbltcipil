@@ -186,6 +186,4 @@ class NotificacaoViewSet(viewsets.ModelViewSet):
 
 
 
-
-
     

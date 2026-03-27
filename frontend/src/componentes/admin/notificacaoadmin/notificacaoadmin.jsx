@@ -46,6 +46,8 @@ export default function AdminAuditLog() {
           );
         } catch (err) {
           console.error("Erro ao buscar logs de auditoria", err);
+        } finally {
+          setLoading(false)
         }
       };
 

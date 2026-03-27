@@ -6,11 +6,7 @@ from django.apps import apps
 
 
 class Perfil(models.Model):
-
-    TIPOS = [
-        ("aluno", "Aluno"),
-        ("funcionario", "Funcionário"),
-    ]
+    
 
     ESTADOS = [
         ("Ativo", "Ativo"),
@@ -21,12 +17,6 @@ class Perfil(models.Model):
         User,
         on_delete=models.CASCADE,
         help_text="Usuário do sistema associado a este perfil"
-    )
-
-    tipo = models.CharField(
-        max_length=20,
-        choices=TIPOS,
-        help_text="Tipo de perfil dentro do sistema"
     )
 
     telefone = models.CharField(

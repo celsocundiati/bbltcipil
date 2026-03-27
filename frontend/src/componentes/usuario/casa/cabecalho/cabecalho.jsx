@@ -7,10 +7,16 @@ import {IoCalendarClearOutline} from "react-icons/io5";
 import {GiGreekTemple} from "react-icons/gi";
 import {RiBookShelfLine} from "react-icons/ri"
 import { motion } from "framer-motion";
-import { useAuth } from "../../../auth/userAuth/useAuth";
+import { useAuth } from "../../../auth/userAuth/useauth";
 
 function Cabecalho() {
    const { user } = useAuth(); // pega o usuário autenticado
+
+    function podeVerAdmin(user) {
+        const gruposPermitidos = ["Admin", "Bibliotecario"];
+        const userData = user?.user || {}; // pega o objeto interno
+        return userData?.is_superuser || userData?.grupos?.some(g => gruposPermitidos.includes(g));
+    }
     
     {/* header */}
 
@@ -21,7 +27,9 @@ function Cabecalho() {
         { path: "/exposicao", label: "Exposições", icon: IoCalendarClearOutline },
         { path: "/institucional", label: "Institucional", icon: GiGreekTemple },
         { path: "/perfil", label: "Meu Perfil", icon: MdPersonOutline },
-        ...(user?.perfil?.tipo === "admin" ? [{ path: "/admin", label: "Admin", icon: MdAdminPanelSettings }] : []),
+        ...(podeVerAdmin(user) 
+        ? [{ path: "/admin", label: "Admin", icon: MdAdminPanelSettings }] 
+        : [])
         ];
 
 

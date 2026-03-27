@@ -8,7 +8,7 @@ import { IoCalendarClearOutline } from "react-icons/io5";
 import EstadoDetalhes from "./estadoDetalhes/estado";
 import { motion } from "framer-motion";
 import { useState, useEffect, use } from "react";
-import { useAuth } from "../../../../auth/userAuth/useAuth";
+import { useAuth } from "../../../../auth/userAuth/useauth";
 import api from "../../../../service/api/api";
 
 function Detalhes() {

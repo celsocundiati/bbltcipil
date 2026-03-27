@@ -13,7 +13,6 @@ User = get_user_model()
 # =====================================================
 # SIGNUP - ATIVAÇÃO DE CONTA (Aluno ou Funcionário)
 # =====================================================
-
 class SignupSerializer(serializers.Serializer):
     n_identificacao = serializers.CharField(max_length=20)
     n_bilhete = serializers.CharField(max_length=30)
@@ -25,58 +24,58 @@ class SignupSerializer(serializers.Serializer):
         n_bilhete = data["n_bilhete"]
         email = data["email"]
 
-        # Verifica email já existente
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("Já existe uma conta com este email.")
 
         instance = None
-        tipo = None
+        grupo_nome = None
+        nome_completo = None
 
-        # 1️⃣ Tenta como aluno
+        # 🔹 Aluno
         try:
             instance = AlunoOficial.objects.get(
                 n_processo=n_identificacao,
                 n_bilhete=n_bilhete
             )
-            tipo = "aluno"
+            grupo_nome = "Aluno"
             nome_completo = instance.nome_completo
         except AlunoOficial.DoesNotExist:
             pass
 
-        # 2️⃣ Se não for aluno, tenta como funcionário
+        # 🔹 Funcionário
         if not instance:
             try:
                 instance = FuncionarioOficial.objects.get(
                     n_agente=n_identificacao,
                     n_bilhete=n_bilhete
                 )
-                tipo = "funcionario"
+                grupo_nome = "Funcionario"
                 nome_completo = instance.nome
             except FuncionarioOficial.DoesNotExist:
                 raise serializers.ValidationError(
                     "Utilizador não encontrado ou dados incorretos."
                 )
 
-        # 3️⃣ Verifica se já tem conta ativa
         if instance.perfil:
             raise serializers.ValidationError(
                 "Este utilizador já possui conta ativa."
             )
 
         data["instance"] = instance
-        data["tipo"] = tipo
+        data["grupo_nome"] = grupo_nome
         data["nome_completo"] = nome_completo
+
         return data
 
     def create(self, validated_data):
         instance = validated_data["instance"]
-        tipo = validated_data["tipo"]
+        grupo_nome = validated_data["grupo_nome"]
         email = validated_data["email"]
         password = validated_data["password"]
         n_identificacao = validated_data["n_identificacao"]
         nome_completo = validated_data["nome_completo"]
 
-        # Cria User
+        # 🔥 Criação do user
         user = User.objects.create_user(
             username=n_identificacao,
             email=email,
@@ -84,36 +83,34 @@ class SignupSerializer(serializers.Serializer):
             first_name=nome_completo
         )
 
-        # Define grupo automaticamente
-        grupo_nome = "Aluno" if tipo == "aluno" else "Funcionario"
+        # 🔥 Grupo
         grupo, _ = Group.objects.get_or_create(name=grupo_nome)
         user.groups.add(grupo)
 
-        # 🔹 Cria Perfil vinculado ao User
+        # 🔥 Perfil SEM tipo
         perfil = Perfil.objects.create(
             user=user,
-            tipo=tipo,
-            telefone="",
+            telefone=""
         )
 
-        # 🔹 Associa o Perfil ao registro oficial
+        # 🔥 Vincular ao registro oficial
         instance.perfil = perfil
         instance.save()
 
-        # Auditoria
+        # 🔥 Auditoria
         AuditLog.objects.create(
             usuario=user,
             acao="Sign up",
             modelo="User",
             objeto_id=user.id,
             alteracoes={
-                "tipo": tipo,
+                "grupo": grupo_nome,
                 "identificacao": n_identificacao
             }
         )
 
         return user
-
+    
 
 # =====================================================
 # LOGIN - n_processo/n_agente + senha
@@ -145,7 +142,6 @@ class LoginSerializer(serializers.Serializer):
                 "username": user.username,
                 "email": user.email,
                 "groups": [group.name for group in user.groups.all()],
-                "tipo": user.perfil.tipo if hasattr(user, "perfil") else None
             }
         }
     

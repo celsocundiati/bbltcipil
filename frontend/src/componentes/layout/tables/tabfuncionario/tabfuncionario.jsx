@@ -23,10 +23,16 @@ function TabFuncionario() {
             if (estadoFilter) params.estado = estadoFilter;
 
             const res = await api.get("/admin/perfil/", {params});
-            const dados = Array.isArray(res.data.results) ? res.data.results : res.data;
-            const perfisFuncionarios = dados.filter(
-              (perfil) => perfil.tipo === "funcionario"
-            );
+            
+            // garante que temos uma lista
+            const perfis = Array.isArray(res.data.results) ? res.data.results : res.data;
+
+            // filtra apenas usuários que pertencem ao grupo "Aluno"
+            const perfisFuncionarios = perfis.filter((perfil) => {
+              const grupos = perfil.grupos || [];
+              return grupos.includes("Funcionario");
+            });
+
             setFuncionarios(perfisFuncionarios);
         }catch(err){
             console.error("Erro ao carregar funcionários.", err)
