@@ -1,3 +1,4 @@
+import HelpChatIcon from "./ajuda/chat";
 import Cabecalho from "./cabecalho/cabecalho";
 import Footer from "./footer/footer";
 import Sessao01 from "./sessao01/sessao01";
@@ -10,6 +11,7 @@ function Casa() {
     return(
         <div className="overflow-hidden">
             <Cabecalho/>
+            <HelpChatIcon/>
             <Sessao01/>
             <Sessao02/>
             <Sessao03 props={"popular"}/>

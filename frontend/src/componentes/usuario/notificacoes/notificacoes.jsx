@@ -1,4 +1,4 @@
-import ListaNotificacoes from '../../layout/tables/tabnotificacoes/TabNotificacoes';
+import ListaNotificacoes from "../../layout/tables/tabnotificacoes/TabNotificacoes";
 import { Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 

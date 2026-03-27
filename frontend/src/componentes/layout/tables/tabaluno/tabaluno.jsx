@@ -23,8 +23,16 @@ function TabAluno() {
             if (search) params.search = search;
             if (estadoFilter) params.estado = estadoFilter;
             const res = await api.get("/admin/perfil/", {params});
-            const perfisAlunos = Array.isArray(res.data.results) ? res.data.results : res.data
-            .filter((perfil) => perfil.tipo === "aluno");
+            
+            // garante que temos uma lista
+            const perfis = Array.isArray(res.data.results) ? res.data.results : res.data;
+
+            // filtra apenas usuários que pertencem ao grupo "Aluno"
+            const perfisAlunos = perfis.filter((perfil) => {
+              const grupos = perfil.grupos || [];
+              return grupos.includes("Aluno");
+            });
+            
             setAlunos(perfisAlunos);
         }catch(err){
             console.error("Erro ao carregar perfis.", err)

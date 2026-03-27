@@ -14,6 +14,8 @@ function EstadoCard({estado, label}){
             return `${base} bg-red-100 text-[#EF4444] border-[#EF4444]/30`;
         } else if (status.includes("pendente")) {
             return `${base} bg-[#f97b27]/10 text-[#F97B17] border-[#F97B17]/30`;
+        } else if (status.includes("reservado")) {
+            return `${base} bg-orange-100 text-[#F97B17] border-[#F97B17]/30`;
         } else {
             return `${base} bg-green-100 text-[#22C55E] border-[#22C55E]/30`; // default estiloEstado(livro.estado)
         }

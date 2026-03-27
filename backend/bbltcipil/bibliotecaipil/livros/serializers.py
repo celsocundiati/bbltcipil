@@ -110,33 +110,25 @@ class ReservaSerializer(serializers.ModelSerializer):
         read_only_fields = ["usuario"]
 
     def get_usuario_nome(self, obj):
-        # Tenta pegar o perfil; se não existir, retorna username
-        perfil = getattr(obj.usuario, "perfil", None)
-        if not perfil:
-            return obj.usuario.username
+        user = obj.usuario
+        grupos = getattr(user, "grupos", [])
 
-        # Aluno oficial
-        if perfil.tipo == "aluno" and hasattr(perfil, "aluno_oficial") and perfil.aluno_oficial:
-            return perfil.aluno_oficial.nome_completo
+        # Admin ou Bibliotecario
+        if "Admin" in grupos or "Bibliotecario" in grupos:
+            return f"{user.first_name} {user.last_name}".strip() or user.username
 
-        # Funcionário oficial
-        if perfil.tipo == "funcionario" and hasattr(perfil, "funcionario_oficial") and perfil.funcionario_oficial:
-            return perfil.funcionario_oficial.nome
-
-        # Se nenhum oficial existir, retorna username
-        return obj.usuario.username
-    
+        # Outros usuários (aluno)
+        return getattr(user, "username", "Desconhecido")
 
     def validate(self, data):
         user = self.context["request"].user
         livro = data.get("livro")
 
-        # 🔥 BLOQUEIO: usuário sem perfil
-        perfil = getattr(user, "perfil", None)
-
-        if not perfil:
+        # 🔥 BLOQUEIO: usuário sem grupos
+        grupos = getattr(user, "grupos", [])
+        if not grupos:
             raise serializers.ValidationError(
-                {"usuario": "Usuário sem perfil associado. Não é permitido realizar reservas."}
+                {"usuario": "Usuário sem grupos associados. Não é permitido realizar reservas."}
             )
 
         # 🔥 REGRA EXISTENTE (reserva duplicada)
@@ -161,7 +153,7 @@ class ReservaSerializer(serializers.ModelSerializer):
 # ==============================
 class EmprestimoSerializer(serializers.ModelSerializer):
     livro_nome = serializers.CharField(source="reserva.livro.titulo", read_only=True)
-    usuario_nome = serializers.CharField(source="reserva.usuario.first_name", read_only=True)
+    usuario_nome = serializers.SerializerMethodField()
     capa = serializers.ReadOnlyField(source="reserva.livro.capa")
     autor_nome = serializers.CharField(source="reserva.livro.autor.nome", read_only=True)
     livro_id = serializers.IntegerField(source="reserva.livro.id", read_only=True)
@@ -170,6 +162,17 @@ class EmprestimoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Emprestimo
         fields = "__all__"
+
+    def get_usuario_nome(self, obj):
+        user = obj.reserva.usuario
+        grupos = getattr(user, "grupos", [])
+
+        # Admin ou Bibliotecario
+        if "Admin" in grupos or "Bibliotecario" in grupos:
+            return f"{user.first_name} {user.last_name}".strip() or user.username
+
+        # Outros usuários (aluno)
+        return getattr(user, "username", "Desconhecido")
 
     def validate_data_devolucao(self, value):
         if value < timezone.now().date():

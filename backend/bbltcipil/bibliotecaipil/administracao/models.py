@@ -137,6 +137,12 @@ class ConfiguracaoSistema(models.Model):
 
     def __str__(self):
         return "Configurações do Sistema"
+    
+    class Meta:
+        permissions = [
+            ("gerir_usuarios", "Pode gerir usuários"),
+            ("ver_relatorios", "Pode ver relatórios"),
+        ]
 
 
 

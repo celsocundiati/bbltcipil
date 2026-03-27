@@ -1,14 +1,27 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../userAuth/useAuth";
+import { useAuth } from "../userAuth/useauth";
 
-export default function AdminRoute({ children }) {
+/**
+ * Protege rotas por roles
+ * @param {ReactNode} children Componentes filhos
+ * @param {Array<string>} allowedRoles Roles permitidas
+ */
+
+export function RoleRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
 
   if (loading) return <div>Carregando...</div>;
 
-  if (!user || user?.perfil?.tipo !== "admin") {
-    return <Navigate to="/login" replace />;
-  }
+  const userRoles = user?.user?.grupos || [];
+  const isSuperUser = user?.user?.is_superuser;
+
+  // Superuser tem acesso total
+  if (isSuperUser) return children;
+
+  const hasAccess = allowedRoles.some((role) => userRoles.includes(role));
+
+  if (!hasAccess) return <Navigate to="/" replace />;
 
   return children;
 }
+

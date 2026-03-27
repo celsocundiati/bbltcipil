@@ -29,6 +29,8 @@ from .serializers import (
     ConfiguracaoSistemaSerializer
 )
 from .audit_service import AuditService
+from django.contrib.auth.models import User, Group
+from .permissions import IsAdmin
 
 User = get_user_model()
 
@@ -594,6 +596,55 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
 
         return queryset
 
+
+
+# ----------------------------------
+# ADMIN 
+# ----------------------------------
+
+
+class AdminUserViewSet(viewsets.ViewSet):
+    permission_classes = [IsAdmin]
+
+    def list(self, request):
+        users = User.objects.all()
+        data = []
+        for u in users:
+            data.append({
+                "id": u.id,
+                "username": u.username,
+                "email": u.email,
+                "grupos": [g.name for g in u.groups.all()]
+            })
+        return Response(data)
+
+    def create(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        grupo_nome = request.data.get("grupo")
+
+        user = User.objects.create_user(username=username, password=password)
+
+        if grupo_nome:
+            grupo = Group.objects.get(name=grupo_nome)
+            user.groups.add(grupo)
+
+        return Response({"message": "Usuário criado"})
+
+    def update(self, request, pk=None):
+        user = User.objects.get(id=pk)
+        grupo_nome = request.data.get("grupo")
+
+        user.groups.clear()
+        grupo = Group.objects.get(name=grupo_nome)
+        user.groups.add(grupo)
+
+        return Response({"message": "Permissão atualizada"})
+
+    def destroy(self, request, pk=None):
+        user = User.objects.get(id=pk)
+        user.delete()
+        return Response({"message": "Usuário removido"})
 
 
 # ----------------------------------------------

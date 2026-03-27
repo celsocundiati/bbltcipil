@@ -86,17 +86,6 @@ class RefreshTokenView(APIView):
 # =====================================================
 # LOGIN - n_processo + senha
 # =====================================================
-# class LoginAlunoView(APIView):
-#     permission_classes = [AllowAny]
-#     authentication_classes = []
-
-#     def post(self, request):
-#         serializer = LoginSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-
-#         return Response(serializer.validated_data, status=status.HTTP_200_OK)
-
-
 class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -140,7 +129,6 @@ class LogoutView(APIView):
 # =====================================================
 # ME - Dados do usuário autenticado
 # =====================================================
-
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -154,15 +142,11 @@ class MeView(APIView):
         return self._update_user(request.user, request.data, partial=True)
 
     def _update_user(self, user, data, partial=False):
-        """
-        Atualiza parcialmente ou totalmente email e telefone
-        """
         perfil = getattr(user, "perfil", None)
 
         email = data.get("email")
         telefone = data.get("telefone")
 
-        # Atualização parcial
         if email:
             user.email = email
             user.save(update_fields=["email"])
@@ -174,17 +158,18 @@ class MeView(APIView):
         return self._get_data(user)
 
     def _get_data(self, user):
-        perfil = Perfil.objects.select_related(
-            "aluno_oficial",
-            "funcionario_oficial"
-        ).filter(user=user).first()
+        perfil = getattr(user, "perfil", None)
+
+        grupos = list(user.groups.values_list("name", flat=True))
 
         dados_oficiais = {}
         perfil_data = {}
 
+        ao = getattr(perfil, "aluno_oficial", None) if perfil else None
+        fo = getattr(perfil, "funcionario_oficial", None) if perfil else None
+
         if perfil:
-            if perfil.tipo == "aluno" and perfil.aluno_oficial:
-                ao = perfil.aluno_oficial
+            if "Aluno" in grupos and ao:
                 dados_oficiais = {
                     "n_processo": ao.n_processo,
                     "nome_completo": ao.nome_completo,
@@ -194,8 +179,8 @@ class MeView(APIView):
                     "idade": ao.idade,
                     "n_bilhete": ao.n_bilhete,
                 }
-            elif perfil.tipo == "funcionario" and perfil.funcionario_oficial:
-                fo = perfil.funcionario_oficial
+
+            elif "Funcionario" in grupos and fo:
                 dados_oficiais = {
                     "n_agente": fo.n_agente,
                     "nome": fo.nome,
@@ -204,15 +189,14 @@ class MeView(APIView):
                 }
 
             perfil_data = {
-                "tipo": perfil.tipo,
                 "telefone": perfil.telefone,
                 "estado": perfil.estado,
                 "n_reservas": perfil.n_reservas,
                 "n_emprestimos": perfil.n_emprestimos
             }
+
         else:
             perfil_data = {
-                "tipo": "admin" if user.is_superuser else None,
                 "telefone": None,
                 "estado": "ativo",
                 "n_reservas": 0,
@@ -226,10 +210,10 @@ class MeView(APIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "is_superuser": user.is_superuser,
-                "grupos": [g.name for g in user.groups.all()]
+                "grupos": grupos
             },
             "perfil": perfil_data,
-            "dados_oficiais": dados_oficiais
+            "dados_oficiais": dados_oficiais,
         })
 
 
