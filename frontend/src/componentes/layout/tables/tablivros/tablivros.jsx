@@ -183,9 +183,6 @@ function TabelaLivros(){
 
                                     <td className="px-5 py-4 truncate text-black/85 text-center">
                                         <div className="flex gap-3 justify-center">
-                                            {/* <button className="hover:text-[#f97b17] transition">
-                                                <FiEye size={20}/>
-                                            </button> */}
                                             <button onClick={() => openModal("update", livro)} className="hover:text-black/70 cursor-pointer transition">
                                                 <LuFilePen size={25}/>
                                             </button>

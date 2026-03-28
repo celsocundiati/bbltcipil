@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import AuditLog, Multa, ConfiguracaoSistema
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
+from django.contrib.auth.models import User, Group
+
+
 
 # --------------------------
 # Reserva e Empréstimo
@@ -252,4 +255,158 @@ class ConfiguracaoSistemaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Horário de fim de semana inválido.")
 
         return data
+
+
+class UserAdminSerializer(serializers.ModelSerializer):
+    grupos = serializers.ListField(
+        child=serializers.CharField(),
+        write_only=True,
+        required=False
+    )
+
+    grupos_display = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "password",
+            "is_active",
+            "is_superuser",
+            "last_login",
+            "grupos",
+            "grupos_display"
+        ]
+        extra_kwargs = {
+            "password": {"write_only": True}
+        }
+
+    def get_grupos_display(self, obj):
+        return list(obj.groups.values_list("name", flat=True))
+
+    # VALIDAÇÃO CENTRAL (CRIAÇÃO + UPDATE)
+    def validate(self, data):
+        request = self.context["request"]
+        user = request.user
+
+        grupos = data.get("grupos", [])
+        is_superuser = data.get("is_superuser", False)
+
+        # Bibliotecário não pode criar nem editar
+        if user.groups.filter(name="Bibliotecario").exists():
+            raise serializers.ValidationError(
+                "Bibliotecários não têm permissão para criar ou editar usuários."
+            )
+
+        # Admin não pode criar/editar superuser
+        if not user.is_superuser and is_superuser:
+            raise serializers.ValidationError(
+                "Apenas superusuário pode criar superusers."
+            )
+
+        # Admin não pode atribuir grupo Superuser
+        if not user.is_superuser and "Superuser" in grupos:
+            raise serializers.ValidationError(
+                "Você não pode atribuir esse nível de permissão."
+            )
+
+        # Admin só pode criar/editar Bibliotecário
+        if not user.is_superuser and grupos:
+            allowed = {"Bibliotecario"}
+            for g in grupos:
+                if g not in allowed:
+                    raise serializers.ValidationError(
+                        "Admin só pode criar ou editar Bibliotecários."
+                    )
+
+        return data
+
+    def create(self, validated_data):
+        grupos = validated_data.pop("grupos", [])
+        password = validated_data.pop("password", None)
+        is_superuser = validated_data.get("is_superuser", False)
+
+        user = User(**validated_data)
+
+        if not password:
+            raise serializers.ValidationError("Password é obrigatório")
+
+        user.set_password(password)
+
+        # Superuser
+        if is_superuser:
+            user.is_superuser = True
+            user.is_staff = True
+        else:
+            # Admin e Bibliotecário
+            user.is_superuser = False
+            user.is_staff = True
+
+        user.save()
+
+        # Grupos
+        for grupo_nome in grupos:
+            try:
+                grupo = Group.objects.get(name=grupo_nome)
+                user.groups.add(grupo)
+            except Group.DoesNotExist:
+                raise serializers.ValidationError(f"Grupo '{grupo_nome}' não existe")
+
+        return user
+
+    def update(self, instance, validated_data):
+        grupos = validated_data.pop("grupos", None)
+        password = validated_data.pop("password", None)
+
+        request = self.context["request"]
+        user = request.user
+
+        # Bloquear bibliotecário
+        if user.groups.filter(name="Bibliotecario").exists():
+            raise serializers.ValidationError(
+                "Bibliotecários não têm permissão para editar usuários."
+            )
+
+        # Admin não pode promover para superuser
+        if not user.is_superuser and validated_data.get("is_superuser"):
+            raise serializers.ValidationError(
+                "Apenas superusuário pode promover usuários a superusuário."
+            )
+
+        # Admin só pode editar Bibliotecário
+        if not user.is_superuser and grupos:
+            allowed = {"Bibliotecario"}
+            for g in grupos:
+                if g not in allowed:
+                    raise serializers.ValidationError(
+                        "Admin só pode editar Bibliotecários."
+                    )
+
+        # UPDATE NORMAL
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if password:
+            instance.set_password(password)
+
+        # Superuser sempre é staff
+        if instance.is_superuser:
+            instance.is_staff = True
+
+        instance.save()
+
+        # UPDATE GRUPOS
+        if grupos is not None:
+            instance.groups.clear()
+            for grupo_nome in grupos:
+                try:
+                    grupo = Group.objects.get(name=grupo_nome)
+                    instance.groups.add(grupo)
+                except Group.DoesNotExist:
+                    raise serializers.ValidationError(f"Grupo '{grupo_nome}' não existe")
+
+        return instance
 
