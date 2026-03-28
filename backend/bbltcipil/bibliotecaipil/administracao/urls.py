@@ -16,7 +16,7 @@ from .views import (
     MultaViewSet,
     DashboardResumoGeralView,
     ConfiguracaoSistemaViewSet,
-    AdminUserViewSet
+    UserAdminViewSet
 )
 
 router = DefaultRouter()
@@ -31,7 +31,7 @@ router.register(r'funcionarios', FuncionarioOficialAdminViewSet, basename='funci
 router.register(r'perfil', PerfilAdminViewSet, basename='perfil-admin')
 router.register(r"multas", MultaViewSet, basename="multas-admin")
 router.register(r'configuracoes', ConfiguracaoSistemaViewSet, basename='configuracoes')
-router.register(r'admins', AdminUserViewSet, basename='admins')
+router.register(r'users', UserAdminViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -26,11 +26,11 @@ from .serializers import (
     FuncionarioOficialAdminSerializer,
     PerfilAdminSerializer,
     MultaSerializer,
-    ConfiguracaoSistemaSerializer
+    ConfiguracaoSistemaSerializer,
+    UserAdminSerializer
 )
 from .audit_service import AuditService
-from django.contrib.auth.models import User, Group
-from .permissions import IsAdmin
+from django.contrib.auth.models import User
 
 User = get_user_model()
 
@@ -601,50 +601,37 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
 # ----------------------------------
 # ADMIN 
 # ----------------------------------
+class UserAdminViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by("-id")
+    serializer_class = UserAdminSerializer
+    permission_classes = [permissions.IsAdminUser]
 
+    # 🔥 FILTROS (search + estado + grupos)
+    def get_queryset(self):
+        queryset = super().get_queryset()
 
-class AdminUserViewSet(viewsets.ViewSet):
-    permission_classes = [IsAdmin]
+        # 🔹 Filtro apenas para superuser, Admin ou Bibliotecário
+        queryset = queryset.filter(
+            Q(is_superuser=True) | Q(groups__name__in=["Admin", "Bibliotecario"])
+        ).distinct()  # distinct porque join com groups pode gerar duplicados
 
-    def list(self, request):
-        users = User.objects.all()
-        data = []
-        for u in users:
-            data.append({
-                "id": u.id,
-                "username": u.username,
-                "email": u.email,
-                "grupos": [g.name for g in u.groups.all()]
-            })
-        return Response(data)
+        # 🔹 Filtro de pesquisa
+        search = self.request.query_params.get("search")
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(email__icontains=search) |
+                Q(first_name__icontains=search)
+            )
 
-    def create(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        grupo_nome = request.data.get("grupo")
+        # 🔹 Filtro de estado
+        estado = self.request.query_params.get("estado")
+        if estado == "ativo":
+            queryset = queryset.filter(is_active=True)
+        elif estado == "inativo":
+            queryset = queryset.filter(is_active=False)
 
-        user = User.objects.create_user(username=username, password=password)
-
-        if grupo_nome:
-            grupo = Group.objects.get(name=grupo_nome)
-            user.groups.add(grupo)
-
-        return Response({"message": "Usuário criado"})
-
-    def update(self, request, pk=None):
-        user = User.objects.get(id=pk)
-        grupo_nome = request.data.get("grupo")
-
-        user.groups.clear()
-        grupo = Group.objects.get(name=grupo_nome)
-        user.groups.add(grupo)
-
-        return Response({"message": "Permissão atualizada"})
-
-    def destroy(self, request, pk=None):
-        user = User.objects.get(id=pk)
-        user.delete()
-        return Response({"message": "Usuário removido"})
+        return queryset
 
 
 # ----------------------------------------------

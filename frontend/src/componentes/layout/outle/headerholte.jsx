@@ -5,6 +5,7 @@ import Modal from "../modais/modal";
 import {Link} from "react-router-dom";
 import ModalAlunoOficial from "../modais/modalalunooficial/modalalunooficial";
 import ModalMultas from "../modais/modalmultas/modalmultas";
+import ModalAddAdmin from "../modais/modaladminadd/addadmin";
 
 function HeaderOutle({page}){
 
@@ -17,11 +18,6 @@ function HeaderOutle({page}){
     const [showModalDevol, setShowModalDevol] = useState(false);
     const [showModalAdmin, setShowModalAdmin] = useState(false);
     const [showModalMulta, setShowModalMulta] = useState(false);
-
-    // function fetchMultas() {
-    //     // se ainda não tens API aqui, deixa vazio ou log
-    //     console.log("Atualizar lista de multas");
-    // }
 
     function handleClick3(){
         setShowModalEstudante(true);
@@ -122,7 +118,7 @@ function HeaderOutle({page}){
                         <p className="text-black/70 text-lg">Gerir equipes e permissões</p>
                     </article>
                     <button onClick={handleClick5} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg cursor-pointer rounded-lg">
-                    <MdPersonOutline size={25}/> + Adicionar Admin
+                        <MdPersonOutline size={25}/> + Adicionar Admin
                     </button>
                 </section>
             ) : page === "multas" ?(
@@ -144,7 +140,7 @@ function HeaderOutle({page}){
             {showModalReserva && <Modal tipo="reserva" onClose={() => setShowModalReserva(false)}/> }
             {showModalEstudante && <ModalAlunoOficial  onClose={() => setShowModalEstudante(false)}/> }
             {showModalDevol && <Modal tipo="devoluicao" onClose={() => setShowModalDevol(false)}/> }
-            {showModalAdmin && <Modal tipo="admins" onClose={() => setShowModalAdmin(false)}/> }
+            {showModalAdmin && <ModalAddAdmin onClose={() => setShowModalAdmin(false)}/> }
             {showModalMulta && ( <ModalMultas onClose={() => setShowModalMulta(false)}/> )}        
 
         </main>
