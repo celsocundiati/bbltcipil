@@ -14,7 +14,7 @@ from datetime import timedelta
 from rest_framework.response import Response
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import AlunoOficial, FuncionarioOficial, Perfil
-from .models import AuditLog, Multa, ConfiguracaoSistema
+from .models import Multa, ConfiguracaoSistema
 from .serializers import (
     ReservaAdminSerializer,
     EmprestimoAdminSerializer,
@@ -29,7 +29,7 @@ from .serializers import (
     ConfiguracaoSistemaSerializer,
     UserAdminSerializer
 )
-from .audit_service import AuditService
+from audit.services import AuditService
 from django.contrib.auth.models import User
 
 User = get_user_model()
@@ -570,7 +570,7 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Permite pesquisa por usuário, ação e modelo.
     """
-    queryset = AuditLog.objects.all().order_by('-criado_em')
+    queryset = AuditService.objects.all().order_by('-criado_em')
     serializer_class = AuditLogSerializer
     permission_classes = [permissions.IsAdminUser]
 
@@ -800,7 +800,7 @@ class EstatisticasMensaisAdminView(APIView):
             estatisticas[item["mes"]]["reservas"] = item["total"]
 
         # Devoluções por mês (AuditLog com estado 'devolvido')
-        devolucoes_por_mes = AuditLog.objects.filter(alteracoes__estado="devolvido").annotate(
+        devolucoes_por_mes = AuditService.objects.filter(alteracoes__estado="devolvido").annotate(
             mes=ExtractMonth("criado_em")
         ).values("mes").annotate(total=Count("id"))
 

@@ -8,6 +8,9 @@ import { MdPersonOutline } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
+import { useAuth } from "../../../auth/userAuth/useauth";
+import { podeGerir } from "../../../auth/podegerir/permissao";
+
 
 function TabAutores() {
   const [showModalAutor, setShowModalAutor] = useState(false);
@@ -16,6 +19,8 @@ function TabAutores() {
   const [autores, setAutores] = useState([]);
   const [modal, setModal] = useState({ open: false, type: null, autor: null });
   const navigate = useNavigate();
+  
+  const { user } = useAuth();
 
   useEffect(() => {
 
@@ -32,17 +37,17 @@ function TabAutores() {
     fectAutores()
   }, [navigate]);
 
-
-
-    
     function handleClick(){
+        if (!podeGerir(user)) return;
         setShowModalAutor(true);
     }
     function clickEditar(autor){
+        if (!podeGerir(user)) return;
         setAutorSelecionado(autor)
         setEditarAutor(true);
     }
     function openModal(type, autor){
+        if (!podeGerir(user)) return;
         setModal({open: true, type, autor});
     }
     function closeModal(){
@@ -50,6 +55,9 @@ function TabAutores() {
     }
 
     async function handleConfirm() {
+
+        if (!podeGerir(user)) return;
+
         if(modal.type === "delete"){
             await api.delete(`/admin/autores/${modal.autor.id}/`);
             setAutores(prev => prev.filter(a => a.id !== modal.autor.id));
@@ -70,7 +78,8 @@ function TabAutores() {
             viewport={{ once: true }}             // anima apenas uma vez
             >
             <div>
-                <BtnAddAdmin tipo="autor" onClick={handleClick}/>
+                {((podeGerir(user)) && <BtnAddAdmin tipo="autor" onClick={handleClick}/>)}
+                
             </div>
             <div className="w-full bg-white rounded-2xl px-8 my-25 py-8">
                 <table className="w-full table-fixed border-collapse bg-white shadow-md rounded-xl overflow-hidden">
@@ -79,7 +88,7 @@ function TabAutores() {
                             <th className="w-[15%] px-5 py-3 text-center">Autor</th>
                             <th  className="w-[25%] px-5 py-3 text-center">Nacionalidade</th>
                             <th className="w-[15%] px-5 py-3 text-center">Nº de Livro</th>
-                            <th className="w-[15%] px-5 py-3 text-center">Empréstimo</th>
+                            {((podeGerir(user)) && <th className="w-[15%] px-5 py-3 text-center">Ações</th>)}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-black/10">
@@ -99,12 +108,14 @@ function TabAutores() {
                                 </td>
                                 <td className="px-5 py-4 truncate text-center text-black/85"> {autor.nacionalidade} </td>
                                 <td className="px-5 py-4 truncate text-center text-black/85"> {autor.total_obras} </td>
-                                <td className="px-5 py-4 truncate text-center text-black/85">
-                                    <div className="flex gap-2 items-center justify-center">
-                                        <button onClick={() => clickEditar(autor)} className="cursor-pointer"> <LuFilePen size={30}/> </button>
-                                        <button onClick={() => openModal("delete", autor)} className="cursor-pointer"> <FiTrash2 size={30} className="text-red-700"/> </button>
-                                    </div>
-                                </td>
+                                {((podeGerir(user)) && 
+                                    <td className="px-5 py-4 truncate text-center text-black/85">
+                                        <div className="flex gap-2 items-center justify-center">
+                                            <button onClick={() => clickEditar(autor)} className="cursor-pointer"> <LuFilePen size={30}/> </button>
+                                            <button onClick={() => openModal("delete", autor)} className="cursor-pointer"> <FiTrash2 size={30} className="text-red-700"/> </button>
+                                        </div>
+                                    </td>
+                                )}
                                             
                             </tr>
                         )))}

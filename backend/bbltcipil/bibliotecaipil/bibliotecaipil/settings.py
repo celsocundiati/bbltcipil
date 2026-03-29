@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "administracao.apps.AdministracaoConfig",
     "ia.apps.IaConfig",
+    "audit.apps.AuditConfig",
 ]
 
 
@@ -66,6 +67,7 @@ MIDDLEWARE = [
     "administracao.middleware.CurrentUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "audit.middleware.AuditMiddleware",
 ]
 
 

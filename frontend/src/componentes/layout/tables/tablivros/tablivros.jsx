@@ -4,8 +4,13 @@ import { FiTrash2 } from "react-icons/fi";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
 import {FiSearch} from "react-icons/fi";
+import { podeGerir } from "../../../auth/podegerir/permissao";
+import { useAuth } from "../../../auth/userAuth/useauth";
+
 
 function TabelaLivros(){
+    
+    const { user } = useAuth();
 
     const [livros, setLivros] = useState([]);
     const [categorias, setCategorias] = useState([]);
@@ -49,6 +54,7 @@ function TabelaLivros(){
     }, [search, estadoFilter]);
 
     function openModal(type, livro){
+        if (!podeGerir(user)) return;
         setModal({open: true, type, livro});
     }
     function closeModal(){
@@ -56,6 +62,7 @@ function TabelaLivros(){
     }
 
     async function handleConfirm() {
+        if (!podeGerir(user)) return;
         if(modal.type === "delete"){
             await api.delete(`/admin/livros/${modal.livro.id}/`);
             setLivros(prev => prev.filter(item => item.id !== modal.livro.id));
@@ -130,7 +137,7 @@ function TabelaLivros(){
                                 <th className="w-[10%] px-5 py-3 text-center">Descrição</th>
                                 <th className="w-[10%] px-5 py-3 text-center">Sumário</th>
                                 <th className="w-[15%] px-5 py-3 text-center">Estado</th>
-                                <th className="w-[15%] px-5 py-3 text-center">Ações</th>
+                                {((podeGerir(user)) && <th className="w-[15%] px-5 py-3 text-center">Ações</th>)}
                             </tr>
                         </thead>
 
@@ -180,17 +187,20 @@ function TabelaLivros(){
                                             {livro.estado}
                                         </span>
                                     </td>
-
-                                    <td className="px-5 py-4 truncate text-black/85 text-center">
-                                        <div className="flex gap-3 justify-center">
-                                            <button onClick={() => openModal("update", livro)} className="hover:text-black/70 cursor-pointer transition">
-                                                <LuFilePen size={25}/>
-                                            </button>
-                                            <button onClick={() => openModal("delete", livro)} className="text-red-500 hover:text-red-700 cursor-pointer transition">
-                                                <FiTrash2 size={25}/>
-                                            </button>
-                                        </div>
-                                    </td>
+                                    
+                                    {((podeGerir(user)) && 
+                                        <td className="px-5 py-4 truncate text-black/85 text-center">
+                                            <div className="flex gap-3 justify-center">
+                                                <button onClick={() => openModal("update", livro)} className="hover:text-black/70 cursor-pointer transition">
+                                                    <LuFilePen size={25}/>
+                                                </button>
+                                                <button onClick={() => openModal("delete", livro)} className="text-red-500 hover:text-red-700 cursor-pointer transition">
+                                                    <FiTrash2 size={25}/>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    )}
+                                    
                                 </tr>
                                 ))
                             )}

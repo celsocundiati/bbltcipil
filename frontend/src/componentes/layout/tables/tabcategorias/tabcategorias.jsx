@@ -8,8 +8,13 @@ import { HiOutlineFolder } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
+import { podeGerir } from "../../../auth/podegerir/permissao";
+import { useAuth } from "../../../auth/userAuth/useauth";
+
 
 function TabCategorias(){
+
+    const { user } = useAuth();
 
     const [showModalCategoria, setShowModalCategoria] = useState(false);
     const [categorias, setCategorias] = useState([]);
@@ -23,6 +28,7 @@ function TabCategorias(){
     const navigate = useNavigate();
 
     function handleOpenEditModal(categoria) {
+        if (!podeGerir(user)) return;
         setCategoriaSelecionada(categoria);
         setEditModalOpen(true);
     }
@@ -48,16 +54,20 @@ function TabCategorias(){
 
 
     function handleClick(){
+        if (!podeGerir(user)) return;
         setShowModalCategoria(true);
     }
 
     function openModal(type, categoria){
-            setModal({open: true, type, categoria});
+        if (!podeGerir(user)) return;
+        setModal({open: true, type, categoria});
     }
     function closeModal(){
         setModal({open:false, type: null, categoria: null});
     }
     async function handleConfirm() {
+        if (!podeGerir(user)) return;
+
         if(modal.type === "delete"){
             await api.delete(`/admin/categorias/${modal.categoria.id}/`);
             setCategorias(prev => prev.filter(c => c.id !== modal.categoria.id));
@@ -80,7 +90,7 @@ function TabCategorias(){
             viewport={{ once: true }}             // anima apenas uma vez
             >
             <div>
-                <BtnAddAdmin tipo="categoria" onClick={handleClick}/>
+                {((podeGerir(user)) && <BtnAddAdmin tipo="categoria" onClick={handleClick}/>)}
             </div>
             <div 
             transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo   
@@ -91,7 +101,7 @@ function TabCategorias(){
                             <th className="w-[15%] px-5 py-3 text-center">Livro</th>
                             <th className="w-[25%] px-5 py-3 text-center">Descrição</th>
                             <th className="w-[15%] px-5 py-3 text-center">Nº de Livro</th>
-                            <th className="w-[15%] px-5 py-3 text-center">Empréstimo</th>
+                            {((podeGerir(user)) && <th className="w-[15%] px-5 py-3 text-center">Ações</th>)}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-black/10">
@@ -111,12 +121,14 @@ function TabCategorias(){
                                     </td>
                                     <td className="px-5 py-4 truncate text-center text-black/85"> {categoria.descricao} </td>
                                     <td className="px-5 py-4 truncate text-center text-black/85"> {categoria.n_livros} </td>
-                                    <td className="px-5 py-4 truncate text-center text-black/85">
-                                        <div className="flex gap-2 items-center justify-center">
-                                            <button  onClick={() => handleOpenEditModal(categoria)} className="cursor-pointer"> <LuFilePen size={30}/> </button>
-                                            <button  onClick={() => openModal("delete", categoria)} className="cursor-pointer"> <FiTrash2 size={30} className="text-red-700"/> </button>
-                                        </div>
-                                    </td>
+                                    {((podeGerir(user)) && 
+                                        <td className="px-5 py-4 truncate text-center text-black/85">
+                                            <div className="flex gap-2 items-center justify-center">
+                                                <button  onClick={() => handleOpenEditModal(categoria)} className="cursor-pointer"> <LuFilePen size={30}/> </button>
+                                                <button  onClick={() => openModal("delete", categoria)} className="cursor-pointer"> <FiTrash2 size={30} className="text-red-700"/> </button>
+                                            </div>
+                                        </td>
+                                    )}
                                 </tr>
                         )))}
                     </tbody>

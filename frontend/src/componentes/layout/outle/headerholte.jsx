@@ -1,33 +1,39 @@
 import {MdPersonOutline} from "react-icons/md";
 import {HiOutlineArrowDownTray, HiOutlineCurrencyDollar} from "react-icons/hi2";
 import { useState } from "react";
-import Modal from "../modais/modal";
 import {Link} from "react-router-dom";
 import ModalAlunoOficial from "../modais/modalalunooficial/modalalunooficial";
 import ModalMultas from "../modais/modalmultas/modalmultas";
 import ModalAddAdmin from "../modais/modaladminadd/addadmin";
+import { podeGerir } from "../../auth/podegerir/permissao";
+import { useAuth } from "../../auth/userAuth/useauth";
 
 function HeaderOutle({page}){
 
+    const { user } = useAuth();
+
     // flex justify-between p-5
     
-    const [showModal, setShowModal] = useState(false);
-    const [showModalEmprest, setShowModalEmprest] = useState(false);
-    const [showModalReserva, setShowModalReserva] = useState(false);
     const [showModalEstudante, setShowModalEstudante] = useState(false);
-    const [showModalDevol, setShowModalDevol] = useState(false);
     const [showModalAdmin, setShowModalAdmin] = useState(false);
     const [showModalMulta, setShowModalMulta] = useState(false);
 
+
     function handleClick3(){
+        if (!podeGerir(user)) return;
         setShowModalEstudante(true);
     }
+
     function handleClick5(){
+        if (!podeGerir(user)) return;
         setShowModalAdmin(true);
     }
+
     function handleClick6(){
+        if (!podeGerir(user)) return;
         setShowModalMulta(true);
     }
+
 
     return(
         <main>
@@ -37,7 +43,14 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Livros</h1>
                         <p className="text-black/70 text-lg">Gerir catálogo completo da biblioteca</p>
                     </article>
-                    <Link to="/admin/addlivro" className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg">+ Adicionar Livro</Link>
+                    {podeGerir(user) && (
+                        <Link 
+                            to="/admin/addlivro" 
+                            className="bg-[#F86417] text-white px-4 py-2 text-lg cursor-pointer rounded-lg"
+                        >
+                            + Adicionar Livro
+                        </Link>
+                    )}
                 </section>
             ) : page === "perfil" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
@@ -62,14 +75,6 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Empréstimos</h1>
                         <p className="text-black/70 text-lg">Gerir e acompanhar empréstimos de livros</p>
                     </article>
-                    {/* <article className="flex gap-5">
-                        <button onClick={handleClick4} className="flex gap-2 items-center bg-white border border-black/15 cursor-pointer px-4 py-1.5 text-lg rounded-lg">
-                            <FiCheckCircle size={25}/> Registar Devolução
-                        </button>
-                        <button onClick={handleClick2} className="bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg cursor-pointer">
-                            + Novo Empréstimo
-                        </button>
-                    </article> */}
                 </section>  
             ) : page === "reservas" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
@@ -77,12 +82,6 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Reservas</h1>
                         <p className="text-black/70 text-lg">Gerir e acompanhar reservas de livros</p>
                     </article>
-                    
-                    {/* <article className="flex gap-5">
-                        <button onClick={handleClick7} className="bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg cursor-pointer">
-                            + Nova Reserva
-                        </button>
-                    </article> */}
                 </section>  
             ) : page === "categoriasautores" ?(
                 <section className="space-y-2 mt-30 flex-wrap">
@@ -117,9 +116,11 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Administradores</h1>
                         <p className="text-black/70 text-lg">Gerir equipes e permissões</p>
                     </article>
-                    <button onClick={handleClick5} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg cursor-pointer rounded-lg">
-                        <MdPersonOutline size={25}/> + Adicionar Admin
-                    </button>
+                    {podeGerir(user) && (
+                        <button onClick={handleClick5} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg cursor-pointer rounded-lg">
+                            <MdPersonOutline size={25}/> + Adicionar Admin
+                        </button>
+                    )}
                 </section>
             ) : page === "multas" ?(
                 <section className="flex relative flex-wrap justify-between items-center mt-30">
@@ -127,19 +128,18 @@ function HeaderOutle({page}){
                         <h1 className="text-2xl font-medium">Gestão de Multas</h1>
                         <p className="text-black/70 text-lg">Gerir multas e configurar regras.</p>
                     </article>
-                    <button onClick={handleClick6} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg cursor-pointer rounded-lg gap-2">
-                        <HiOutlineCurrencyDollar size={25}/> Aplicar multa
-                    </button>
+                    {podeGerir(user) && (
+                        <button onClick={handleClick6} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg cursor-pointer rounded-lg gap-2">
+                            <HiOutlineCurrencyDollar size={25}/> Aplicar multa
+                        </button>
+                    )}
                 </section>
 
             ) : (
                 null
             )}
             
-            {showModalEmprest && <Modal tipo="emprestimo" onClose={() => setShowModalEmprest(false)}/> }
-            {showModalReserva && <Modal tipo="reserva" onClose={() => setShowModalReserva(false)}/> }
             {showModalEstudante && <ModalAlunoOficial  onClose={() => setShowModalEstudante(false)}/> }
-            {showModalDevol && <Modal tipo="devoluicao" onClose={() => setShowModalDevol(false)}/> }
             {showModalAdmin && <ModalAddAdmin onClose={() => setShowModalAdmin(false)}/> }
             {showModalMulta && ( <ModalMultas onClose={() => setShowModalMulta(false)}/> )}        
 
