@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from .models import AuditLog, Multa, ConfiguracaoSistema
+from .models import Multa, ConfiguracaoSistema
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
 from django.contrib.auth.models import User, Group
+from audit.models import AuditLog
 
 
 

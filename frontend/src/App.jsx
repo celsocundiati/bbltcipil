@@ -72,16 +72,45 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="gestao" element={<GestaoLivros />} />
-          <Route path="addlivro" element={<AddLivro />} />
-          <Route path="livros/:id" element={<EditarLivro />} />
-          <Route path="perfis" element={<Estudantes />} />
+          
+          <Route path="addlivro" element={
+            <RoleRoute apenasAdmin={true}>
+              <AddLivro />
+            </RoleRoute>
+          } />
+
+          <Route path="livros/:id" element={
+            <RoleRoute apenasAdmin={true}>
+              <EditarLivro />
+            </RoleRoute>
+          } />
+          
+          <Route path="perfis" element={
+            <RoleRoute apenasAdmin={true}>
+              <Estudantes />
+            </RoleRoute>
+          } />
+
           <Route path="emprestimos" element={<Emprestimos />} />
           <Route path="multas" element={<Multas />} />
           <Route path="acervo" element={<Acervo />} />
           <Route path="categoriasautores" element={<CategoriasAutores />} />
-          <Route path="relatorios" element={<Relatorios />} />
+
+          <Route path="relatorios" element={
+            <RoleRoute apenasAdmin={true}>
+              <Relatorios />
+            </RoleRoute>
+          } />
+
           <Route path="configuracoesadmin" element={<Configuracoesadmin />} />
-          <Route path="admins" element={<Admins />} />
+          
+          <Route path="admins" element={
+            <RoleRoute apenasAdmin={true}>
+              <Admins />
+            </RoleRoute>
+          } />
+          {/* <Route path="admins" element={<Admins />} /> */}
+
           <Route path="audit-log" element={<AdminAuditLog />} />
           <Route path="" element={<Sair />} />
         </Route>

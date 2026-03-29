@@ -5,9 +5,14 @@ from datetime import timedelta
 
 from livros.models import Reserva, Livro, Emprestimo
 from .models import Multa
-from .audit_service import AuditService
 from .service import calcular_valor_multa
+from audit.utils import set_system_user
 
+@shared_task
+def minha_task():
+    set_system_user()
+
+    # resto da lógica
 
 # =============================
 # MULTAS
@@ -155,6 +160,7 @@ def rotina_automatica_sistema():
     expirar_reservas.delay()
     aprovar_reservas_automaticamente.delay()
     atualizar_emprestimos_atrasados.delay()
+    minha_task.delay()
 
     print("✅ [ORQUESTRADOR] Tasks disparadas")
 
