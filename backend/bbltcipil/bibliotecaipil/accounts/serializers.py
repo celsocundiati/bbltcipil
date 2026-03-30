@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import Group
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from administracao.models import AuditLog
+from audit.models import AuditLog
 from .models import AlunoOficial, FuncionarioOficial, Perfil
 
 User = get_user_model()

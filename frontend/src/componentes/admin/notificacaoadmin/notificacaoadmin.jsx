@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import api from "../../service/api/api";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import Loading from "../../layout/motion/motion";
 
 export default function AdminAuditLog() {
   const [logs, setLogs] = useState([]);
@@ -55,113 +56,139 @@ export default function AdminAuditLog() {
 
   }, [search, acaoFilter, modeloFilter, periodoDias]);
 
-  // 📄 EXPORTAR PDF
-  const exportPDF = () => {
-    if (!logs || logs.length === 0) {
-      alert("Sem dados para exportar neste período.");
-      return;
+  const exportPDF = async () => {
+    setLoading(true);
+
+    try {
+      // 🔥 buscar TODOS os logs com filtros (sem paginação)
+      const params = {};
+      if (search) params.search = search;
+      if (acaoFilter) params.acao = acaoFilter;
+      if (modeloFilter) params.modelo = modeloFilter;
+      if (periodoDias) params.days = periodoDias;
+
+      // ⚠️ força retorno grande (backend deve permitir)
+      params.page_size = 1000;
+
+      const response = await api.get("admin/auditlog/", { params });
+
+      const data = Array.isArray(response.data.results)
+        ? response.data.results
+        : response.data;
+
+      if (!data || data.length === 0) {
+        alert("Sem dados para exportar neste período.");
+        return;
+      }
+
+      // 🔥 ordenar por data (mais recente primeiro)
+      data.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+
+      const doc = new jsPDF();
+      const dataAtual = new Date().toLocaleString();
+
+      // 🔥 métricas rápidas
+      const totalLogs = data.length;
+      const totalCriacoes = data.filter(l => l.acao === "Criou").length;
+      const totalAtualizacoes = data.filter(l => l.acao === "Atualizou").length;
+      const totalRemocoes = data.filter(l => l.acao === "Removeu").length;
+
+      const filtros = `Pesquisa: ${search || "—"}\nAção: ${acaoFilter || "—"}\nModelo: ${modeloFilter || "—"}\nPeríodo: últimos ${periodoDias} dias`;
+
+      // 🔹 HEADER
+      doc.setFontSize(16);
+      doc.text("BIBLIOTECA IPIL", 14, 15);
+
+      doc.setFontSize(10);
+      doc.text("Relatório de Auditoria do Sistema", 14, 22);
+
+      doc.setFontSize(9);
+      doc.text(`Gerado em: ${dataAtual}`, 14, 28);
+
+      doc.setFontSize(10);
+      doc.text(`Total de Registos: ${totalLogs}`, 14, 38);
+
+      doc.setFontSize(9);
+      doc.text(`Criações: ${totalCriacoes} | Atualizações: ${totalAtualizacoes} | Remoções: ${totalRemocoes}`, 14, 45);
+
+      doc.text("Filtros Aplicados:", 14, 52);
+      doc.text(filtros, 14, 57);
+
+      // 🔹 TABELA
+      const tableColumn = ["Usuário", "Ação", "Modelo", "ID", "Resumo", "Data"];
+
+      const tableRows = data.map((log) => {
+        const resumo = log.alteracoes && typeof log.alteracoes === "object"
+        ? Object.entries(log.alteracoes || {}).map(([k, v]) => `${k}: ${v}`).join(" | ") || "—"
+        : "—";
+
+        return [
+          log.usuario_nome || "Sistema",
+          log.acao || "—",
+          log.modelo_nome || "—", // 🔥 corrigido
+          log.objeto_id || "—",
+          resumo,
+          new Date(log.criado_em).toLocaleString(),
+        ];
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 70,
+        styles: {
+          fontSize: 7,
+          cellPadding: 3,
+          overflow: "linebreak",
+        },
+        headStyles: {
+          fillColor: [249, 123, 23],
+        },
+        columnStyles: {
+          4: { cellWidth: 80 }, // resumo maior
+        },
+      });
+
+      // 🔹 RODAPÉ
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(
+          `Página ${i} de ${pageCount}`,
+          doc.internal.pageSize.width - 40,
+          doc.internal.pageSize.height - 10
+        );
+      }
+
+      // 🔥 nome inteligente
+      const nome = `Audit_${acaoFilter || "all"}_${modeloFilter || "all"}_${periodoDias}d`;
+      doc.save(`${nome}.pdf`);
+
+    } catch (err) {
+      console.error("Erro ao exportar PDF", err);
+      alert("Erro ao gerar relatório.");
+    } finally {
+      setLoading(false);
     }
-
-    const doc = new jsPDF();
-    const dataAtual = new Date().toLocaleString();
-    const totalLogs = logs.length;
-    const filtros = `Pesquisa: ${search || "—"}\nAção: ${acaoFilter || "—"}\nModelo: ${modeloFilter || "—"}\nPeríodo: últimos ${periodoDias} dias`;
-
-    // 🔹 Cabeçalho
-    doc.setFontSize(16);
-    doc.text("BIBLIOTECA IPIL", 14, 15);
-    doc.setFontSize(10);
-    doc.text("Relatório de Auditoria do Sistema", 14, 22);
-    doc.setFontSize(9);
-    doc.text(`Gerado em: ${dataAtual}`, 14, 28);
-
-    doc.setFontSize(10);
-    doc.text(`Total de Registos: ${totalLogs}`, 14, 38);
-    doc.setFontSize(9);
-    doc.text("Filtros Aplicados:", 14, 45);
-    doc.text(filtros, 14, 50);
-
-    // 🔹 Tabela
-    const tableColumn = ["Usuário", "Ação", "Modelo", "ID", "Resumo", "Data"];
-    const tableRows = logs.map((log) => {
-      const resumo =
-        typeof log.alteracoes === "object"
-          ? Object.values(log.alteracoes).join(" - ")
-          : "—";
-
-      return [
-        log.usuario_nome || "—",
-        log.acao || "—",
-        log.modelo || "—",
-        log.objeto_id || "—",
-        resumo,
-        new Date(log.criado_em).toLocaleString(),
-      ];
-    });
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 65,
-      styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: [249, 123, 23] },
-      columnStyles: { 4: { cellWidth: 70 } },
-    });
-
-    // 🔹 Rodapé
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.text(
-        `Página ${i} de ${pageCount}`,
-        doc.internal.pageSize.width - 40,
-        doc.internal.pageSize.height - 10
-      );
-    }
-
-    doc.save(`AuditLog_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
-  // 📊 FORMATAR ALTERAÇÕES
-  function logAlteracoes(modelo, alt) {
-    const mensagens = {
-      Emprestimo: (
-        <p className="text-black/70 truncate w-[95%]">
-          {[alt.alteracoes?.nome, alt.alteracoes?.livro, alt.alteracoes?.estado].join(" - ")}
-        </p>
-      ),
-      Reserva: (
-        <p className="text-black/70 truncate w-[95%]">
-          {[alt.alteracoes?.nome, alt.alteracoes?.livro, alt.alteracoes?.estado].join(" - ")}
-        </p>
-      ),
-      Livro: (
-        <p className="text-black/70 truncate w-[95%]">
-          {[alt.alteracoes?.titulo, alt.alteracoes?.autor].join(" - ")}
-        </p>
-      ),
-      User: (
-        <p className="text-black/70 truncate w-[95%]">
-          {[alt.alteracoes?.tipo, alt.alteracoes?.identificacao].join(" - ")}
-        </p>
-      ),
-      Categoria: (
-        <p className="text-black/70 truncate w-[95%]">
-          {[alt.alteracoes?.categoria, alt.alteracoes?.descricao].join(" - ")}
-        </p>
-      ),
-      Autor: (
-        <p className="text-black/70">
-          {[alt.alteracoes?.autor, alt.alteracoes?.nacionalidade].join(" - ")}
-        </p>
-      ),
-    };
+  const truncate = (text, maxLength = 100) => {
+    if (!text) return "—";
+    return text.length > maxLength ? text.slice(0, maxLength) + "…" : text;
+  };
+  
+  function logAlteracoes(log) {
+    if (!log.alteracoes || Object.keys(log.alteracoes).length === 0) return "Nenhuma ação!";
 
-    return mensagens[modelo] || (
-      <p className="text-black/70 truncate w-[95%]">Nenhuma ação!</p>
-    );
+    return Object.entries(log.alteracoes).map(([k, v], idx) => (
+      <span className="w-2/3" key={idx}>
+        {truncate(`${k}: ${v}`, 80)} <br />
+      </span>
+    ));
   }
+
+
 
   // 🎨 CORES POR AÇÃO
   function bg(acao) {
@@ -183,14 +210,14 @@ export default function AdminAuditLog() {
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <p className="text-xl animate-pulse">Carregando dados...</p>
-      </div>
+      <section className="w-full h-screen flex items-center justify-center">
+        <Loading message=""/>
+      </section>
     );
   }
 
   return (
-    <motion.div
+    <motion.section
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -199,10 +226,10 @@ export default function AdminAuditLog() {
     >
       <main className="w-full grid gap-5">
         <section className="bg-white border border-black/10 rounded-lg p-5 space-y-6">
-          <div>
+          <section>
             <h1 className="text-xl">Auditoria do Sistema</h1>
             <p className="text-black/70">Últimas ações no sistema</p>
-          </div>
+          </section>
 
           {/* EXPORT PDF */}
           <button
@@ -213,7 +240,7 @@ export default function AdminAuditLog() {
           </button>
 
           {/* FILTROS */}
-          <div className="flex flex-wrap gap-3">
+          <section className="flex flex-wrap gap-3">
             <input
               type="text"
               placeholder="Pesquisar pelo nome completo ou nome de usuário..."
@@ -257,10 +284,10 @@ export default function AdminAuditLog() {
               <option value={30}>Últimos 30 dias</option>
               <option value={60}>Últimos 60 dias</option>
             </select>
-          </div>
+          </section>
 
           {/* LISTA DE LOGS */}
-          <div className="space-y-4">
+          <section className="space-y-4">
             {logs.length === 0 ? (
               <p>Nenhum log encontrado</p>
             ) : (
@@ -270,25 +297,25 @@ export default function AdminAuditLog() {
                   className={`p-4 rounded cursor-pointer ${bg(log.acao)}`}
                 >
                   <Link to={getRedirectPath(log)}>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-[#F97B17] rounded-full"></div>
-                      <h2>{log.acao} {log.modelo}</h2>
-                    </div>
+                    <section className="flex items-center gap-2">
+                      <section className="w-2 h-2 bg-[#F97B17] rounded-full"></section>
+                      <h2>{log.acao} {log.modelo_nome || "—"}</h2>
+                    </section>
 
-                    <div className="pl-5">
-                      {logAlteracoes(log.modelo, log)}
+                    <section className="pl-5">
+                      {logAlteracoes(log)}
                       <p className="text-sm text-black/70">
-                        {log.usuario_nome} - {new Date(log.criado_em).toLocaleString()}
+                        {log.usuario_nome || "SYSTEM"} - {new Date(log.criado_em).toLocaleString()}
                       </p>
-                    </div>
+                    </section>
                   </Link>
                 </article>
               ))
             )}
-          </div>
+          </section>
         </section>
       </main>
-    </motion.div>
+    </motion.section>
   );
 }
 

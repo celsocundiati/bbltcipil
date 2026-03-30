@@ -10,7 +10,7 @@ function Multas(){
             whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
             viewport={{ once: true }}             // anima apenas uma vez
             transition={{ duration: 0.8 }}     // começa invisível e levemente abaixo 
-            className="w-full grid grid-cols-1 space-y-20">
+            className="mt-30 w-full grid grid-cols-1 space-y-20">
             <HeaderOutle page="multas"/>
             <RotulosOutle page="multas"/>
             <TabMultas/>

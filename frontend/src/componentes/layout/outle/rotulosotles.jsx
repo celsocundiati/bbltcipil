@@ -1,127 +1,7 @@
-// import { HiOutlineTrendingUp } from "react-icons/hi";
-// import { gerarDashboardRotulos } from "../../layout/campos/campos";
-// import { useDataStates, useResumoGeral } from "../../layout/tables/utilitarios/Utils";
-
-// function RotulosOutle({ page }) {
-
-//     const resumo = useResumoGeral();
-//     const dashboardData = useDataStates();
-
-//     const dashboardRotulos = dashboardData
-//         ? gerarDashboardRotulos(dashboardData)
-//         : [];
-
-
-//     if (!resumo || !dashboardData) {
-//         return (
-//         <div className="w-full flex items-center justify-center">
-//             <p className="text-xl animate-pulse">Carregando cards...</p>
-//         </div>
-//         );
-//     }
-
-//     // Exemplo: gerar cards genéricos para dashboard
-//     // const dashboardRotulos = [
-//     //     {
-//     //         titulo: "Total Alunos",
-//     //         label: resumo.alunos.total,
-//     //         descricao: "Crescimento mensal",
-//     //         icone: <HiOutlineShieldCheck size={25} />
-//     //     },
-//     //     {
-//     //         titulo: "Empréstimos Ativos",
-//     //         label: resumo.emprestimos.ativos,
-//     //         descricao: "Crescimento mensal",
-//     //         icone: <FiActivity size={25} />
-//     //     },
-//     //     {
-//     //         titulo: "Reservas Pendentes",
-//     //         label: resumo.reservas.pendentes,
-//     //         descricao: "Novas solicitações",
-//     //         icone: <HiOutlineTrendingUp size={25} />
-//     //     },
-//     //     {
-//     //         titulo: "Multas Pendentes",
-//     //         label: resumo.multas.pendentes,
-//     //         descricao: "A pagar",
-//     //         icone: <HiOutlineTrendingUp size={25} />
-//     //     }
-//     // ];
-
-    
-//     return (
-//         <main>
-//             {page === "dashboard" && (
-//                 <section className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-7">
-//                     {dashboardRotulos.map((card, idx) => (
-//                         <div key={idx} className="bg-white w-full px-4 py-5 border border-black/10 rounded-lg flex justify-between hover:shadow transition">
-//                             <div>
-//                                 <p className="text-black/70">{card.titulo}</p>
-//                                 <label className="text-lg">{card.label}</label>
-//                                 <span className="flex items-center gap-2 text-green-600">
-//                                     <HiOutlineTrendingUp size={20}/> {card.descricao}
-//                                 </span>
-//                             </div>
-//                             <div className="flex items-center justify-center bg-black/5 h-8 text-[#F97B17] px-2 rounded-md">
-//                                 {card.icone}
-//                             </div>
-//                         </div>
-//                     ))}
-//                 </section>
-//             )}
-
-//             {page === "perfil" && (
-//                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//                     <Card titulo="Total de Perfis" valor={resumo.perfis.total} cor="#F97B17" />
-//                     <Card titulo="Ativos" valor={resumo.perfis.ativos} cor="green" />
-//                     <Card titulo="Com Empréstimos" valor={resumo.perfis.com_emprestimos} cor="blue" />
-//                     <Card titulo="Suspensos" valor={resumo.perfis.suspensos} cor="red" />
-//                 </section>
-//             )}
-
-//             {page === "emprestimos" && (
-//                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//                     <Card titulo="Ativos" valor={resumo.emprestimos.ativos} cor="#F97B17" />
-//                     <Card titulo="Atrasados" valor={resumo.emprestimos.atrasados} cor="red" />
-//                     <Card titulo="Devoluções Hoje" valor={resumo.emprestimos.devolucoes_hoje} cor="green" />
-//                     <Card titulo="Vencimento Próximo" valor={resumo.emprestimos.vencimento_proximo} cor="blue" />
-//                 </section>
-//             )}
-
-//             {page === "reservas" && (
-//                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//                     <Card titulo="Pendentes" valor={resumo.reservas.pendentes} cor="#F97B17" />
-//                     <Card titulo="Aprovadas" valor={resumo.reservas.aprovadas} cor="green" />
-//                     <Card titulo="Finalizadas" valor={resumo.reservas.finalizadas} cor="blue" />
-//                     <Card titulo="Reservados" valor={resumo.reservas.aprovadas + resumo.reservas.finalizadas} cor="orange" />
-//                 </section>
-//             )}
-
-//             {page === "multas" && (
-//                 <section className="grid grid-cols-1 md:grid-cols-4 gap-5">
-//                     <Card titulo="Total" valor={resumo.multas.total} cor="#F97B17" />
-//                     <Card titulo="Pendentes" valor={resumo.multas.pendentes} cor="red" />
-//                     <Card titulo="Pagas" valor={resumo.multas.pagas} cor="green" />
-//                     <Card titulo="Valor Total" valor={`$${resumo.multas.valor_total}`} cor="blue" />
-//                 </section>
-//             )}
-//         </main>
-//     );
-// }
-
-// const Card = ({ titulo, valor, cor }) => (
-//     <div className="bg-white p-6 rounded-xl border border-black/10 hover:shadow transition">
-//         <p className="text-black/60 text-sm">{titulo}</p>
-//         <p className={`text-3xl font-bold ${cor ? `text-[${cor}]` : ""}`}>{valor}</p>
-//     </div>
-// );
-
-// export default RotulosOutle;
-
-
 import { HiOutlineTrendingUp } from "react-icons/hi";
 import { gerarDashboardRotulos } from "../../layout/campos/campos";
 import { useDataStates, useResumoGeral } from "../../layout/tables/utilitarios/Utils";
+import Loading from "../motion/motion";
 
 function RotulosOutle({ page }) {
     const resumo = useResumoGeral();
@@ -130,6 +10,7 @@ function RotulosOutle({ page }) {
     const dashboardRotulos = dashboardData
         ? gerarDashboardRotulos(dashboardData)
         : [];
+
 
     if (!resumo || !dashboardData) {
         return (

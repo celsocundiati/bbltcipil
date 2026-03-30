@@ -262,9 +262,11 @@ function TabAdmins() {
     useEffect(() => {
         const fetchAdmins = async () => {
             try {
-                const res = await api.get("admin/users/", {
-                    params: { search, estado: estadoFilter },
-                });
+                const params = {};
+                if (search) params.search = search;
+                if (estadoFilter) params.estado = estadoFilter;
+                setLoading(true)
+                const res = await api.get("admin/users/", { params });
                 const data = Array.isArray(res.data.results) ? res.data.results : res.data;
                 setAdmins(data);
             } catch (err) {
@@ -326,10 +328,12 @@ function TabAdmins() {
     const handleUpdateSuccess = async () => {
         // Atualiza lista de admins após edição sem recarregar a página
         try {
+
             const res = await api.get("admin/users/", {
                 params: { search, estado: estadoFilter },
             });
             const data = Array.isArray(res.data.results) ? res.data.results : res.data;
+            console.log(res.data)
             setAdmins(data);
         } catch (err) {
             console.error("Erro ao atualizar lista de admins:", err);
@@ -383,7 +387,7 @@ function TabAdmins() {
                         <tbody className="divide-y divide-black/10">
                             {admins.length === 0 && !loading ? (
                                 <tr>
-                                    <td colSpan={6} className="text-center py-4 text-red-700">Nenhum resultado encontrado.</td>
+                                    <td colSpan={5} className="text-center py-4 text-red-700">Nenhum resultado encontrado.</td>
                                 </tr>
                             ) : (
                                 admins.map((adm) => (

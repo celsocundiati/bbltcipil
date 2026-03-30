@@ -39,8 +39,14 @@ import Sair from './componentes/auth/sair/sair';
 
 // Rotas privadas padrão
 import PrivateRoute from './componentes/auth/rotasprivadas/rotasprivadas';
+import Loading from "./componentes/layout/motion/motion";
+import { useAuth } from "./componentes/auth/userAuth/useauth";
 
 function App() {
+  const { loading } = useAuth();
+  
+  if (loading) return <Loading message=""/>;
+  
   return (
     <Router>
       <Routes>
