@@ -123,16 +123,11 @@ function HeaderOutle({page}){
                     )}
                 </section>
             ) : page === "multas" ?(
-                <section className="flex relative flex-wrap justify-between items-center mt-30">
+                <section className="flex relative flex-wrap justify-between items-center">
                     <article className="space-y-2">
                         <h1 className="text-2xl font-medium">Gestão de Multas</h1>
                         <p className="text-black/70 text-lg">Gerir multas e configurar regras.</p>
                     </article>
-                    {podeGerir(user) && (
-                        <button onClick={handleClick6} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg cursor-pointer rounded-lg gap-2">
-                            <HiOutlineCurrencyDollar size={25}/> Aplicar multa
-                        </button>
-                    )}
                 </section>
 
             ) : (

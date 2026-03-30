@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect, use } from "react";
 import { useAuth } from "../../../../auth/userAuth/useauth";
 import api from "../../../../service/api/api";
+import Loading from "../../../../layout/motion/motion";
 
 function Detalhes() {
   const { id } = useParams()
@@ -35,7 +36,7 @@ function Detalhes() {
     fetchLivros();
   }, [id]);
 
-  if (loading) return <p className="text-center mt-10">Carregando detalhes do livro...</p>;
+  if (loading) return <Loading message=""/>;
   if (!livro) return <p className="text-red-600 text-center mt-20">Nenhum livro encontrado.</p>;
 
   // Estilo do botão

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { FaBook } from "react-icons/fa";
 import api from "../../service/api/api";
 import { motion } from "framer-motion";
+import Loading from "../../layout/motion/motion";
 
 
 function EditarLivro() {
@@ -127,8 +128,8 @@ function EditarLivro() {
 
     if (loadingPage) {
         return (
-            <div className="w-full h-screen flex items-center justify-center">
-                <p className="text-xl animate-pulse text-center">Carregando dados...</p>
+            <div>
+                <Loading message=""/>
             </div>
         );
     }

@@ -1,7 +1,6 @@
 import uuid
 from .context import set_current_user, set_request_meta, set_trace_id
 
-
 class AuditMiddleware:
 
     def __init__(self, get_response):
@@ -17,7 +16,13 @@ class AuditMiddleware:
         set_request_meta(ip)
         set_trace_id(trace_id)
 
-        response = self.get_response(request)
+        try:
+            response = self.get_response(request)
+        finally:
+            # 🔥 LIMPEZA (EVITA VAZAMENTO ENTRE REQUESTS)
+            set_current_user(None)
+            set_request_meta(None)
+            set_trace_id(None)
 
         return response
 
@@ -26,3 +31,6 @@ class AuditMiddleware:
         if x_forwarded:
             return x_forwarded.split(",")[0]
         return request.META.get("REMOTE_ADDR")
+    
+
+    

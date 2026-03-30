@@ -140,12 +140,31 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
 # AuditLog
 # --------------------------
 class AuditLogSerializer(serializers.ModelSerializer):
-    usuario_nome = serializers.CharField(source="usuario.username", read_only=True)
+    modelo_nome = serializers.SerializerMethodField()
+    usuario_nome = serializers.SerializerMethodField()
 
     class Meta:
         model = AuditLog
-        fields = ["id", "usuario", "usuario_nome", "acao", "modelo", "objeto_id", "alteracoes", "criado_em"]
-        read_only_fields = fields
+        fields = [
+            "id",
+            "usuario_nome",
+            "acao",
+            "modelo_nome",
+            "objeto_id",
+            "alteracoes",
+            "origem",
+            "ip_address",
+            "trace_id",
+            "criado_em"
+        ]
+
+    def get_modelo_nome(self, obj):
+        return obj.modelo.model if obj.modelo else None
+
+    def get_usuario_nome(self, obj):
+        if obj.usuario:
+            return obj.usuario.username or obj.usuario.first_name
+        return "Sistema"
 
 
 # --------------------------

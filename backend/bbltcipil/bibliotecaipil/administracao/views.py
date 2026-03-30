@@ -1,221 +1,157 @@
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
-from django.utils import timezone
-from django.db import transaction
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
 from django.db.models import Count, Sum, Q
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from django.utils.timezone import now
-from rest_framework.decorators import action
 from datetime import timedelta
-from rest_framework.response import Response
+from audit.models import AuditLog
 from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
 from accounts.models import AlunoOficial, FuncionarioOficial, Perfil
 from .models import Multa, ConfiguracaoSistema
 from .serializers import (
-    ReservaAdminSerializer,
-    EmprestimoAdminSerializer,
-    AutorAdminSerializer,
-    CategoriaAdminSerializer,
-    LivroAdminSerializer,
-    AuditLogSerializer,
-    AlunoOficialAdminSerializer,
-    FuncionarioOficialAdminSerializer,
-    PerfilAdminSerializer,
-    MultaSerializer,
-    ConfiguracaoSistemaSerializer,
+    ReservaAdminSerializer, EmprestimoAdminSerializer, AutorAdminSerializer,
+    CategoriaAdminSerializer, LivroAdminSerializer, AuditLogSerializer,
+    AlunoOficialAdminSerializer, FuncionarioOficialAdminSerializer,
+    PerfilAdminSerializer, MultaSerializer, ConfiguracaoSistemaSerializer,
     UserAdminSerializer
 )
+from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo
+from .permissions import SistemaPermission, OnlySuperUser
 from audit.services import AuditService
-from django.contrib.auth.models import User
+from django.http import HttpResponse
+import csv
+
 
 User = get_user_model()
 
+
 # -----------------------------
-# LIVRO
+# LIVROS
 # -----------------------------
 class LivroAdminViewSet(viewsets.ModelViewSet):
-    queryset = Livro.objects.all()
+    queryset = Livro.objects.select_related("autor", "categoria").all()
     serializer_class = LivroAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
-    
+    permission_classes = [SistemaPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['estado']
-    search_fields = ['titulo', 'isbn', 'categoria__nome']
+    search_fields = ['titulo', 'isbn', 'categoria__nome', 'autor__nome']
     ordering_fields = ['publicado_em', 'titulo', 'isbn', 'estado']
     ordering = ['publicado_em']
 
+    def _audit(self, livro, action):
+        AuditService.log(
+            user=self.request.user,
+            action=action,
+            instance=livro,
+            extra={"titulo": livro.titulo, "autor": livro.autor.nome}
+        )
+
     def perform_create(self, serializer):
         livro = serializer.save()
-        AuditService.log(user=self.request.user, action="Adicionou", instance=livro, extra={"titulo": livro.titulo, "autor": livro.autor.nome})
+        self._audit(livro, "Criou")
 
     def perform_update(self, serializer):
         livro = serializer.save()
-        AuditService.log(user=self.request.user, action="Atualizou", instance=livro, extra={"titulo": livro.titulo, "autor": livro.autor.nome})
+        self._audit(livro, "Atualizou")
 
     def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Removeu", instance=instance, extra={"titulo": instance.titulo, "autor": instance.autor.nome})
+        self._audit(instance, "Removeu")
         instance.delete()
 
 
 # -----------------------------
-# RESERVA
+# RESERVAS
 # -----------------------------
 class ReservaAdminViewSet(viewsets.ModelViewSet):
-    queryset = Reserva.objects.select_related("usuario", "livro")
+    queryset = Reserva.objects.select_related("usuario", "livro").all()
     serializer_class = ReservaAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
-
+    permission_classes = [SistemaPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['estado']
     search_fields = ['usuario__first_name', 'livro__titulo']
-    ordering_fields = ['data_reserva', 'livro', 'estado']
+    ordering_fields = ['data_reserva', 'livro__titulo', 'estado']
     ordering = ['-data_reserva']
 
-    #  BLOQUEAR UPDATE GENÉRICO
     def update(self, request, *args, **kwargs):
-        raise ValidationError("Use ações específicas (aprovar, finalizar, cancelar).")
+        raise ValidationError({"detail": "Use ações específicas: aprovar, finalizar ou cancelar."})
 
     def partial_update(self, request, *args, **kwargs):
-        raise ValidationError("Use ações específicas (aprovar, finalizar, cancelar).")
+        raise ValidationError({"detail": "Use ações específicas: aprovar, finalizar ou cancelar."})
 
-    # -----------------------------
-    #  APROVAR RESERVA
-    # -----------------------------
+    def _log_reserva(self, reserva, action):
+        AuditService.log(
+            user=self.request.user,
+            action=action,
+            instance=reserva,
+            extra={"livro": reserva.livro.titulo, "usuario": reserva.usuario.first_name, "estado": reserva.estado}
+        )
+
     @action(detail=True, methods=["post"])
     def aprovar(self, request, pk=None):
-
         reserva = self.get_object()
-
         if reserva.estado != "reservado":
-            raise ValidationError("Apenas reservas 'reservado' podem ser usadas.")
-
+            raise ValidationError({"detail": "Apenas reservas 'reservado' podem ser aprovadas."})
         reserva.estado = "em_uso"
         reserva.aprovada_por = request.user
         reserva.save(update_fields=["estado", "aprovada_por"])
+        self._log_reserva(reserva, "Aprovou")
+        return Response({"status": "Reserva aprovada com sucesso"})
 
-        AuditService.log(
-            user=request.user,
-            action="Aprovou",
-            instance=reserva,
-            extra={
-                "livro": reserva.livro.titulo,
-                "nome": reserva.usuario.first_name,
-                "estado": reserva.estado,
-            }
-        )
-
-        return Response({"status": "Uso aprovado com sucesso"})
-
-    # -----------------------------
-    #  FINALIZAR RESERVA
-    # -----------------------------
     @action(detail=True, methods=["post"])
     def finalizar(self, request, pk=None):
-
         reserva = self.get_object()
-
         if reserva.estado != "em_uso":
-            raise ValidationError("Apenas reservas 'em_uso' podem ser finalizadas.")
-
+            raise ValidationError({"detail": "Apenas reservas 'em_uso' podem ser finalizadas."})
         reserva.estado = "finalizada"
         reserva.save(update_fields=["estado"])
-
-        AuditService.log(
-            user=request.user,
-            action="Finalizou",
-            instance=reserva,
-            extra={
-                "livro": reserva.livro.titulo,
-                "nome": reserva.usuario.first_name,
-                "estado": reserva.estado,
-            }
-        )
-
+        self._log_reserva(reserva, "Finalizou")
         return Response({"status": "Reserva finalizada com sucesso"})
 
-    # -----------------------------
-    #  CANCELAR RESERVA
-    # -----------------------------
     @action(detail=True, methods=["post"])
     def cancelar(self, request, pk=None):
-
         reserva = self.get_object()
-
         if reserva.estado not in ["pendente", "reservado"]:
-            raise ValidationError("Só pode cancelar reservas ativas.")
-
+            raise ValidationError({"detail": "Só é possível cancelar reservas ativas."})
         reserva.estado = "expirada"
         reserva.save(update_fields=["estado"])
-
-        AuditService.log(
-            user=request.user,
-            action="Cancelou",
-            instance=reserva,
-            extra={
-                "livro": reserva.livro.titulo,
-                "usuario": reserva.usuario.first_name
-            }
-        )
-
+        self._log_reserva(reserva, "Cancelou")
         return Response({"status": "Reserva cancelada com sucesso"})
 
-    # -----------------------------
-    # 🗑️ DELETE CONTROLADO
-    # -----------------------------
     def destroy(self, request, *args, **kwargs):
-
         reserva = self.get_object()
-
         if reserva.estado not in ["pendente", "reservado"]:
-            raise ValidationError("Só pode remover reservas não processadas.")
-
-        AuditService.log(
-            user=request.user,
-            action="Removeu",
-            instance=reserva,
-            extra={
-                "livro": reserva.livro.titulo,
-                "usuario": reserva.usuario.first_name
-            }
-        )
-
+            raise ValidationError({"detail": "Só pode remover reservas não processadas."})
+        self._log_reserva(reserva, "Removeu")
         reserva.delete()
-
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 # -----------------------------
-# EMPRÉSTIMO
+# EMPRÉSTIMOS
 # -----------------------------
 class EmprestimoAdminViewSet(viewsets.ModelViewSet):
-    queryset = Emprestimo.objects.all()
+    queryset = Emprestimo.objects.select_related("reserva", "reserva__usuario", "reserva__livro").prefetch_related("multas").all()
     serializer_class = EmprestimoAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
-    
+    permission_classes = [SistemaPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['acoes']
     search_fields = ['reserva__usuario__first_name', 'reserva__livro__titulo']
     ordering_fields = ['data_emprestimo', 'acoes']
     ordering = ['-data_emprestimo']
 
-    # 🔥 CREATE
     def perform_create(self, serializer):
-
         reserva = serializer.validated_data.get("reserva")
-
         if not reserva:
-            raise ValidationError("Reserva é obrigatória.")
-
+            raise ValidationError({"detail": "Reserva é obrigatória."})
         with transaction.atomic():
-
-            emprestimo = criar_emprestimo(
-                reserva=reserva,
-                admin_user=self.request.user
-            )
-
+            emprestimo = criar_emprestimo(reserva=reserva, admin_user=self.request.user)
             AuditService.log(
                 user=self.request.user,
                 action="Criou",
@@ -228,16 +164,11 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
                 }
             )
 
-    # 🔥 UPDATE (SEM DEVOLUÇÃO AQUI)
     def perform_update(self, serializer):
-
         instance = self.get_object()
-
         if instance.acoes == "devolvido":
-            raise ValidationError("Empréstimo já devolvido não pode ser alterado.")
-
+            raise ValidationError({"detail": "Empréstimo já devolvido não pode ser alterado."})
         emprestimo = serializer.save()
-
         AuditService.log(
             user=self.request.user,
             action="Atualizou",
@@ -250,22 +181,13 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
             }
         )
 
-    # 🔥 ACTION EXCLUSIVA: DEVOLUÇÃO (CORE DO NEGÓCIO)
     @action(detail=True, methods=["post"])
     def devolver(self, request, pk=None):
-
         emprestimo = self.get_object()
-
         if emprestimo.acoes == "devolvido":
-            return Response(
-                {"detail": "Este empréstimo já foi devolvido."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
+            return Response({"detail": "Este empréstimo já foi devolvido."}, status=status.HTTP_400_BAD_REQUEST)
         with transaction.atomic():
-
             devolver_emprestimo(emprestimo)
-
             AuditService.log(
                 user=request.user,
                 action="Devolveu",
@@ -276,19 +198,9 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
                     "estado": emprestimo.acoes,
                 }
             )
+        return Response({"success": True, "message": "Devolução realizada com sucesso.", "id": emprestimo.id})
 
-        return Response(
-            {
-                "success": True,
-                "message": "Devolução realizada com sucesso.",
-                "id": emprestimo.id
-            },
-            status=status.HTTP_200_OK
-        )
-
-    # 🔥 DELETE
     def perform_destroy(self, instance):
-
         AuditService.log(
             user=self.request.user,
             action="Cancelou",
@@ -298,130 +210,89 @@ class EmprestimoAdminViewSet(viewsets.ModelViewSet):
                 "nome": instance.reserva.usuario.first_name
             }
         )
-
         instance.delete()
 
 
-# -----------------------------
-# AUTOR
-# -----------------------------
-class AutorAdminViewSet(viewsets.ModelViewSet):
+# ---------------------------------------------
+# AUTOR & CATEGORIA (BaseAdmin para DRY)
+# ---------------------------------------------
+class BaseAdminViewSet(viewsets.ModelViewSet):
+    permission_classes = [SistemaPermission]
+
+    def _log(self, instance, action, extra_fields):
+        AuditService.log(user=self.request.user, action=action, instance=instance, extra=extra_fields)
+
+    def perform_create(self, serializer):
+        obj = serializer.save()
+        self._log(obj, "Adicionou", {f"{self.model_name}": str(obj), **self.extra_fields(obj)})
+
+    def perform_update(self, serializer):
+        obj = serializer.save()
+        self._log(obj, "Atualizou", {f"{self.model_name}": str(obj), **self.extra_fields(obj)})
+
+    def perform_destroy(self, instance):
+        self._log(instance, "Removeu", {f"{self.model_name}": str(instance), **self.extra_fields(instance)})
+        instance.delete()
+
+
+class AutorAdminViewSet(BaseAdminViewSet):
     queryset = Autor.objects.all()
     serializer_class = AutorAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
+    model_name = "autor"
 
-    def perform_create(self, serializer):
-        autor = serializer.save()
-        AuditService.log(user=self.request.user, action="Adicionou", instance=autor,
-            extra={"autor": autor.nome,
-                   "nacionalidade": autor.nacionalidade,
-                })
-
-    def perform_update(self, serializer):
-        autor = serializer.save()
-        AuditService.log(user=self.request.user, action="Atualizou", instance=autor,
-            extra={"autor": autor.nome,
-                   "nacionalidade": autor.nacionalidade,
-                })
-
-    def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Removeu", instance=instance,
-            extra={"autor": instance.nome,
-                   "nacionalidade": instance.nacionalidade,
-                })
-        instance.delete()
+    def extra_fields(self, obj):
+        return {"nacionalidade": obj.nacionalidade}
 
 
-# -----------------------------
-# CATEGORIA
-# -----------------------------
-class CategoriaAdminViewSet(viewsets.ModelViewSet):
+class CategoriaAdminViewSet(BaseAdminViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
+    model_name = "categoria"
 
-    def perform_create(self, serializer):
-        categoria = serializer.save()
-        AuditService.log(user=self.request.user, action="Adicionou", instance=categoria,
-            extra={"categoria": categoria.nome,
-                   "descricao": categoria.descricao,
-                })
-
-    def perform_update(self, serializer):
-        categoria = serializer.save()
-        AuditService.log(user=self.request.user, action="Atualizou", instance=categoria,
-            extra={"categoria": categoria.nome,
-                   "descricao": categoria.descricao,
-                })
-    def perform_destroy(self, instance):
-        AuditService.log(user=self.request.user, action="Removeu", instance=instance,
-            extra={"categoria": instance.nome,
-                   "descricao": instance.descricao,
-                })
-        instance.delete()
-
+    def extra_fields(self, obj):
+        return {"descricao": obj.descricao}
 
 # -----------------------------
-# MULTAS POR EMPRÉSTIMOS
+# MULTAS
 # -----------------------------
-
 class MultaViewSet(viewsets.ModelViewSet):
-    queryset = Multa.objects.all().order_by("-data_criacao")
+    queryset = Multa.objects.select_related(
+        "emprestimo", "emprestimo__reserva", "emprestimo__reserva__usuario"
+    ).all()
     serializer_class = MultaSerializer
-    permission_classes = [permissions.IsAdminUser]
-
+    permission_classes = [SistemaPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['estado']
     search_fields = ['usuario__first_name', 'emprestimo__reserva__livro__titulo']
     ordering_fields = ['data_criacao', 'emprestimo__reserva__livro__titulo', 'estado']
     ordering = ['-data_criacao']
 
-    # 🔥 CRIAR MULTA
     def perform_create(self, serializer):
         emprestimo = serializer.validated_data.get("emprestimo")
         motivo = serializer.validated_data.get("motivo")
-
         if not emprestimo:
-            raise ValidationError("Empréstimo é obrigatório")
-
-        # 🔥 REGRA 1: evitar duplicação de Dano/Perda
-        if motivo in ["Dano", "Perda"]:
-            if Multa.objects.filter(
-                emprestimo=emprestimo,
-                motivo=motivo
-            ).exists():
-                raise ValidationError(
-                    f"Já existe multa de {motivo} para este empréstimo."
-                )
-
-        # 🔥 REGRA 2: limite de multas (exceto atraso)
+            raise ValidationError({"detail": "Empréstimo é obrigatório."})
+        if motivo in ["Dano", "Perda"] and Multa.objects.filter(emprestimo=emprestimo, motivo=motivo).exists():
+            raise ValidationError({"detail": f"Já existe multa de {motivo} para este empréstimo."})
         total_multas = Multa.objects.filter(emprestimo=emprestimo).exclude(motivo="Atraso").count()
-
         if total_multas >= 2:
-            raise ValidationError(
-                "Este empréstimo já atingiu o limite de multas."
-            )
-
-        # 💰 VALOR DINÂMICO (CONFIG)
+            raise ValidationError({"detail": "Este empréstimo já atingiu o limite de multas."})
         valor = calcular_valor_multa(emprestimo, motivo)
-
-        serializer.save(
-            valor=valor,
-            criado_por=self.request.user
+        multa = serializer.save(valor=valor, criado_por=self.request.user)
+        AuditService.log(
+            user=self.request.user,
+            action="Criou multa",
+            instance=multa,
+            extra={"emprestimo": emprestimo.id, "motivo": motivo, "valor": valor}
         )
 
-    # 🔹 EMPRESTIMOS DISPONÍVEIS
     @action(detail=False, methods=["get"])
     def emprestimos_disponiveis(self, request):
-
         emprestimos = Emprestimo.objects.filter(
             acoes__in=["ativo", "atrasado"]
         ).exclude(
             multas__motivo__in=["Dano", "Perda"]
-        ).select_related(
-            "reserva", "reserva__usuario", "reserva__livro"
-        ).distinct()
-
+        ).select_related("reserva", "reserva__usuario", "reserva__livro").distinct()
         data = [
             {
                 "id": e.id,
@@ -430,42 +301,34 @@ class MultaViewSet(viewsets.ModelViewSet):
                 "estado": e.acoes,
                 "data_devolucao": e.data_devolucao,
                 "multas_total": e.multas.count(),
-                "tem_multa_grave": e.multas.filter(
-                    motivo__in=["Dano", "Perda"]
-                ).exists(),
+                "tem_multa_grave": e.multas.filter(motivo__in=["Dano", "Perda"]).exists(),
             }
             for e in emprestimos
         ]
-
         return Response(data)
 
-    # 🔹 PAGAR MULTA
     @action(detail=True, methods=["post"])
     def pagar(self, request, pk=None):
         multa = self.get_object()
-
         if multa.estado == "Pago":
             return Response({"status": "Já paga"}, status=400)
-
         multa.marcar_como_pago()
+        AuditService.log(user=request.user, action="Pagou multa", instance=multa)
         return Response({"status": "Multa paga com sucesso"})
 
-    # 🔹 DISPENSAR MULTA
     @action(detail=True, methods=["post"])
     def dispensar(self, request, pk=None):
         multa = self.get_object()
-
         if multa.estado == "Pago":
-            return Response({"error": "Não pode dispensar paga"}, status=400)
-
+            return Response({"error": "Não pode dispensar multa já paga"}, status=400)
         multa.dispensar()
+        AuditService.log(user=request.user, action="Dispensou multa", instance=multa)
         return Response({"status": "Multa dispensada"})
-    
+
 
 # -----------------------------
 # CONFIGURAÇÕES DO SISTEMA
 # -----------------------------
-
 class ConfiguracaoSistemaViewSet(viewsets.ViewSet):
 
     def get_object(self):
@@ -480,23 +343,19 @@ class ConfiguracaoSistemaViewSet(viewsets.ViewSet):
     def create(self, request):
         config = self.get_object()
         serializer = ConfiguracaoSistemaSerializer(config, data=request.data)
-        
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
         config = self.get_object()
         serializer = ConfiguracaoSistemaSerializer(config, data=request.data, partial=True)
-        
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 # -----------------------------
 # ALUNO OFICIAL
@@ -504,7 +363,7 @@ class ConfiguracaoSistemaViewSet(viewsets.ViewSet):
 class AlunoOficialAdminViewSet(viewsets.ModelViewSet):
     queryset = AlunoOficial.objects.all()
     serializer_class = AlunoOficialAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [SistemaPermission]
 
     def perform_create(self, serializer):
         aluno = serializer.save()
@@ -525,7 +384,7 @@ class AlunoOficialAdminViewSet(viewsets.ModelViewSet):
 class FuncionarioOficialAdminViewSet(viewsets.ModelViewSet):
     queryset = FuncionarioOficial.objects.all()
     serializer_class = FuncionarioOficialAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [SistemaPermission]
 
     def perform_create(self, serializer):
         funcionario = serializer.save()
@@ -544,21 +403,13 @@ class FuncionarioOficialAdminViewSet(viewsets.ModelViewSet):
 # PERFIL UNIFICADO (ALUNO + FUNCIONÁRIO)
 # --------------------------------------
 class PerfilAdminViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet unificado para perfis de Aluno e Funcionário.
-    Permite filtros, pesquisa e ordenação por dados oficiais.
-    """
     queryset = Perfil.objects.select_related('aluno_oficial', 'funcionario_oficial', 'user').all()
     serializer_class = PerfilAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [SistemaPermission]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['estado']
-    search_fields = [
-        'user__first_name',
-        'user__username',
-        'funcionario_oficial__cargo'
-    ]
+    search_fields = ['user__first_name', 'user__username', 'funcionario_oficial__cargo']
     ordering_fields = ['user__first_name', 'n_reservas', 'n_emprestimos']
     ordering = ['user__first_name']
 
@@ -567,12 +418,9 @@ class PerfilAdminViewSet(viewsets.ModelViewSet):
 # AUDIT LOG (READ ONLY) COM PESQUISA
 # ----------------------------------
 class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Permite pesquisa por usuário, ação e modelo.
-    """
-    queryset = AuditService.objects.all().order_by('-criado_em')
+    queryset = AuditLog.objects.all().order_by('-criado_em')
     serializer_class = AuditLogSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [OnlySuperUser]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['acao', 'modelo']
@@ -580,40 +428,34 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ['criado_em', 'usuario__username', 'acao']
     ordering = ['-criado_em']
 
-    
     def get_queryset(self):
         queryset = super().get_queryset()
-
         days = self.request.query_params.get('days')
-
         if days:
             try:
                 days = int(days)
                 data_limite = timezone.now() - timedelta(days=days)
                 queryset = queryset.filter(criado_em__gte=data_limite)
             except ValueError:
-                pass  # ignora se não for número
-
+                pass
         return queryset
 
 
-
 # ----------------------------------
-# ADMIN 
+# ADMIN USER
 # ----------------------------------
 class UserAdminViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by("-id")
     serializer_class = UserAdminSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [SistemaPermission]
 
-    # 🔥 FILTROS (search + estado + grupos)
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        # 🔹 Filtro apenas para superuser, Admin ou Bibliotecário
+        
+        # 🔹 Inclui superuser ou qualquer admin/bibliotecário
         queryset = queryset.filter(
             Q(is_superuser=True) | Q(groups__name__in=["Admin", "Bibliotecario"])
-        ).distinct()  # distinct porque join com groups pode gerar duplicados
+        ).distinct()
 
         # 🔹 Filtro de pesquisa
         search = self.request.query_params.get("search")
@@ -624,15 +466,15 @@ class UserAdminViewSet(viewsets.ModelViewSet):
                 Q(first_name__icontains=search)
             )
 
-        # 🔹 Filtro de estado
+        # 🔹 Filtro por estado
         estado = self.request.query_params.get("estado")
         if estado == "ativo":
             queryset = queryset.filter(is_active=True)
         elif estado == "inativo":
             queryset = queryset.filter(is_active=False)
+        
 
         return queryset
-
 
 # ----------------------------------------------
 # RELATÓRIOS + DASHBOARD + ESTATÍSTICAS-MENSAIS
@@ -800,7 +642,7 @@ class EstatisticasMensaisAdminView(APIView):
             estatisticas[item["mes"]]["reservas"] = item["total"]
 
         # Devoluções por mês (AuditLog com estado 'devolvido')
-        devolucoes_por_mes = AuditService.objects.filter(alteracoes__estado="devolvido").annotate(
+        devolucoes_por_mes = AuditLog.objects.filter(alteracoes__estado="devolvido").annotate(
             mes=ExtractMonth("criado_em")
         ).values("mes").annotate(total=Count("id"))
 
@@ -850,33 +692,58 @@ class EstatisticasMensaisAdminView(APIView):
         return Response(data)
 
 
-class EstatisticasAcervoAdminView(APIView):
-    def get(self, request):
-        # Consulta livros agrupados por categoria
-        categorias = (
-            Livro.objects
-            .values("categoria__nome")  # assume que Livro tem ForeignKey para Categoria
-            .annotate(total=Count("id"))
-            .order_by("-total")
-        )
 
-        # Mapeia cores fixas para categorias (pode ajustar ou gerar dinamicamente)
-        cores = [
-            "#2563eb", "#16a34a", "#9333ea", "#f97316", "#dc2626", "#003366",
-            "#FF9900", "#00CC99", "#9900CC"
-        ]
+# class EstatisticasAcervoAdminView(APIView):
+#     """
+#     Estatísticas do acervo: livros por categoria, com cores para dashboards.
+#     """
+#     def get(self, request):
+#         # Consulta livros agrupados por categoria
+#         categorias = (
+#             Livro.objects
+#             .values("categoria__nome")
+#             .annotate(total=Count("id"))
+#             .order_by("-total")
+#         )
 
-        # Monta resposta
-        data = [
-            {
-                "id": idx + 1,
-                "categoria": cat["categoria__nome"],
-                "total": cat["total"],
-                "cor": cores[idx % len(cores)]  # recicla cores se houver mais categorias
-            }
-            for idx, cat in enumerate(categorias)
-        ]
+#         # Lista de cores padrão (rotativa)
+#         cores_padrao = [
+#             "#2563eb", "#16a34a", "#9333ea", "#f97316",
+#             "#dc2626", "#003366", "#facc15", "#4d7c0f",
+#             "#d946ef", "#059669", "#7c3aed", "#f43f5e"
+#         ]
 
-        return Response(data)
+#         # Monta lista de dados com categoria, total e cor
+#         data = []
+#         for idx, cat in enumerate(categorias):
+#             cor = cores_padrao[idx % len(cores_padrao)]  # rotaciona cores
+#             data.append({
+#                 "categoria": cat["categoria__nome"] or "Sem Categoria",
+#                 "total_livros": cat["total"],
+#                 "cor": cor
+#             })
 
+#         return Response(data)
+    
+class EstatisticasAcervoAdminView(APIView): 
+    """ Estatísticas do acervo: livros por categoria, com cores para dashboards. """ 
+    def get(self, request): # Consulta livros agrupados por categoria 
+        
+        categorias = ( Livro.objects .values("categoria__nome") 
+            .annotate(total=Count("id")) 
+            .order_by("-total") )
+        
+        # Lista de cores padrão (rotativa)
+
+        cores_padrao = [ "#2563eb", "#16a34a",
+            "#9333ea", "#f97316", "#dc2626", 
+            "#003366", "#facc15", "#4d7c0f", 
+            "#d946ef", "#059669", "#7c3aed", "#f43f5e" ] 
+        # Monta lista de dados com categoria, total e cor 
+        data = [] 
+        for idx, cat in enumerate(categorias): 
+            cor = cores_padrao[idx % len(cores_padrao)] # rotaciona cores 
+            data.append({ "categoria": cat["categoria__nome"] or "Sem Categoria", 
+                "total_livros": cat["total"], "cor": cor })
+            return Response(data)
 

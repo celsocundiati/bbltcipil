@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import AuditLog, Multa
+from .models import Multa, ConfiguracaoSistema
 
-admin.site.register(AuditLog)
 admin.site.register(Multa)
+admin.site.register(ConfiguracaoSistema)
 
 # Register your models here.
