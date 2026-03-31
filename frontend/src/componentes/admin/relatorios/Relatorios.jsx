@@ -99,11 +99,10 @@ function Relatorios(){
                         <h1 className="text-2xl font-medium">Relatórios</h1>
                         <p className="text-black/70 text-lg">Analisa detalhadamente as actividades da biblioteca</p>
                     </section>
-                    {((podeGerir(user)) && 
-                        <button onClick={exportPDF} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg gap-2 cursor-pointer">
-                            <HiOutlineArrowDownTray size={25}/> Exportar Relatórios
-                        </button>
-                    )}
+
+                    <button onClick={exportPDF} className="flex items-center bg-[#F86417] text-white px-4 h-10 text-lg rounded-lg gap-2 cursor-pointer">
+                        <HiOutlineArrowDownTray size={25}/> Exportar Relatórios
+                    </button>
                     
                 </section>
             </section>

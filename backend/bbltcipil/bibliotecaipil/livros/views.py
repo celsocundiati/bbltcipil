@@ -4,19 +4,15 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, ValidationError
-
 from django.contrib.auth import get_user_model
-
 from .models import Categoria, Autor, Livro, Reserva, Emprestimo, Notificacao
 from .serializers import (
     CategoriaSerializer, AutorSerializer, LivroSerializer,
     ReservaSerializer, EmprestimoSerializer, NotificacaoSerializer
 )
-
-from .service import criar_reserva
-
+from .service import criar_reserva, cancelar_reserva
 User = get_user_model()
-
+from bibliotecaipil.events import emit_event
 
 
 # ==============================
@@ -134,15 +130,10 @@ class ReservaViewSet(viewsets.ModelViewSet):
 
         reserva = self.get_object()
 
-        if reserva.usuario_id != request.user.id:
-            raise PermissionDenied("Sem permissão para cancelar esta reserva.")
-
-        if reserva.estado not in ["pendente", "reservado"]:
-            raise PermissionDenied("Só pode cancelar reservas ativas.")
-
-        reserva.delete()
+        cancelar_reserva(reserva, request.user)
 
         return Response({"mensagem": "Reserva cancelada com sucesso"})
+    
 
 
 
