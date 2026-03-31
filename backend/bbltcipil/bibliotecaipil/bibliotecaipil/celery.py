@@ -1,3 +1,19 @@
+# import os
+# from celery import Celery
+
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bibliotecaipil.settings")
+
+# app = Celery("bibliotecaipil")
+
+# app.config_from_object("django.conf:settings", namespace="CELERY")
+
+# app.autodiscover_tasks()
+
+# # 🔥 ADICIONA ISTO (ESSENCIAL)
+# import livros.events
+# import audit.events
+
+
 import os
 from celery import Celery
 
@@ -8,4 +24,16 @@ app = Celery("bibliotecaipil")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.autodiscover_tasks()
+
+# 🔥 GARANTIR DJANGO READY
+import django
+django.setup()
+
+# 🔥 IMPORTAR TODOS OS EVENTS (CRÍTICO)
+import livros.events
+import audit.events
+import administracao.events
+
+
+
 

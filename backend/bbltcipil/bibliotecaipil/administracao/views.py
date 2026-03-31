@@ -22,7 +22,7 @@ from .serializers import (
     PerfilAdminSerializer, MultaSerializer, ConfiguracaoSistemaSerializer,
     UserAdminSerializer
 )
-from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo
+from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo, aprovar_reserva, cancelar_reserva_admin, finalizar_reserva, remover_reserva
 from .permissions import SistemaPermission, OnlySuperUser
 from audit.services import AuditService
 from django.http import HttpResponse
@@ -96,40 +96,43 @@ class ReservaAdminViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def aprovar(self, request, pk=None):
         reserva = self.get_object()
-        if reserva.estado != "reservado":
-            raise ValidationError({"detail": "Apenas reservas 'reservado' podem ser aprovadas."})
-        reserva.estado = "em_uso"
-        reserva.aprovada_por = request.user
-        reserva.save(update_fields=["estado", "aprovada_por"])
+
+        aprovar_reserva(reserva, request.user)
+
         self._log_reserva(reserva, "Aprovou")
+
         return Response({"status": "Reserva aprovada com sucesso"})
+
 
     @action(detail=True, methods=["post"])
     def finalizar(self, request, pk=None):
         reserva = self.get_object()
-        if reserva.estado != "em_uso":
-            raise ValidationError({"detail": "Apenas reservas 'em_uso' podem ser finalizadas."})
-        reserva.estado = "finalizada"
-        reserva.save(update_fields=["estado"])
+
+        finalizar_reserva(reserva)
+
         self._log_reserva(reserva, "Finalizou")
+
         return Response({"status": "Reserva finalizada com sucesso"})
+
 
     @action(detail=True, methods=["post"])
     def cancelar(self, request, pk=None):
         reserva = self.get_object()
-        if reserva.estado not in ["pendente", "reservado"]:
-            raise ValidationError({"detail": "Só é possível cancelar reservas ativas."})
-        reserva.estado = "expirada"
-        reserva.save(update_fields=["estado"])
+
+        cancelar_reserva_admin(reserva, request.user)
+
         self._log_reserva(reserva, "Cancelou")
+
         return Response({"status": "Reserva cancelada com sucesso"})
+
 
     def destroy(self, request, *args, **kwargs):
         reserva = self.get_object()
-        if reserva.estado not in ["pendente", "reservado"]:
-            raise ValidationError({"detail": "Só pode remover reservas não processadas."})
+
+        remover_reserva(reserva, request.user)
+
         self._log_reserva(reserva, "Removeu")
-        reserva.delete()
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

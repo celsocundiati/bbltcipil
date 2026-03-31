@@ -6,7 +6,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 from audit.models import AuditLog
 from .models import AlunoOficial, FuncionarioOficial, Perfil
-
+from django.contrib.contenttypes.models import ContentType
 User = get_user_model()
 
 
@@ -101,7 +101,7 @@ class SignupSerializer(serializers.Serializer):
         AuditLog.objects.create(
             usuario=user,
             acao="Sign up",
-            modelo="User",
+            modelo=ContentType.objects.get_for_model(user),  # ✅ CERTO
             objeto_id=user.id,
             alteracoes={
                 "grupo": grupo_nome,

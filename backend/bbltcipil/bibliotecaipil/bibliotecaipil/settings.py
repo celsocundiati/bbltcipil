@@ -230,7 +230,7 @@ CELERY_BEAT_SCHEDULE = {
     # 🔥 ORQUESTRADOR (opcional)
     "rotina-geral": {
         "task": "administracao.tasks.rotina_automatica_sistema",
-        "schedule": crontab(minute="*/30"),
+        "schedule": crontab(minute="*/2"),
     },
 }
 
