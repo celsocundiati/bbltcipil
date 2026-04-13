@@ -77,6 +77,15 @@ function RotulosOutle({ page }) {
                 </section>
             )}
 
+            {page === "admins" && (
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card titulo="Total de Admins" valor={resumo.admins.total} cor="#F97B17" />
+                    <Card titulo="Admins Ativos" valor={resumo.admins.ativos} cor="#22C55E" />
+                    <Card titulo="Ativos Hoje" valor={resumo.admins.ativos_hoje} cor="#22C55E" />
+                    <Card titulo="Super Users" valor={resumo.admins.superusers} cor="#22C55E" />
+                </section>
+            )}
+
             {page === "relatorios" && (
                 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Card titulo="Empréstimos este mês" valor={resumo.relatorios.emprestimos_mes} cor="#F97B17" />

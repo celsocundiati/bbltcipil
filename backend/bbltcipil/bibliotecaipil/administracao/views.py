@@ -586,6 +586,23 @@ class DashboardResumoGeralView(APIView):
             "livros_adicionados": Livro.objects.filter(created_at__month=hoje.month).count(),
         }
 
+        # =======================
+        # 👨‍💼 ADMINISTRADORES
+        # =======================
+        total_admins = User.objects.filter(is_staff=True).count()
+
+        admins_ativos = User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).count()
+
+        superusers = User.objects.filter(is_superuser=True).count()
+
+        admins_ativos_hoje = User.objects.filter(
+            is_staff=True,
+            last_login__date=hoje
+        ).count()
+
         return Response({
             "perfis": {
                 "total": total_perfis,
@@ -610,6 +627,12 @@ class DashboardResumoGeralView(APIView):
                 "pendentes": multas_pendentes,
                 "pagas": multas_pagas,
                 "valor_total": valor_total_multas
+            },
+            "admins": {
+                "total": total_admins,
+                "ativos": admins_ativos,
+                "ativos_hoje": admins_ativos_hoje,
+                "superusers": superusers
             },
             "relatorios": relatorios
         })
@@ -695,58 +718,35 @@ class EstatisticasMensaisAdminView(APIView):
         return Response(data)
 
 
-
-# class EstatisticasAcervoAdminView(APIView):
-#     """
-#     Estatísticas do acervo: livros por categoria, com cores para dashboards.
-#     """
-#     def get(self, request):
-#         # Consulta livros agrupados por categoria
-#         categorias = (
-#             Livro.objects
-#             .values("categoria__nome")
-#             .annotate(total=Count("id"))
-#             .order_by("-total")
-#         )
-
-#         # Lista de cores padrão (rotativa)
-#         cores_padrao = [
-#             "#2563eb", "#16a34a", "#9333ea", "#f97316",
-#             "#dc2626", "#003366", "#facc15", "#4d7c0f",
-#             "#d946ef", "#059669", "#7c3aed", "#f43f5e"
-#         ]
-
-#         # Monta lista de dados com categoria, total e cor
-#         data = []
-#         for idx, cat in enumerate(categorias):
-#             cor = cores_padrao[idx % len(cores_padrao)]  # rotaciona cores
-#             data.append({
-#                 "categoria": cat["categoria__nome"] or "Sem Categoria",
-#                 "total_livros": cat["total"],
-#                 "cor": cor
-#             })
-
-#         return Response(data)
-    
 class EstatisticasAcervoAdminView(APIView): 
-    """ Estatísticas do acervo: livros por categoria, com cores para dashboards. """ 
-    def get(self, request): # Consulta livros agrupados por categoria 
+    def get(self, request): 
         
-        categorias = ( Livro.objects .values("categoria__nome") 
-            .annotate(total=Count("id")) 
-            .order_by("-total") )
+        categorias = (
+            Livro.objects
+            .values("categoria__nome")
+            .annotate(total=Count("id"))
+            .order_by("-total")
+        )
         
-        # Lista de cores padrão (rotativa)
+        cores_padrao = [
+            "#2563eb", "#16a34a", "#9333ea", "#f97316", "#dc2626",
+            "#003366", "#facc15", "#4d7c0f", "#d946ef", "#059669",
+            "#7c3aed", "#f43f5e"
+        ]
 
-        cores_padrao = [ "#2563eb", "#16a34a",
-            "#9333ea", "#f97316", "#dc2626", 
-            "#003366", "#facc15", "#4d7c0f", 
-            "#d946ef", "#059669", "#7c3aed", "#f43f5e" ] 
-        # Monta lista de dados com categoria, total e cor 
-        data = [] 
-        for idx, cat in enumerate(categorias): 
-            cor = cores_padrao[idx % len(cores_padrao)] # rotaciona cores 
-            data.append({ "categoria": cat["categoria__nome"] or "Sem Categoria", 
-                "total_livros": cat["total"], "cor": cor })
-            return Response(data)
+        data = []
+
+        for idx, cat in enumerate(categorias):
+            cor = cores_padrao[idx % len(cores_padrao)]
+            data.append({
+                "categoria": cat["categoria__nome"] or "Sem Categoria",
+                "total": cat["total"],  # 🔥 atenção aqui também
+                "cor": cor
+            })
+
+        return Response(data)  # ✅ fora do loop
+
+
+
+
 

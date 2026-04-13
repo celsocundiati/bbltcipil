@@ -12,7 +12,7 @@ def notificar_emprestimo_atrasado(payload):
     perfil = e.reserva.perfil_oficial
     usuario = perfil.user if perfil else e.reserva.usuario
 
-    Notificacao.objects.get_or_create(
+    Notificacao.objects.create(
         usuario=usuario,
         titulo="Livro em atraso",
         descricao=f"O livro '{e.livro.titulo}' está atrasado.",
@@ -28,7 +28,7 @@ def notificar_emprestimo_devolvido(payload):
     perfil = e.reserva.perfil_oficial
     usuario = perfil.user if perfil else e.reserva.usuario
 
-    Notificacao.objects.get_or_create(
+    Notificacao.objects.create(
         usuario=usuario,
         titulo="Livro devolvido",
         descricao=f"O livro '{e.livro.titulo}' foi devolvido com sucesso.",
@@ -47,7 +47,7 @@ def notificar_reserva_aprovada(payload):
     perfil = r.perfil_oficial
     usuario = perfil.user if perfil else r.usuario
 
-    Notificacao.objects.get_or_create(
+    Notificacao.objects.create(
         usuario=usuario,
         titulo="Reserva aprovada",
         descricao=f"Sua reserva do livro '{r.livro.titulo}' foi aprovada.",
