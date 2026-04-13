@@ -3,6 +3,29 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 
 
+# def criar_reserva(usuario, livro):
+
+#     from livros.models import Reserva
+
+#     reserva = Reserva(
+#         usuario=usuario,
+#         livro=livro,
+#     )
+
+#     reserva.save()
+
+#     perfil = getattr(usuario, "perfil", None)
+#     if perfil:
+#         perfil.atualizar_contadores()
+#         perfil.atualizar_estado()
+
+#     # 🔥 EVENTO
+#     emit_event("reserva_criada", {
+#         "reserva_id": reserva.id
+#     })
+
+#     return reserva
+
 def criar_reserva(usuario, livro):
 
     from livros.models import Reserva
@@ -19,9 +42,11 @@ def criar_reserva(usuario, livro):
         perfil.atualizar_contadores()
         perfil.atualizar_estado()
 
-    # 🔥 EVENTO
+    # 🔥 PAYLOAD COMPLETO (PADRÃO CORRETO)
     emit_event("reserva_criada", {
-        "reserva_id": reserva.id
+        "reserva_id": reserva.id,
+        "titulo": livro.titulo,
+        "usuario_id": usuario.id,
     })
 
     return reserva
@@ -34,6 +59,7 @@ def marcar_emprestimo_atrasado(e):
     emit_event("emprestimo_atrasado", {
         "emprestimo_id": e.id
     })
+
 
 def cancelar_reserva(reserva, usuario):
 
@@ -56,20 +82,3 @@ def cancelar_reserva(reserva, usuario):
     emit_event("reserva_cancelada", payload)
     
 
-# def cancelar_reserva(reserva, usuario):
-
-#     if reserva.usuario_id != usuario.id:
-#         raise PermissionDenied("Sem permissão para cancelar esta reserva.")
-
-#     if reserva.estado not in ["pendente", "reservado"]:
-#         raise PermissionDenied("Só pode cancelar reservas ativas.")
-
-#     reserva_id = reserva.id  # 🔥 guarda antes de deletar
-
-#     with transaction.atomic():
-#         reserva.delete()
-
-#     # 🔥 EVENTO CRÍTICO
-#     emit_event("reserva_cancelada", {
-#         "reserva_id": reserva_id
-#     })
