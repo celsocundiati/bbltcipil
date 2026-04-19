@@ -17,6 +17,16 @@ function HeaderCardInfo({tipo})
                         <p className="text-black/70 text-lg">Definir limites e prazos</p>
                     </div>
                 </article>
+            ) : tipo === "reservas" ?(
+                <article className="flex items-center gap-4 p-5">
+                    <div className="bg-[#F97B17]/5 text-[#F97B17] px-2 py-2 rounded-xl">
+                        <HiOutlineBookOpen size={40}/>
+                    </div>
+                    <div>
+                        <h2 className="text-xl mb-1">Regras de Reservas</h2>
+                        <p className="text-black/70 text-lg">Definir limites</p>
+                    </div>
+                </article>
             ) : tipo === "multas" ?(
                 <article className="flex items-center gap-4 p-5">
                     <div className="bg-green-500/5 text-green-500 px-2 py-2 rounded-xl">

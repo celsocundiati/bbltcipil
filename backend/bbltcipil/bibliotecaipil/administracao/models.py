@@ -67,11 +67,23 @@ class Multa(models.Model):
             self.usuario = self.emprestimo.reserva.usuario
         super().save(*args, **kwargs)
 
+
     def marcar_como_pago(self):
-        if self.estado != "Pago":
-            self.estado = "Pago"
-            self.data_pagamento = timezone.now()
-            self.save()
+        from administracao.service import devolver_emprestimo
+
+        if self.estado == "Pago":
+            return
+
+        self.estado = "Pago"
+        self.data_pagamento = timezone.now()
+
+        self.save(update_fields=["estado", "data_pagamento"])
+
+        # 🔥 REGRA DE NEGÓCIO: pagamento da multa força devolução
+        emprestimo = self.emprestimo
+
+        if emprestimo and emprestimo.acoes != "devolvido":
+            devolver_emprestimo(emprestimo)
 
     def dispensar(self):
         if self.estado == "Pago":
@@ -85,6 +97,17 @@ class Multa(models.Model):
 
 
 class ConfiguracaoSistema(models.Model):
+
+        # 📌 Reservas (NOVO)
+    limite_reservas_ativas = models.PositiveIntegerField(default=5)
+    limite_reservas_uso = models.PositiveIntegerField(default=3)
+
+    # 🧱 Limite global (TOTAL VIDA)
+    limite_reservas_total = models.PositiveIntegerField(null=True, blank=True)
+
+    # 📆 Limite mensal
+    limite_reservas_mensal = models.PositiveIntegerField(default=10)
+
     # 📚 Regras de Empréstimos
     dias_emprestimo = models.PositiveIntegerField(default=14)
     limite_livros_estudante = models.PositiveIntegerField(default=3)

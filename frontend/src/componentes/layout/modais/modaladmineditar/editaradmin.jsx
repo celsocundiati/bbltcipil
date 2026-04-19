@@ -61,6 +61,7 @@ function ModalEditAdmin({ onClose, onSuccess, adm }) {
         return "Usuário";
     };
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -68,7 +69,7 @@ function ModalEditAdmin({ onClose, onSuccess, adm }) {
         try {
             const payload = montarPayload();
 
-            await api.patch(`/admin/users/${adm.id}/`, payload);
+            await api.patch(`/admin/users/promote/`, payload);
 
             setModal({
                 open: true,
@@ -113,7 +114,6 @@ function ModalEditAdmin({ onClose, onSuccess, adm }) {
                             type="text"
                             name="username"
                             value={adm.username}
-                            disabled
                             className="w-full px-3 py-2 border border-black/10 outline-none rounded-lg bg-gray-100 cursor-not-allowed"
                         />
 

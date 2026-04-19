@@ -18,7 +18,7 @@ function Sessao01() {
                     <h1 className="text-white text-3xl">{texto_principal}</h1>
                     <p className="text-white">{texto_base}</p>
                 </div>
-                <div className="flex justify-center items-center lg:w-2xl w-full relative">
+                {/* <div className="flex justify-center items-center lg:w-2xl w-full relative">
                     <input
                         type="text"
                         name="pesquisaSess01"
@@ -28,7 +28,7 @@ function Sessao01() {
                     <button className="absolute right-0 bg-[#F86417] h-full cursor-pointer rounded-r-xl">
                         <LuSearch className="text-white size-7 p-1" />
                     </button>
-                </div>
+                </div> */}
             </div>
         </motion.div>
     )

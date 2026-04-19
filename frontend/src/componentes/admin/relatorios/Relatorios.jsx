@@ -3,7 +3,7 @@ import Grafic from "../../layout/grafics/Grafic";
 import { useEstatisticasMensais } from "../../layout/tables/utilitarios/Utils";
 import TituloGrafico from "./seccoes/titulografico";
 import { motion } from "framer-motion";
-import TabRelatorios from "../../layout/tables/tabrelatorios/tabrelatorio";
+import TabRelatorios from "../../layout/tables/tabrelatorios/tabrelatorios";
 import {HiOutlineArrowDownTray} from "react-icons/hi2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -113,7 +113,7 @@ function Relatorios(){
                 <article className="bg-white border border-black/10 rounded-lg p-8 space-y-12">
                     <TituloGrafico variant="line"/>
                     <Grafic variant="line" data={rowsTableEstrato} xkey="mes" lines={[
-                        {dataKey: "emprestimos"},{dataKey: "devoluicoes", color:"#16a34a", with: 1},]} 
+                        {dataKey: "emprestimos"},{dataKey: "devolucoes", color:"#16a34a", with: 1},]} 
                     />
                 </article>
                 <article className="bg-white border border-black/10 rounded-lg p-8 space-y-12">

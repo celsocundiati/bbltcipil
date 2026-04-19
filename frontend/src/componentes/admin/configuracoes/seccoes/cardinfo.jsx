@@ -10,6 +10,9 @@ import { podeGerir } from "../../../auth/podegerir/permissao";
 function CardInfo() {
 
   const [formData, setFormData] = useState({
+    limite_reservas_ativas: 0,
+    limite_reservas_uso: 0,
+    limite_reservas_mensal: 0,
     dias_emprestimo: 0,
     limite_livros_estudante: 0,
     multa_por_dia: 0,
@@ -73,9 +76,51 @@ function CardInfo() {
       setLoading(false);
     }
   }
+  
 
   return (
     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-8">
+      {/* RESERVAS */}
+      <section className="w-full border border-black/10 rounded-lg">
+        <HeaderCardInfo tipo="reservas" />
+
+        <article className="grid md:grid-cols-3 gap-6 p-5">
+
+          <div>
+            <h3>Reservas Ativas</h3>
+            <input
+              type="number"
+              name="limite_reservas_ativas"
+              value={formData.limite_reservas_ativas}
+              onChange={handleChange}
+              className="w-full h-10 px-5 py-2 bg-black/3 border border-black/5 rounded-2xl outline-none focus:ring-2 focus:ring-[#f97b17]"
+            />
+          </div>
+
+          <div>
+            <h3>Reservas em Uso</h3>
+            <input
+              type="number"
+              name="limite_reservas_uso"
+              value={formData.limite_reservas_uso}
+              onChange={handleChange}
+              className="w-full h-10 px-5 py-2 bg-black/3 border border-black/5 rounded-2xl outline-none focus:ring-2 focus:ring-[#f97b17]"
+            />
+          </div>
+
+          <div>
+            <h3>Reservas Mensais</h3>
+            <input
+              type="number"
+              name="limite_reservas_mensal"
+              value={formData.limite_reservas_mensal}
+              onChange={handleChange}
+              className="w-full h-10 px-5 py-2 bg-black/3 border border-black/5 rounded-2xl outline-none focus:ring-2 focus:ring-[#f97b17]"
+            />
+          </div>
+
+        </article>
+      </section>
 
       {/* EMPRÉSTIMOS */}
       <section className="w-full border border-black/10 rounded-lg">
@@ -201,6 +246,7 @@ function CardInfo() {
             <FiPhone />
             <input
               type="text"
+              required
               name="telefone"
               value={formData.telefone}
               onChange={handleChange}

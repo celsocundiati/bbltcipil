@@ -6,7 +6,7 @@ export default function HelpChatIcon() {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate("/chat-ai"); // rota do seu ChatBot
+    navigate("/assistente"); // rota do seu ChatBot
   };
 
   return (

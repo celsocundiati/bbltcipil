@@ -1,16 +1,12 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 
 function Tabs({tabs, defaultTab = 0})
 {
     const [active, setActive] = useState(defaultTab);
 
     return(
-        <motion.section  initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-            viewport={{ once: true }}             // anima apenas uma vez
-            className="relative w-full">
-            <div className="absolute space-y-10">
+        <section className="relative w-full">
+            <div className="absolute">
                 <nav className="flex items-center justify-start w-64 gap-2 rounded-full bg-black/10 px-2 py-1.5">
                     {tabs.map((tab, index) => (
                         <button key={tab.label} onClick={() => setActive(index)} 
@@ -20,11 +16,11 @@ function Tabs({tabs, defaultTab = 0})
                         </button>
                     ))}
                 </nav>
-                <section className="w-full">
+                <section className="mt-5">
                     {tabs[active].content}
                 </section>
             </div>
-        </motion.section>
+        </section>
     );
 }
 export default Tabs;

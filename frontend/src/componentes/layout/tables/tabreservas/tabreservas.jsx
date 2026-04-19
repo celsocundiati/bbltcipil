@@ -3,13 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiSearch } from "react-icons/fi";
 import api from "../../../service/api/api";
-import { useAuth } from "../../../auth/userAuth/useauth";
 import ModalAprovarEmprestimo from "../../modais/modalaprovaremprestimo/modalaprovaremprestimo";
+import Permissao from "../../../auth/hooks/gerir/gerenciamento";
 
 function TabelaReservas() {
-    const { user } = useAuth();
-    const userRoles = user?.user?.grupos || [];
-    const superuser = user?.user?.is_superuser;
 
     const [idDestacado, setIdDestacado] = useState(null);
     const [reservas, setReservas] = useState([]);
@@ -34,25 +31,77 @@ function TabelaReservas() {
     };
 
     // ==========================
-    // 🔹 BUSCAR RESERVAS
+    // 🔹 BUSCAR RESERVAS (REFATORADO)
+    // ==========================
+    const fetchReservas = async () => {
+        try {
+            const params = {};
+            if (search) params.search = search;
+            if (estadoFilter) params.estado = estadoFilter;
+
+            const res = await api.get("admin/reservas/", { params });
+
+            const data = Array.isArray(res.data.results)
+                ? res.data.results
+                : res.data;
+
+            setReservas(data);
+
+        } catch (err) {
+            console.error("Erro ao buscar reservas", err);
+
+            if (err.response?.status === 401) {
+                navigate("/login");
+            }
+        }
+    };
+
+    // ==========================
+    // 🔥 USEEFFECT LIMPO
     // ==========================
     useEffect(() => {
-        const fetchReservas = async () => {
-            try {
-                const params = {};
-                if (search) params.search = search;
-                if (estadoFilter) params.estado = estadoFilter;
-
-                const res = await api.get("admin/reservas/", { params });
-                const data = Array.isArray(res.data.results) ? res.data.results : res.data;
-                setReservas(data);
-            } catch (err) {
-                console.error("Erro ao buscar reservas", err);
-                if (err.response?.status === 401) navigate("/login");
-            }
-        };
         fetchReservas();
     }, [search, estadoFilter, navigate]);
+
+    // ==========================
+    // 🔹 PROMISE ACTIONS
+    // ==========================
+    const aprovarReserva = (id) =>
+        api.post(`admin/reservas/${id}/aprovar/`);
+
+    const finalizarReserva = (id) =>
+        api.post(`admin/reservas/${id}/finalizar/`);
+
+    // ==========================
+    // 🔹 HANDLERS (AGORA CORRETOS)
+    // ==========================
+    const handleAprovar = async (id) => {
+        try {
+            await aprovarReserva(id);
+            await fetchReservas(); // 🔥 REFRESH REAL DO BACKEND
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao aprovar reserva");
+        }
+    };
+
+    const handleFinalizar = async (id) => {
+        try {
+            await finalizarReserva(id);
+            await fetchReservas(); // 🔥 REFRESH REAL DO BACKEND
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao finalizar reserva");
+        }
+    };
+    
+    const handleEmprestar = (reserva) => {
+        if (!podeEmprestar(reserva)) {
+            alert("Usuário da reserva não tem perfil de funcionário.");
+            return;
+        }
+        setReservaSelecionada(reserva);
+    };
 
     // ==========================
     // 🔹 HASH SCROLL
@@ -69,11 +118,6 @@ function TabelaReservas() {
         }
     }, [location, reservas]);
 
-    // ==========================
-    // 🔹 PROMISE ACTIONS (BACKEND)
-    // ==========================
-    const aprovarReserva = (id) => api.post(`admin/reservas/${id}/aprovar/`);
-    const finalizarReserva = (id) => api.post(`admin/reservas/${id}/finalizar/`);
 
     // ==========================
     // 🔹 VERIFICAÇÃO DE PERFIL DO USUÁRIO DA RESERVA
@@ -87,77 +131,46 @@ function TabelaReservas() {
     };
 
     // ==========================
-    // 🔹 HANDLERS
-    // ==========================
-    const handleAprovar = (id) => {
-        aprovarReserva(id)
-            .then(() => {
-                setReservas(prev =>
-                    prev.map(r => (r.id === id ? { ...r, estado: "em_uso" } : r))
-                );
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Erro ao aprovar reserva");
-            });
-    };
-
-    const handleFinalizar = (id) => {
-        finalizarReserva(id)
-            .then(() => {
-                setReservas(prev =>
-                    prev.map(r => (r.id === id ? { ...r, estado: "finalizada" } : r))
-                );
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Erro ao finalizar reserva");
-            });
-    };
-
-    const handleEmprestar = (reserva) => {
-        if (!podeEmprestar(reserva)) {
-            alert("Usuário da reserva não tem perfil de funcionário.");
-            return;
-        }
-        setReservaSelecionada(reserva);
-    };
-
-    // ==========================
     // 🔹 RENDERIZAÇÃO AÇÃO PRINCIPAL
     // ==========================
     const renderAcaoPrincipal = (reserva) => {
-        if (["Bibliotecario", "Admin"].some(role => userRoles.includes(role) || user?.user?.is_superuser)) {
-            switch (reserva.estado) {
-                case "pendente":
-                    return <span className="text-gray-500">—</span>;
-                case "reservado":
-                    return (
-                        <button
-                            onClick={() => handleAprovar(reserva.id)}
-                            className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                                    bg-blue-100 text-blue-600 border border-blue-200
-                                    hover:bg-blue-200 transition"
-                        >
-                            Aprovar Uso
-                        </button>
-                    );
-                case "em_uso":
-                    return podeFinalizar(reserva) ? (
-                        <button
-                            onClick={() => handleFinalizar(reserva.id)}
-                            className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
-                                    bg-green-100 text-green-600 border border-green-200
-                                    hover:bg-green-200 transition"
-                        >
-                            Finalizar
-                        </button>
-                    ) : <span className="text-gray-500">—</span>;
-                default:
-                    return <span className="text-gray-500">—</span>;
-            }
-        }
-        return <span className="text-gray-500">—</span>;
+        return (
+            <Permissao roles={["Admin", "Bibliotecario"]}>
+                {(() => {
+                    switch (reserva.estado) {
+                        case "pendente":
+                            return <span className="text-gray-500">—</span>;
+
+                        case "reservado":
+                            return (
+                                <button
+                                    onClick={() => handleAprovar(reserva.id)}
+                                    className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+                                            bg-blue-100 text-blue-600 border border-blue-200
+                                            hover:bg-blue-200 transition"
+                                >
+                                    Aprovar Uso
+                                </button>
+                            );
+
+                        case "em_uso":
+                            return podeFinalizar(reserva) ? (
+                                <button
+                                    onClick={() => handleFinalizar(reserva.id)}
+                                    className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer
+                                            bg-green-100 text-green-600 border border-green-200
+                                            hover:bg-green-200 transition"
+                                >
+                                    Finalizar
+                                </button>
+                            ) : <span className="text-gray-500">—</span>;
+
+                        default:
+                            return <span className="text-gray-500">—</span>;
+                    }
+                })()}
+            </Permissao>
+        );
     };
 
     // ==========================
@@ -244,14 +257,18 @@ function TabelaReservas() {
                                             <td className="px-5 py-4 text-center">{renderAcaoPrincipal(reserva)}</td>
                                             <td className="px-5 py-4 text-center">
                                                 {podeEmprestar(reserva) ? (
-                                                    <button
-                                                        onClick={() => handleEmprestar(reserva)}
-                                                        className="px-3 py-1 rounded-full text-sm font-medium
-                                                                   bg-green-100 text-green-700 border border-green-200
-                                                                   hover:bg-green-200 transition cursor-pointer"
-                                                    >
-                                                        Solicitar Empréstimo
-                                                    </button>
+                                                    
+                                                    <Permissao roles={["Admin", "Bibliotecario"]}>
+                                                        <button
+                                                            onClick={() => handleEmprestar(reserva)}
+                                                            className="px-3 py-1 rounded-full text-sm font-medium
+                                                                    bg-green-100 text-green-700 border border-green-200
+                                                                    hover:bg-green-200 transition cursor-pointer"
+                                                        >
+                                                            Solicitar Empréstimo
+                                                        </button>
+                                                    </Permissao>
+                                                    
                                                 ) : <span className="text-gray-500">—</span>}
                                             </td>
                                         </tr>
@@ -266,10 +283,9 @@ function TabelaReservas() {
                     <ModalAprovarEmprestimo
                         reserva={reservaSelecionada}
                         onClose={() => setReservaSelecionada(null)}
-                        onSave={(emprestimoCriado) => {
-                            setReservas(prev =>
-                                prev.map(r => r.id === emprestimoCriado.reserva_id ? { ...r, estado: "finalizada" } : r)
-                            );
+
+                        onSave={async () => {
+                            await fetchReservas(); // 🔥 sincroniza depois do empréstimo
                             setReservaSelecionada(null);
                         }}
                     />

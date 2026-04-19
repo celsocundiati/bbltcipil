@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
+from django.contrib.auth.models import User, Group
 from django.db.models import Count, Sum, Q
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth import get_user_model
@@ -20,7 +21,7 @@ from .serializers import (
     CategoriaAdminSerializer, LivroAdminSerializer, AuditLogSerializer,
     AlunoOficialAdminSerializer, FuncionarioOficialAdminSerializer,
     PerfilAdminSerializer, MultaSerializer, ConfiguracaoSistemaSerializer,
-    UserAdminSerializer
+    PromoteUserSerializer, UserListSerializer
 )
 from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo, aprovar_reserva, cancelar_reserva_admin, finalizar_reserva, remover_reserva
 from .permissions import SistemaPermission, OnlySuperUser
@@ -449,35 +450,80 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
 # ----------------------------------
 class UserAdminViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by("-id")
-    serializer_class = UserAdminSerializer
     permission_classes = [SistemaPermission]
 
+    # 🔥 SERIALIZER DINÂMICO
+    def get_serializer_class(self):
+        if self.action in ["list", "retrieve"]:
+            return UserListSerializer
+        return PromoteUserSerializer
+
+    # -------------------------
+    # LISTAGEM
+    # -------------------------
     def get_queryset(self):
         queryset = super().get_queryset()
-        
-        # 🔹 Inclui superuser ou qualquer admin/bibliotecário
+
         queryset = queryset.filter(
-            Q(is_superuser=True) | Q(groups__name__in=["Admin", "Bibliotecario"])
+            Q(is_superuser=True) |
+            Q(groups__name__in=["Admin", "Bibliotecario"])
         ).distinct()
 
-        # 🔹 Filtro de pesquisa
-        search = self.request.query_params.get("search")
-        if search:
-            queryset = queryset.filter(
-                Q(username__icontains=search) |
-                Q(email__icontains=search) |
-                Q(first_name__icontains=search)
-            )
-
-        # 🔹 Filtro por estado
         estado = self.request.query_params.get("estado")
+
         if estado == "ativo":
             queryset = queryset.filter(is_active=True)
         elif estado == "inativo":
             queryset = queryset.filter(is_active=False)
-        
 
         return queryset
+
+    # -------------------------
+    # PROMOVER
+    # -------------------------
+    @action(detail=False, methods=["post"])
+    def promote(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "detail": "Utilizador promovido com sucesso",
+            "user": serializer.validated_data["user_instance"].username,
+        })
+
+    # -------------------------
+    # DELETE
+    # -------------------------
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+
+        # 🔥 grupos administrativos
+        admin_groups = ["Admin", "Bibliotecario"]
+
+        # 🔥 remover apenas grupos admin
+        groups_to_remove = user.groups.filter(name__in=admin_groups)
+        user.groups.remove(*groups_to_remove)
+
+        # 🔥 garantir que continua funcionário
+        funcionario_group, _ = Group.objects.get_or_create(name="Funcionario")
+        
+        if not user.groups.exists():
+            user.groups.add(funcionario_group)
+
+        # 🔥 regra staff
+        user.is_staff = user.groups.filter(
+            name__in=["Admin", "Bibliotecario"]
+        ).exists()
+
+        user.save()
+
+        return Response({
+            "detail": "Permissões administrativas removidas",
+            "grupos": list(user.groups.values_list("name", flat=True)),
+            "is_staff": user.is_staff
+        })
+
 
 # ----------------------------------------------
 # RELATÓRIOS + DASHBOARD + ESTATÍSTICAS-MENSAIS
@@ -532,6 +578,7 @@ class DashboardStatsAdminView(APIView):
         }
 
         return Response(data)
+
 
 
 class DashboardResumoGeralView(APIView):
@@ -598,9 +645,13 @@ class DashboardResumoGeralView(APIView):
 
         superusers = User.objects.filter(is_superuser=True).count()
 
+        inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_dia = inicio_dia + timedelta(days=1)
+
         admins_ativos_hoje = User.objects.filter(
             is_staff=True,
-            last_login__date=hoje
+            last_login__gte=inicio_dia,
+            last_login__lt=fim_dia
         ).count()
 
         return Response({
@@ -641,8 +692,8 @@ class DashboardResumoGeralView(APIView):
 class EstatisticasMensaisAdminView(APIView):
     def get(self, request):
         meses = [
-            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+            "Jul", "Ago", "Set", "Out", "Nov", "Dezo"
         ]
 
         # Inicializa estatísticas
@@ -684,13 +735,20 @@ class EstatisticasMensaisAdminView(APIView):
             estatisticas[item["mes"]]["perfil"] = item["total"]
 
         # Multas por mês (supondo campo 'valor_multa' no Emprestimo)
+        # multas_por_mes = Multa.objects.annotate(
+        #     mes=ExtractMonth("data_criacao")
+        # ).values("mes").annotate(total=Sum("valor"))
+
+        # for item in multas_por_mes:
+        #     estatisticas[item["mes"]]["multas"] =  item["total"]
+
         multas_por_mes = Multa.objects.annotate(
             mes=ExtractMonth("data_criacao")
         ).values("mes").annotate(total=Sum("valor"))
 
         for item in multas_por_mes:
-            estatisticas[item["mes"]]["multas"] =  item["total"]
-
+            estatisticas[item["mes"]]["multas"] = item["total"] if item["total"] else 0
+            
         # Livros distintos emprestados por mês
         livros_por_mes = Emprestimo.objects.annotate(
             mes=ExtractMonth("data_emprestimo")
@@ -718,35 +776,30 @@ class EstatisticasMensaisAdminView(APIView):
         return Response(data)
 
 
-class EstatisticasAcervoAdminView(APIView): 
-    def get(self, request): 
-        
+class EstatisticasAcervoAdminView(APIView):
+    def get(self, request):
+
         categorias = (
             Livro.objects
             .values("categoria__nome")
             .annotate(total=Count("id"))
             .order_by("-total")
         )
-        
+
         cores_padrao = [
-            "#2563eb", "#16a34a", "#9333ea", "#f97316", "#dc2626",
-            "#003366", "#facc15", "#4d7c0f", "#d946ef", "#059669",
-            "#7c3aed", "#f43f5e"
+            "#2563eb", "#16a34a", "#9333ea", "#f97316",
+            "#dc2626", "#003366", "#facc15", "#4d7c0f",
+            "#d946ef", "#059669", "#7c3aed", "#f43f5e"
         ]
 
         data = []
 
         for idx, cat in enumerate(categorias):
-            cor = cores_padrao[idx % len(cores_padrao)]
             data.append({
                 "categoria": cat["categoria__nome"] or "Sem Categoria",
-                "total": cat["total"],  # 🔥 atenção aqui também
-                "cor": cor
+                "total": cat["total"],   # 👈 PADRÃO CORRETO
+                "cor": cores_padrao[idx % len(cores_padrao)]
             })
 
-        return Response(data)  # ✅ fora do loop
-
-
-
-
+        return Response(data)
 

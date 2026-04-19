@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
 import { obterIniciais } from "../utilitarios/Utils";
 import { motion } from "framer-motion";
-motion
+
 
 function TabALunosOficiais() {
   const [alunos, setAlunos] = useState([]);

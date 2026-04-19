@@ -1,0 +1,99 @@
+User pergunta
+   ↓
+View chama task Celery
+   ↓
+Celery processa (services.py)
+   ↓
+Eventos são disparados
+   ↓
+Handlers executam automações
+
+#ai_assistant/tasks.py new file
+from celery import shared_task
+from .services import gerar_resposta
+from bibliotecaipil.events import emit_event
+
+
+@shared_task
+def processar_mensagem_task(pergunta, user_id, chat_id):
+    from django.contrib.auth.models import User
+    from chats.models import Chat  # ajusta se necessário
+
+    user = User.objects.get(id=user_id)
+    chat = Chat.objects.get(id=chat_id)
+
+    resposta = gerar_resposta(pergunta, user, chat)
+
+    # 🔥 Dispara evento depois da resposta
+    emit_event("mensagem_processada", {
+        "user_id": user_id,
+        "chat_id": chat_id,
+        "pergunta": pergunta,
+        "resposta": resposta
+    })
+
+    return resposta
+
+#ai_assistant/views.py  update
+Na minha views trocar isto 👉 resposta = gerar_resposta(pergunta, user, chat)
+Por isso 👉
+from ai_assistant.tasks import processar_mensagem_task
+
+task = processar_mensagem_task.delay(pergunta, user.id, chat.id)
+
+return Response({
+    "task_id": task.id,
+    "status": "processing"
+})
+
+
+#ai_assistant/events_handlers.py  new file
+from bibliotecaipil.events import register_event
+from .rag_engine import resetar_cache, preload
+
+
+@register_event("livro_criado")
+def atualizar_rag(payload):
+    print("📚 Novo livro detectado. Atualizando IA...")
+    resetar_cache()
+    preload()
+
+
+@register_event("mensagem_processada")
+def log_interacao(payload):
+    print("💬 Interação registrada:")
+    print(payload["pergunta"])
+
+
+#livros/signals.py   update
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Livro
+from bibliotecaipil.events import emit_event
+
+
+@receiver(post_save, sender=Livro)
+def livro_criado(sender, instance, created, **kwargs):
+    if created:
+        emit_event("livro_criado", {
+            "livro_id": instance.id
+        })
+
+
+#bibliotecaipil/celery.py  adiciona:
+@app.on_after_finalize.connect
+def setup_ai(sender, **kwargs):
+    from ai_assistant.rag_engine import preload
+    preload()
+
+
+#ai_assistant/rag_engine.py   update
+troca isto 👉 os.environ["TRANSFORMERS_OFFLINE"] = "1" por isso 👉 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
+
+#ai_assistant/apps.py  adiciona:
+class AiAssistantConfig(AppConfig):
+    name = "ai_assistant"
+
+    def ready(self):
+        import ai_assistant.events_handlers

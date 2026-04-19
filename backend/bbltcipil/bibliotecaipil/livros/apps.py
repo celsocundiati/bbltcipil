@@ -5,6 +5,4 @@ class LivrosConfig(AppConfig):
     name = 'livros'
 
     def ready(self):
-        # Importa os signals automaticamente quando o Django inicia
         from . import signals
-        import livros.events

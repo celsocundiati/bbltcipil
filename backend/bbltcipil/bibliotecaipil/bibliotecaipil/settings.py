@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     "livros.apps.LivrosConfig",
     "accounts.apps.AccountsConfig",
     "administracao.apps.AdministracaoConfig",
-    "ia.apps.IaConfig",
+    'ai_assistant.apps.AiAssistantConfig',
     "audit.apps.AuditConfig",
 ]
 
@@ -230,7 +230,11 @@ CELERY_BEAT_SCHEDULE = {
     # 🔥 ORQUESTRADOR (opcional)
     "rotina-geral": {
         "task": "administracao.tasks.rotina_automatica_sistema",
-        "schedule": crontab(minute="*/2"),
+        "schedule": crontab(minute="*/5"),
+    },
+    'atualizar-estados':{
+        'task': 'livros.tasks.atualizar_estados',
+        'schedule': 30.0,
     },
 }
 

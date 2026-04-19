@@ -1,6 +1,6 @@
 import { FiArrowRight} from "react-icons/fi";
 import { motion } from "framer-motion";
-import CardLivro from "../../cards/cardsLivros/livro";
+import CardLivro from "../../cards/cardsLivross/cardsLivrosHome/livro";
 
 
 function Sessao03() {

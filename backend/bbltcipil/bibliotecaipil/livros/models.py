@@ -3,6 +3,8 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from accounts.models import Perfil
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -71,6 +73,9 @@ class Livro(models.Model):
 
     n_paginas = models.PositiveIntegerField(default=1)
     quantidade = models.PositiveIntegerField(default=1)
+
+    prateleira = models.PositiveIntegerField(null=True, blank=True)
+    fila = models.PositiveIntegerField(blank=True, null=True)
 
     capa = models.URLField(max_length=500)
 
@@ -350,8 +355,96 @@ class Notificacao(models.Model):
         return f"{self.usuario.first_name} - {self.titulo}"
 
 
+# =============================
+# EXPOSIÇÃO
+# =============================
+class Exposicao(models.Model):
+
+    ESTADOS = [
+        ('Disponível', 'Disponível'),
+        ('Reservado', 'Reservado'),
+        ('Esgotado', 'Esgotado'),
+        ('Encerrado', 'Encerrado'),
+    ]
+
+    titulo = models.CharField(max_length=255)
+    capa = models.URLField(max_length=500)
+    descricao = models.TextField(blank=True)
+    local = models.CharField(max_length=255)
+
+    capacidade_maxima = models.PositiveIntegerField()
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='Disponível')
+
+    data_inicio = models.DateTimeField()
+    data_fim = models.DateTimeField()
+
+    def vagas_disponiveis(self):
+        return self.capacidade_maxima - self.participacoes.count()
+
+    def atualizar_estado(self):
+        if self.vagas_disponiveis() <= 0:
+            self.estado = 'Esgotado'
+        else:
+            self.estado = 'Disponível'
+
+    def clean(self):
+        if self.capacidade_maxima <= 0:
+            raise ValidationError("Capacidade deve ser maior que zero.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
+# =============================
+# EVENTO
+# =============================
+class Evento(models.Model):
+
+    ESTADOS = Exposicao.ESTADOS
+
+    titulo = models.CharField(max_length=255)
+    capa = models.URLField(max_length=500)
+    descricao = models.TextField(blank=True)
+    local = models.CharField(max_length=255)
+
+    capacidade_maxima = models.PositiveIntegerField()
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='Disponível')
+
+    data_inicio = models.DateTimeField()
+    data_fim = models.DateTimeField()
+
+    def vagas_disponiveis(self):
+        return self.capacidade_maxima - self.participacoes.count()
+
+
+# =============================
+# PARTICIPAÇÃO
+# =============================
+class Participacao(models.Model):
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    exposicao = models.ForeignKey(Exposicao, related_name='participacoes', on_delete=models.CASCADE)
+    evento = models.ForeignKey(Evento, related_name='participacoes', on_delete=models.CASCADE)
+
+    compareceu = models.BooleanField(default=False)
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.usuario} - {self.exposicao.titulo} / {self.evento.titulo}"
+
+    def clean(self):
+        if self.exposicao.estado == 'Encerrado':
+            raise ValidationError("Exposição encerrada.")
+
+        if self.exposicao.vagas_disponiveis() <= 0:
+            raise ValidationError("Sem vagas disponíveis.")
+
+        if self.evento.estado == 'Encerrado':
+            raise ValidationError("Evento encerrado.")
+
+        if self.evento.vagas_disponiveis() <= 0:
+            raise ValidationError("Sem vagas disponíveis.")
 
 
 

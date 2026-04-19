@@ -16,6 +16,8 @@ function Estado({estado}){
             return `${base} bg-orange-100 text-[#F97B17]`;
         } else if (status.includes("indisponível")) {
             return `${base} bg-red-200 text-[#EF4455]`;
+        } else if (status.includes("em uso")) {
+            return `${base} bg-green-200 text-[#22C55E]`; 
         } else {
             return `${base} bg-green-100 text-[#22C55E]`; // default estiloEstado(livro.estado)  || ""
         }

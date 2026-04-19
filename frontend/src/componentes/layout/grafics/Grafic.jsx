@@ -16,7 +16,7 @@ function Grafic({variant, data, xkey, lines, barkey})
             </LineChart>
         ) : variant === "bar" ?(
             <BarChart data={data} >
-                <XAxis dataKey={xkey} />
+                <XAxis dataKey={xkey} interval={0}/>
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey={barkey} radius={[8, 8, 0, 0]} >

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {FiSearch} from "react-icons/fi";
 import { podeGerir } from "../../../auth/podegerir/permissao";
 import { useAuth } from "../../../auth/userAuth/useauth";
-
+import Permissao from "../../../auth/hooks/gerir/gerenciamento";
 
 function TabelaLivros(){
     
@@ -120,7 +120,7 @@ function TabelaLivros(){
             <section className="w-full bg-white rounded-2xl px-8 py-5 mb-10">
                 <section className="py-5 flex flex-col">
                     <label className="text-xl font-medium">Lista de Livros</label>
-                    <label className="text-black/70">Exibindo 8 de 8 livros</label>
+                    <label className="text-black/70">Exibindo {livros.length} </label>
                 </section>
 
                 <section>
@@ -133,6 +133,8 @@ function TabelaLivros(){
                                 <th className="w-[14%] px-5 py-3 text-center">Nº Páginas</th>
                                 <th className="w-[10%] px-5 py-3 text-center">Ano</th>
                                 <th className="w-[10%] px-5 py-3 text-center">Quantidade</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Prateleira</th>
+                                <th className="w-[10%] px-5 py-3 text-center">Fila</th>
                                 <th className="w-[10%] px-5 py-3 text-center">Editora</th>
                                 <th className="w-[10%] px-5 py-3 text-center">Descrição</th>
                                 <th className="w-[10%] px-5 py-3 text-center">Sumário</th>
@@ -145,7 +147,7 @@ function TabelaLivros(){
                         
                             {livros.length === 0 ? (
                                 <tr>
-                                    <td colSpan={11} className="text-center py-4 text-red-700">
+                                    <td colSpan={13} className="text-center py-4 text-red-700">
                                         Nenhum livro encontrado.
                                     </td>
                                 </tr>
@@ -174,6 +176,8 @@ function TabelaLivros(){
                                     <td className="px-5 py-4 truncate text-black/85 text-center">{livro.n_paginas}</td>
                                     <td className="px-5 py-4 truncate text-black/85 text-center">{livro.publicado_em}</td>
                                     <td className="px-5 py-4 truncate text-black/85 text-center">{livro.quantidade}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro?.prateleira || 0}</td>
+                                    <td className="px-5 py-4 truncate text-black/85 text-center">{livro?.fila || 0}</td>
                                     <td className="px-5 py-4 truncate text-black/85 text-center">{livro.editora}</td>
                                     <td className="px-5 py-4 truncate text-black/85 text-center">{livro.descricao}</td>
                                     <td className="px-5 py-4 truncate text-black/85 text-center">{livro.sumario}</td>
@@ -187,8 +191,8 @@ function TabelaLivros(){
                                             {livro.estado}
                                         </span>
                                     </td>
-                                    
-                                    {((podeGerir(user)) && 
+
+                                    <Permissao roles={["Admin"]}>
                                         <td className="px-5 py-4 truncate text-black/85 text-center">
                                             <div className="flex gap-3 justify-center">
                                                 <button onClick={() => openModal("update", livro)} className="hover:text-black/70 cursor-pointer transition">
@@ -199,8 +203,7 @@ function TabelaLivros(){
                                                 </button>
                                             </div>
                                         </td>
-                                    )}
-                                    
+                                    </Permissao>
                                 </tr>
                                 ))
                             )}

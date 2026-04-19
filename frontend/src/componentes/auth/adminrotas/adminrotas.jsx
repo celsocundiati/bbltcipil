@@ -15,6 +15,7 @@ export function RoleRoute({ children, allowedRoles = [], apenasAdmin = false }) 
   if (loading) return <Loading />;
 
   const userData = user?.user;
+ 
   const userRoles = userData?.grupos || [];
   const isSuperUser = userData?.is_superuser;
   const isAdmin = userRoles.includes("Admin");
