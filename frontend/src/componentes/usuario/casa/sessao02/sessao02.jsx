@@ -27,7 +27,7 @@ function Sessao02() {
     fetchLivrosReservas()
   }, []);
 
-  // 🔎 Métricas calculadas diretamente
+  // 🔎 Métricas calculadas diretamentee
   const livrosDisponiveis = livros.filter(livro => livro.estado_atual === "Disponível").length;
   const totalAcervo = livros.length;
   const minhasReservas = reservas.filter(reservas => reservas.estado !== "finalizada").length;

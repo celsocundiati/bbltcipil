@@ -5,8 +5,8 @@ import {  FiMapPin, FiPhone } from "react-icons/fi";
 import footerImage from "../../../../assets/footer01.png"
 import { motion } from "framer-motion";
 
-function Footer()
-{
+function Footer(){
+    
     return(
 
         <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
