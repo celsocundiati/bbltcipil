@@ -3,7 +3,6 @@ import { MdPersonOutline } from 'react-icons/md';
 
 function ImagemUpload() {
   const [imagem, setImagem] = useState(null);
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
