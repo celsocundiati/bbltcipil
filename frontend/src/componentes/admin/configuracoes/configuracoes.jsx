@@ -1,5 +1,5 @@
 import HeaderOutle from "../../layout/outle/headerholte";
-import CardInfo from "./seccoes/CardInfo";
+import CardInfo from "./seccoes/cardinfo";
 import { motion } from "framer-motion";
 
 function Configuracoesadmin()

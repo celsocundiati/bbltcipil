@@ -3,9 +3,19 @@ from django.db import transaction
 from datetime import timedelta
 from rest_framework.exceptions import ValidationError
 from administracao.utils import get_config
-from livros.models import Livro, Emprestimo
+from livros.models import Livro, Emprestimo, Reserva
 from administracao.models import ConfiguracaoSistema
 from bibliotecaipil.events import emit_event
+from policies.reservas import validar_aprovar_reserva, validar_finalizar_reserva
+from policies.emprestimos import validar_criacao_emprestimo
+
+
+
+def get_config():
+    config = ConfiguracaoSistema.objects.first()
+    if not config:
+        raise Exception("Configuração do sistema não definida")
+    return config
 
 
 def criar_emprestimo(reserva, admin_user=None):
@@ -13,17 +23,10 @@ def criar_emprestimo(reserva, admin_user=None):
     if reserva.estado != "reservado":
         raise Exception("A reserva precisa estar 'reservado'.")
 
-    config = ConfiguracaoSistema.objects.first()
-    if not config:
-        raise Exception("Configuração do sistema não definida")
+    # 🔥 NOVAS REGRAS
+    validar_criacao_emprestimo(reserva.usuario)
 
-    emprestimos_ativos = Emprestimo.objects.filter(
-        reserva__usuario=reserva.usuario,
-        acoes__in=["ativo", "atrasado"]
-    ).count()
-
-    if emprestimos_ativos >= config.limite_livros_estudante:
-        raise Exception("Limite de empréstimos atingido")
+    config = get_config()
 
     with transaction.atomic():
 
@@ -49,8 +52,7 @@ def criar_emprestimo(reserva, admin_user=None):
 
 def aprovar_reserva(reserva, admin_user):
 
-    if reserva.estado != "reservado":
-        raise ValidationError("Apenas reservas 'reservado' podem ser aprovadas.")
+    validar_aprovar_reserva(reserva)
 
     with transaction.atomic():
         reserva.estado = "em_uso"
@@ -64,8 +66,7 @@ def aprovar_reserva(reserva, admin_user):
 
 def finalizar_reserva(reserva):
 
-    if reserva.estado != "em_uso":
-        raise ValidationError("Apenas reservas 'em_uso' podem ser finalizadas.")
+    validar_finalizar_reserva(reserva)
 
     with transaction.atomic():
         reserva.estado = "finalizada"
@@ -120,9 +121,6 @@ def devolver_emprestimo(emprestimo):
     emit_event("emprestimo_devolvido", {
         "emprestimo_id": emprestimo.id
     })
-
-
-
 
 
 def calcular_valor_multa(emprestimo, motivo):

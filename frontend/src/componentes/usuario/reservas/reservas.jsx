@@ -1,10 +1,9 @@
 import { div } from "framer-motion/client";
-import Cabecalho from "../..//usuario/casa/cabecalho/cabecalho";
-import Welcome from "../../usuario//catalogo/seccoes/Welcome";
-
-import Footer from "../../usuario/casa/footer/footer";
+import Cabecalho from "../casa/cabecalho/cabecalho";
+import Welcome from "../catalogo/seccoes/Welcome";
+import Footer from "../casa/footer/footer";
 import { motion } from "framer-motion";
-import CardReservas from "../../usuario/cards/cardReservas/reservas";
+import CardReservas from "../cards/cardReservas/reservas";
 
 function Reservas(){
     return(

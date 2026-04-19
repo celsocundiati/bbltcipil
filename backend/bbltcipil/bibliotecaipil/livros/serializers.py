@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.apps import apps
 from django.utils import timezone
-from .models import Livro, Autor, Categoria, Reserva, Emprestimo, Notificacao
+from .models import Livro, Autor, Categoria, Reserva, Emprestimo, Notificacao, Exposicao, Evento, Participacao
 
 
 # ==============================
@@ -191,4 +191,53 @@ class NotificacaoSerializer(serializers.ModelSerializer):
         read_only_fields = ["usuario", "criada_em", "lida"]
 
 
-        
+class ExposicaoSerializer(serializers.ModelSerializer):
+    vagas_disponiveis = serializers.SerializerMethodField()
+    descricao_estado = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Exposicao
+        fields = '__all__'
+
+    def get_vagas_disponiveis(self, obj):
+        return obj.vagas_disponiveis()
+
+    def get_descricao_estado(self, obj):
+        return obj.dscricao_estado()
+
+
+class EventoSerializer(serializers.ModelSerializer):
+    vagas_disponiveis = serializers.SerializerMethodField()
+    descricao_estado = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Evento
+        fields = '__all__'
+
+    def get_vagas_disponiveis(self, obj):
+        return obj.vagas_disponiveis()
+
+    def get_descricao_estado(self, obj):
+        return obj.dscricao_estado()
+    
+
+
+class ParticipacaoSerializer(serializers.ModelSerializer):
+    exposicao = ExposicaoSerializer(read_only=True)
+    evento = EventoSerializer(read_only=True)
+
+    class Meta:
+        model = Participacao
+        fields = '__all__'
+        read_only_fields = ['usuario', 'data_registro']
+
+    def create(self, validated_data):
+        usuario = self.context['request'].user
+        exposicao = validated_data['exposicao']
+
+        from .service import reservar_exposicao, reservar_evento
+        return reservar_exposicao(usuario, exposicao.id)  
+        return reservar_evento(usuario, evento.id)
+    
+
+    

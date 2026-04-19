@@ -1,8 +1,8 @@
 import React from "react";
 import {FiSearch} from "react-icons/fi";
 
-function InputAdmin({type, placeholder}){
-
+function InputAdmin({type, placeholder})
+{
     return(
         <div className="w-full">
             <div className="flex items-center bg-black/5 border rounded-xl overflow-hiddenmax-w-md text-[#000000]/57
@@ -14,6 +14,5 @@ function InputAdmin({type, placeholder}){
             </div>
         </div>
     );
-    
 }
 export default InputAdmin;

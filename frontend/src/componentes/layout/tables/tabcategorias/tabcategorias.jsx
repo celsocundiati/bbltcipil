@@ -107,7 +107,7 @@ function TabCategorias(){
                     <tbody className="divide-y divide-black/10">
                         {Array.isArray(categorias) && categorias.length === 0 ?(
                             <tr>
-                                <td colSpan={4} className="text-center py-4 text-red-700">
+                                <td colSpan={3} className="text-center py-4 text-red-700">
                                     Nenhuma categoria encontrada.
                                 </td>
                             </tr>

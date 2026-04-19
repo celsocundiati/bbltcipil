@@ -1,3 +1,4 @@
+import React from "react";
 import {FiSearch} from "react-icons/fi";
 
 function InputGroup({type, placeholder, onPesquisar})

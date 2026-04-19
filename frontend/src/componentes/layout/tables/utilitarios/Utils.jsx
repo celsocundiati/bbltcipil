@@ -1,4 +1,3 @@
-import {admins} from "../../../../dados/db.json"
 import {HiOutlineShieldCheck} from "react-icons/hi2"
 import {FiActivity} from "react-icons/fi";
 import { useEffect, useState } from "react";
@@ -104,13 +103,3 @@ export const useResumoGeral = () => {
 
     return resumo;
 };
-
-const totalAdmins = admins.length;
-const superAdmins = admins.filter(adm => adm.funcao === "Super Admin");
-const totalAdminsSuper = superAdmins.length;
-
-export const adminsRotulos = [
-    {icone:<HiOutlineShieldCheck size={40} />, label:"Total de Adm", value:totalAdmins},
-    {icone:<FiActivity size={40} />, label:"Ativos Hoje", value:1},
-    {icone:<HiOutlineShieldCheck size={40} />, label:"Super Admin", value:totalAdminsSuper}
-];

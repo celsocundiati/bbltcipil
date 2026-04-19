@@ -1,0 +1,109 @@
+//import livros from "../../data/bd.json"
+import {LuClock, LuStar} from "react-icons/lu"
+import {IoCalendarClearOutline} from "react-icons/io5";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import api from "../../../service/api/api";
+
+function CardEventos()
+{
+    const [eventos, setEventos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [modal, setModal] = useState({
+        open: false,
+        type: "success", // "success" ou "error"
+        message: "",
+    });
+
+    const carregarEventos = async () => {
+        try {
+            const res = await api.get("/livros/eventos/?ativas=true");
+            setEventos(res.data);
+        } catch (error) {
+            alert("Erro na captura", error)
+        }
+        setLoading(false);
+    }
+
+    useEffect(() => {
+        carregarEventos();
+    }, []);
+
+    const reservar = async (id) => {
+        try {
+            await api.post(`/livros/gestao-eventos/${id}/reservar/`);
+            setModal({
+                open: true,
+                type: "success",
+                message: "Evento reservado com sucesso!",
+            });
+        } catch (error) {
+            if (error.response?.data) {
+                const erros = Object.values(error.response.data)
+                    .flat()
+                    .join(" ");
+
+                setModal({
+                    open: true,
+                    type: "error",
+                    message: erros,
+                });
+                setErro(erros);
+            } else {
+                alert("Erro ao comunicar com o servidor");
+            }
+        }
+    }
+
+    if (loading) return <p>Carregando...</p>
+
+
+    return(
+        <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
+            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
+            viewport={{ once: true }}             // anima apenas uma vez
+            transition={{ duration: 0.8 }} 
+            className="relative w-full overflow-hidden border border-black/17 rounded-md bg-white 
+            hover:shadow-lg hover:scale-102 transition-transform duration-300">
+                {eventos.map((ev) => (
+                    <div className="flex flex-col w-full" key={ev.id}>
+                        <div className="w-full">
+                            <img src={ev.capa}
+                            alt="Imagem" className="w-full transition-transform
+                            duration-300 hover:brightness-110 max-h-72" loading="lazy"/>
+                            <span className="flex items-center top-5 left-8 absolute bg-blue-100 px-4 py-1 gap-1 rounded-2xl">
+                                {/* <LuStar size={20} className="text-[#F97B17]"/> */}
+                                <p className="text-[#f97b17] font-semibold">Destaque</p> 
+                            </span>
+                        </div>
+                        <div className="flex flex-col gap-1 py-5 px-5">
+                            {/* <span className=" text-blue-500 font-medium bg-blue-200 py-1 px-3 rounded-2xl max-w-36 text-center">Evento</span> */}
+                            <h1 className="text-2xl">{ev.titulo}</h1>
+                            <p className="text-black/57">{ev.descricao}</p>
+                            <div className="flex flex-col">
+                                <div className="bg-branco-50 text-cinza-900 flex gap-2"> 
+                                    <IoCalendarClearOutline size={20}/> 
+                                    <p>{ev.data_inicio}</p>
+                                </div>
+                                <div className="text-black/85 flex gap-2" > 
+                                    <LuClock size={20}/> 
+                                    <p>{ev.local}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-10 py-2">
+                                <button onClick={reservar(ev.id)}
+                                    className="text-white px-10 p-2 rounded-lg bg-[#F97B27] cursor-pointer hover:bg-[#F86417]">Participar
+                                </button>
+                                <button className="cursor-pointer p-2 px-10 border border-black/30 rounded-lg hover:bg-black/30 hover:text-white">Ver Mais</button>
+                            </div>
+
+                        </div>
+                    </div>
+                ))}
+            
+
+
+        </motion.div>
+    );
+}
+export default CardEventos;

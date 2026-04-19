@@ -5,7 +5,7 @@ import { useState } from "react";
 
 function Filtragem(){
 
-    const [mostrarFiltro, setMostrarFiltros] = useState(true)
+    const [mostrarFiltro, setMostrarFiltros] = useState(false)
 
     return(
         <div className="px-5">
@@ -33,7 +33,6 @@ function Filtragem(){
                             <hr className="text-[#000000]/17 my-3" />
 
                             <div className="flex justify-between gap-5 pt-5 flex-col lg:flex-row">
-                                <Selects tipo="categoria" lbl="Categoria"/>
                                 <Selects tipo="todos" lbl="Todos"/>
                             </div>
                         </>

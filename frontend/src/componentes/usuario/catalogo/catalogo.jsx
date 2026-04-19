@@ -4,7 +4,7 @@ import WelcomeCatalogo from "./seccoes/Welcome";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import api from "../../service/api/api";
-import CardLivroCatalogo from "../cards/cardsLivros copy/livro";
+import CardLivroCatalogo from "../cards/cardsLivross/cardsLivrosCatalogo/livro";
 
 
 function Catalogo() {

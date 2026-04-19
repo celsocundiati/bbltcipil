@@ -1,0 +1,13 @@
+Remove-Item -Recurse -Force .git
+
+git init
+git remote add origin https://github.com/cristiano-carvalho21/biblioteca_ipil.git
+git add .
+git commit -m "NOVAS VERSÕES DO PROJETO"
+git branch -M main
+git push -f origin main
+
+
+
+git rm -r --cached .
+git add .

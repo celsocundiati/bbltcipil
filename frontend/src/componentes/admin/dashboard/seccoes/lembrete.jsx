@@ -27,7 +27,7 @@ function Lembrete(){
     fetchLogs();
   }, []);
 
-  function logAlteracoes(modelo, alt){
+  function logAlteracoes(alt){
 
     const mensagens = {
         "Emprestimo" : (
@@ -47,7 +47,7 @@ function Lembrete(){
         ),
     };
 
-    return mensagens[modelo] || <p className="text-black/70 truncate w-[95%]">Nenhuma ação!</p>;
+    return mensagens[alt.modelo] || <p className="text-black/70 truncate w-[95%]">Nenhuma ação!</p>;
   }
 
     return(
@@ -69,7 +69,7 @@ function Lembrete(){
                                     <h2>{log.acao} {log.modelo}</h2>
                                 </div>
                                 <section className="px-5">
-                                    {logAlteracoes(log.modelo, log )}
+                                    {logAlteracoes(log)}
                                     <p className="text-black/70">{log.usuario_nome} - {new Date(log.criado_em).toLocaleString()}</p>
                                 </section>
                             </article>

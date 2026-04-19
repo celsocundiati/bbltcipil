@@ -7,3 +7,11 @@ admin.site.register(Categoria)
 admin.site.register(Reserva)
 admin.site.register(Emprestimo)
 admin.site.register(Notificacao)
+
+#Forma mais clássica e profissional
+#@admin.register(Perfil)
+#@admin.register(Autor)
+#@admin.register(Categoria)
+#@admin.register(Reserva)
+#@admin.register(Emprestimo)
+#@admin.register(Notificacao)

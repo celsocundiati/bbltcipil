@@ -11,6 +11,7 @@ import {HiOutlineSquares2X2, HiOutlineBookOpen, HiOutlineUsers,
         {icone:<HiOutlineArrowPath size={25} />, caminho:"emprestimos", label:"Empréstimos"},
         {icone:<HiOutlineCurrencyDollar size={25}/>, caminho:"multas", label:"Multas"},
         {icone:<HiOutlineFolder size={25} />, caminho:"categoriasautores", label:"Categorias & Autores"},
+        {icone:<HiOutlineFolder size={25} />, caminho:"exposicoes_eventos", label:"Exposições & Eventos"},
         {icone:<HiOutlineChartBar size={25} />, caminho:"relatorios", label:"Relatórios"}
     ];
 

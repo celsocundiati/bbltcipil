@@ -7,7 +7,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from audit.models import AuditLog
 from .models import AlunoOficial, FuncionarioOficial, Perfil
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import update_last_login
 User = get_user_model()
 
 
@@ -114,7 +113,7 @@ class SignupSerializer(serializers.Serializer):
     
 
 # =====================================================
-# LOGIN - n_processo/n_agente + senha ----------- Desativar conta dos usuarios
+# LOGIN - n_processo/n_agente + senha
 # =====================================================
 
 class LoginSerializer(serializers.Serializer):
@@ -132,9 +131,6 @@ class LoginSerializer(serializers.Serializer):
 
         if not user.is_active:
             raise AuthenticationFailed("Conta desativada.")
-
-        # 🔥 ATUALIZA LAST LOGIN (ESSENCIAL)
-        update_last_login(None, user)
 
         refresh = RefreshToken.for_user(user)
 

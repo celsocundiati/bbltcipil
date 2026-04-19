@@ -11,6 +11,14 @@ function BtnAddAdmin({tipo, onClick}){
                 <button onClick={onClick} className="bg-[#F86417] text-white px-4 py-1.5 text-lg rounded-xl absolute cursor-pointer">
                     + Novo Autor
                 </button>
+            ) :tipo === "exposicoes" ?(
+                <button onClick={onClick} className="bg-[#F86417] text-white px-4 py-1.5 text-lg rounded-xl absolute cursor-pointer">
+                    + Nova Exposição
+                </button>
+            ) : tipo === "eventos" ?(
+                <button onClick={onClick} className="bg-[#F86417] text-white px-4 py-1.5 text-lg rounded-xl absolute cursor-pointer">
+                    + Novo Evento
+                </button>
             ) : (
                 null
             )}

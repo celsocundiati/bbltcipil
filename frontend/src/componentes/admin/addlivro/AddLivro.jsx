@@ -27,7 +27,7 @@ function AddLivro(){
     descricao: "",
     sumario: "",
     editora: "",
-    n_paginas: 1,
+    nPaginas: 1,
     publicado_em: "",
     quantidade: 1,
   });
@@ -86,22 +86,6 @@ function AddLivro(){
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        const paginas = Number(form.n_paginas);
-
-        if (paginas === 0) {
-            const msg = "O número de páginas não pode ser 0.";
-
-            setErro(msg);
-            setModal({
-                open: true,
-                type: "error",
-                message: msg,
-            });
-
-            return; // 🚫 bloqueia o envio
-        }
-
         setLoading(true);
         setErro(null);
 

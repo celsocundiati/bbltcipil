@@ -3,6 +3,8 @@ import { FiSearch } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../../service/api/api";
+import { podeGerir } from "../../../auth/podegerir/permissao";
+import { useAuth } from "../../../auth/userAuth/useauth";
 
 function TabelaEmprestimos() {
 
@@ -238,13 +240,15 @@ function TabelaEmprestimos() {
                                         </td>
 
                                         <td className="text-center">
-                                            {e.acoes !== "devolvido" && (
+                                            {e.acoes === "ativo" ? (
                                                 <button
                                                     onClick={() => openModal(e)}
                                                     className="px-3 py-1 bg-green-100 text-green-600 rounded-full cursor-pointer"
                                                 >
                                                     Devolver
                                                 </button>
+                                            ) : (
+                                                <span className="text-gray-500">—</span>
                                             )}
                                         </td>
 
@@ -258,7 +262,12 @@ function TabelaEmprestimos() {
 
             {/* 🔥 MODAL (mantido estilo original + erro backend) */}
             {modal.open && (
-                <div className="fixed inset-0 z-50 bg-black/40 flex justify-center items-center">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="space-y-10"
+                    className="fixed inset-0 z-50 bg-black/40 flex justify-center items-center">
 
                     <div className="bg-white p-6 rounded-xl w-full max-w-md">
 
@@ -296,7 +305,7 @@ function TabelaEmprestimos() {
 
                     </div>
 
-                </div>
+                </motion.div>
             )}
 
         </motion.section>
