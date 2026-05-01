@@ -5,15 +5,19 @@ import Estado from "../../../estiloEstado/estado";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../../../service/api/api";
+import Skeleton from "../../../../layout/motion/skeleton/skeleton";
+
 
 function CardLivro() {
   const [livros, setLivros] = useState([]);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
     const fetchLivros = async () => {
       try {
+        setLoading(true);
         const res = await api.get("livros/livros/");
         const data = Array.isArray(res.data.results) ? res.data.results : res.data;
         // setLivros(data);
@@ -21,6 +25,8 @@ function CardLivro() {
       } catch (err) {
         console.error("Erro ao capturar livros", err);
         if (err.response?.status === 401) navigate("/login");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -28,6 +34,9 @@ function CardLivro() {
   }, [navigate]);
 
   
+  if (loading) {
+    return <Skeleton type="card" count={8} />;
+  }
 
   return (
     <motion.section

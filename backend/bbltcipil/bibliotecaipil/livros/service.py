@@ -2,34 +2,65 @@ from bibliotecaipil.events import emit_event
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from .models import Exposicao, Evento, Participacao
-from .events import emit_event
 from policies.reservas import validar_criacao_reserva
+
+
+# def criar_reserva(usuario, livro):
+
+#     from livros.models import Reserva
+    
+#     validar_criacao_reserva(usuario)
+
+#     reserva = Reserva(
+#         usuario=usuario,
+#         livro=livro,
+#     )
+
+#     reserva.save()
+
+#     perfil = getattr(usuario, "perfil", None)
+#     if perfil:
+#         perfil.atualizar_contadores()
+#         perfil.atualizar_estado()
+
+#     # 🔥 EVENTO
+#     emit_event("reserva_criada", {
+#         "reserva_id": reserva.id
+#     })
+
+#     return reserva
 
 
 def criar_reserva(usuario, livro):
 
     from livros.models import Reserva
-    
+
     validar_criacao_reserva(usuario)
 
-    reserva = Reserva(
+    reserva = Reserva.objects.create(
         usuario=usuario,
-        livro=livro,
+        livro=livro
     )
-
-    reserva.save()
 
     perfil = getattr(usuario, "perfil", None)
     if perfil:
         perfil.atualizar_contadores()
         perfil.atualizar_estado()
 
-    # 🔥 EVENTO
     emit_event("reserva_criada", {
         "reserva_id": reserva.id
     })
 
     return reserva
+
+
+# def marcar_emprestimo_atrasado(e):
+#     e.acoes = "atrasado"
+#     e.save(update_fields=["acoes"])
+
+#     emit_event("emprestimo_atrasado", {
+#         "emprestimo_id": e.id
+#     })
 
 
 def marcar_emprestimo_atrasado(e):
@@ -41,26 +72,47 @@ def marcar_emprestimo_atrasado(e):
     })
 
 
+# def cancelar_reserva(reserva, usuario):
+
+#     if reserva.usuario_id != usuario.id:
+#         raise PermissionDenied("Sem permissão para cancelar esta reserva.")
+
+#     if reserva.estado not in ["pendente", "reservado"]:
+#         raise PermissionDenied("Só pode cancelar reservas ativas.")
+
+#     # 🔥 CAPTURA TUDO ANTES DE APAGAR
+#     payload = {
+#         "reserva_id": reserva.id,
+#         "titulo": reserva.livro.titulo,
+#         "usuario_id": reserva.usuario.id,
+#     }
+
+#     with transaction.atomic():
+#         reserva.delete()
+
+#     emit_event("reserva_cancelada", payload)
+    
+
 def cancelar_reserva(reserva, usuario):
 
     if reserva.usuario_id != usuario.id:
-        raise PermissionDenied("Sem permissão para cancelar esta reserva.")
+        raise PermissionDenied()
 
     if reserva.estado not in ["pendente", "reservado"]:
-        raise PermissionDenied("Só pode cancelar reservas ativas.")
+        raise PermissionDenied()
 
-    # 🔥 CAPTURA TUDO ANTES DE APAGAR
     payload = {
         "reserva_id": reserva.id,
         "titulo": reserva.livro.titulo,
-        "usuario_id": reserva.usuario.id,
+        "usuario_id": usuario.id
     }
 
     with transaction.atomic():
         reserva.delete()
 
     emit_event("reserva_cancelada", payload)
-    
+
+
 
 def reservar_exposicao(usuario, exposicao_id):
     with transaction.atomic():
@@ -124,35 +176,65 @@ def reservar_evento(usuario, evento_id):
         return participacao
     
 
-def cancelar_participacao(participacao, usuario):
-    if participacao.usuario_id != usuario.id:
-        raise PermissionDenied("Sem permissão.")
+# def cancelar_participacao(participacao, usuario):
+#     if participacao.usuario_id != usuario.id:
+#         raise PermissionDenied("Sem permissão.")
     
+#     exposicao = participacao.exposicao
+#     evento = participacao.evento
+
+#     payload = {
+#         "participacao_id": participacao.id,
+#         "exposicao": exposicao.titulo,
+#         "usuario_id": usuario.id,
+#     }
+
+#     payload = {
+#         "participacao_id": participacao.id,
+#         "evento": evento.titulo,
+#         "usuario_id": usuario.id,
+#     }
+
+#     with transaction.atomic():
+#         participacao.delete()
+
+#         exposicao.atualizar_estado()
+#         exposicao.save()
+
+#         evento.atualizar_estado()
+#         evento.save()
+
+#     emit_event("participacao_cancelada", payload)
+
+
+def cancelar_participacao(participacao, usuario):
+
+    if participacao.usuario_id != usuario.id:
+        raise PermissionDenied()
+
     exposicao = participacao.exposicao
     evento = participacao.evento
 
-    payload = {
-        "participacao_id": participacao.id,
-        "exposicao": exposicao.titulo,
-        "usuario_id": usuario.id,
-    }
-
-    payload = {
-        "participacao_id": participacao.id,
-        "evento": evento.titulo,
-        "usuario_id": usuario.id,
-    }
-
     with transaction.atomic():
+
+        participacao_id = participacao.id
+
         participacao.delete()
 
-        exposicao.atualizar_estado()
-        exposicao.save()
+        if exposicao:
+            exposicao.atualizar_estado()
+            exposicao.save()
 
-        evento.atualizar_estado()
-        evento.save()
+        if evento:
+            evento.atualizar_estado()
+            evento.save()
 
-    emit_event("participacao_cancelada", payload)
+    emit_event("participacao_cancelada", {
+        "participacao_id": participacao_id,
+        "usuario_id": usuario.id,
+        "exposicao_id": exposicao.id if exposicao else None,
+        "evento_id": evento.id if evento else None,
+    })
 
 
 

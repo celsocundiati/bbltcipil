@@ -3,7 +3,7 @@ from django.db import transaction
 from datetime import timedelta
 from rest_framework.exceptions import ValidationError
 from administracao.utils import get_config
-from livros.models import Livro, Emprestimo, Reserva
+from livros.models import Livro, Emprestimo
 from administracao.models import ConfiguracaoSistema
 from bibliotecaipil.events import emit_event
 from policies.reservas import validar_aprovar_reserva, validar_finalizar_reserva

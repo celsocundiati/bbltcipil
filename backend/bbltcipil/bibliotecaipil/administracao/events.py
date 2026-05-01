@@ -1,39 +1,39 @@
-from bibliotecaipil.events import register_event, emit_event
+from bibliotecaipil.events import register_event
 
 
 # ===============================
 # EMPRÉSTIMO ATRASADO
 # ===============================
-@register_event("emprestimo_atrasado")
-def notificar_emprestimo_atrasado(payload):
-    from livros.models import Emprestimo, Notificacao
+# @register_event("emprestimo_atrasado")
+# def notificar_emprestimo_atrasado(payload):
+#     from livros.models import Emprestimo, Notificacao
 
-    e = Emprestimo.objects.select_related("reserva", "livro").get(id=payload["emprestimo_id"])
-    perfil = e.reserva.perfil_oficial
-    usuario = perfil.user if perfil else e.reserva.usuario
+#     e = Emprestimo.objects.select_related("reserva", "livro").get(id=payload["emprestimo_id"])
+#     perfil = e.reserva.perfil_oficial
+#     usuario = perfil.user if perfil else e.reserva.usuario
 
-    Notificacao.objects.get_or_create(
-        usuario=usuario,
-        titulo="Livro em atraso",
-        descricao=f"O livro '{e.livro.titulo}' está atrasado.",
-        defaults={"tipo": "Emprestimo", "link": f"/reservas#reserva-{e.reserva.id}"}
-    )
+#     Notificacao.objects.get_or_create(
+#         usuario=usuario,
+#         titulo="Livro em atraso",
+#         descricao=f"O livro '{e.livro.titulo}' está atrasado.",
+#         defaults={"tipo": "Emprestimo", "link": f"/reservas#reserva-{e.reserva.id}"}
+#     )
 
 
-@register_event("emprestimo_devolvido")
-def notificar_emprestimo_devolvido(payload):
-    from livros.models import Emprestimo, Notificacao
+# @register_event("emprestimo_devolvido")
+# def notificar_emprestimo_devolvido(payload):
+#     from livros.models import Emprestimo, Notificacao
 
-    e = Emprestimo.objects.get(id=payload["emprestimo_id"])
-    perfil = e.reserva.perfil_oficial
-    usuario = perfil.user if perfil else e.reserva.usuario
+#     e = Emprestimo.objects.get(id=payload["emprestimo_id"])
+#     perfil = e.reserva.perfil_oficial
+#     usuario = perfil.user if perfil else e.reserva.usuario
 
-    Notificacao.objects.get_or_create(
-        usuario=usuario,
-        titulo="Livro devolvido",
-        descricao=f"O livro '{e.livro.titulo}' foi devolvido com sucesso.",
-        defaults={"tipo": "Emprestimo", "link": f"/reservas#reserva-{e.reserva.id}"}
-    )
+#     Notificacao.objects.get_or_create(
+#         usuario=usuario,
+#         titulo="Livro devolvido",
+#         descricao=f"O livro '{e.livro.titulo}' foi devolvido com sucesso.",
+#         defaults={"tipo": "Emprestimo", "link": f"/reservas#reserva-{e.reserva.id}"}
+#     )
 
 
 # ===============================
@@ -87,4 +87,49 @@ def notificar_emprestimo_criado(payload):
         tipo="Emprestimo",
         link=f"/reservas#reserva-{e.reserva.id}"
     )
+
+
+
+
+
+
+
+@register_event("emprestimo_atrasado")
+def notificar_emprestimo_atrasado(payload):
+    from livros.models import Emprestimo, Notificacao
+
+    e = Emprestimo.objects.select_related("reserva", "livro").get(
+        id=payload["emprestimo_id"]
+    )
+
+    perfil = e.reserva.perfil_oficial
+    usuario = perfil.user if perfil else e.reserva.usuario
+
+    Notificacao.objects.get_or_create(
+        usuario=usuario,
+        titulo="Livro em atraso",
+        descricao=f"O livro '{e.livro.titulo}' está atrasado.",
+        defaults={"tipo": "Emprestimo", "link": f"/reservas#reserva-{e.reserva.id}"}
+    )
+
+
+@register_event("emprestimo_devolvido")
+def notificar_emprestimo_devolvido(payload):
+    from livros.models import Emprestimo, Notificacao
+
+    e = Emprestimo.objects.get(id=payload["emprestimo_id"])
+
+    perfil = e.reserva.perfil_oficial
+    usuario = perfil.user if perfil else e.reserva.usuario
+
+    Notificacao.objects.get_or_create(
+        usuario=usuario,
+        titulo="Livro devolvido",
+        descricao=f"O livro '{e.livro.titulo}' foi devolvido com sucesso.",
+        defaults={"tipo": "Emprestimo", "link": f"/reservas#reserva-{e.reserva.id}"}
+    )
+
+
+
+
 

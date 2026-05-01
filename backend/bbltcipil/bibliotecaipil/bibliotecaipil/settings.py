@@ -230,11 +230,11 @@ CELERY_BEAT_SCHEDULE = {
     # 🔥 ORQUESTRADOR (opcional)
     "rotina-geral": {
         "task": "administracao.tasks.rotina_automatica_sistema",
-        "schedule": crontab(minute="*/5"),
+        "schedule": crontab(minute="*/1"),
     },
     'atualizar-estados':{
         'task': 'livros.tasks.atualizar_estados',
-        'schedule': 30.0,
+        "schedule": crontab(minute="*/1"),
     },
 }
 
@@ -247,3 +247,7 @@ EMAIL_HOST_USER = "celsocundiati@gmail.com"  # geralmente seu email de conta Bre
 EMAIL_HOST_PASSWORD = os.getenv("BREVO_API_KEY")
 # print(EMAIL_HOST_PASSWORD)
 DEFAULT_FROM_EMAIL = "Biblioteca IPIL <celsocundiati@gmail.com>"
+
+
+
+

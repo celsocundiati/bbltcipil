@@ -1,17 +1,16 @@
-//import livros from "../../data/bd.json"
-import {LuClock, LuStar} from "react-icons/lu"
-import {IoCalendarClearOutline} from "react-icons/io5";
+import { LuClock } from "react-icons/lu";
+import { IoCalendarClearOutline } from "react-icons/io5";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import api from "../../../service/api/api";
+import Skeleton from "../../../layout/motion/skeleton/skeleton";
 
-function CardExposicoes()
-{
+function CardExposicoes() {
     const [exposicoes, setExposicoes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState({
         open: false,
-        type: "success", // "success" ou "error"
+        type: "success",
         message: "",
     });
 
@@ -20,10 +19,11 @@ function CardExposicoes()
             const res = await api.get("/livros/exposicoes/?ativas=true");
             setExposicoes(res.data);
         } catch (error) {
-            alert("Erro na captura", error)
+            console.error("Erro na captura:", error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
-    }
+    };
 
     useEffect(() => {
         carregarExposicoes();
@@ -31,79 +31,94 @@ function CardExposicoes()
 
     const reservar = async (id) => {
         try {
-            await api.post(`/livros/gestao-exposicoes/${id}/reservar/`);
+            await api.post(`/livros/exposicoes/${id}/reservar/`);
+
             setModal({
                 open: true,
                 type: "success",
                 message: "Exposição reservada com sucesso!",
             });
         } catch (error) {
-            if (error.response?.data) {
-                const erros = Object.values(error.response.data)
-                    .flat()
-                    .join(" ");
+            const erros = error.response?.data
+                ? Object.values(error.response.data).flat().join(" ")
+                : "Erro ao comunicar com o servidor";
 
-                setModal({
-                    open: true,
-                    type: "error",
-                    message: erros,
-                });
-                setErro(erros);
-            } else {
-                alert("Erro ao comunicar com o servidor");
-            }
+            setModal({
+                open: true,
+                type: "error",
+                message: erros,
+            });
         }
+    };
+
+   
+    if(loading) {
+        return <Skeleton type="cardexposicaoexvento" />
     }
 
-    if (loading) return <p>Carregando...</p>
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="grid grid-cols-1 gap-6 w-full"
+        >
+            {exposicoes.map((expo) => (
+                <div
+                    key={expo.id}
+                    className="flex flex-col w-full bg-white border border-black/10 rounded-md overflow-hidden shadow-sm hover:shadow-lg transition"
+                >
+                    {/* IMAGEM */}
+                    <div className="relative w-full">
+                        <img
+                            src={expo.capa}
+                            alt={expo.titulo}
+                            className="w-full max-h-72 object-cover hover:brightness-110 transition"
+                            loading="lazy"
+                        />
 
+                        <span className="absolute top-4 left-4 bg-blue-100 px-4 py-1 rounded-2xl text-[#f97b17] font-semibold">
+                            Destaque
+                        </span>
+                    </div>
 
-    return(
-        <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-            whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-            viewport={{ once: true }}             // anima apenas uma vez
-            transition={{ duration: 0.8 }} 
-            className="relative w-full overflow-hidden border border-black/17 rounded-md bg-white 
-            hover:shadow-lg hover:scale-102 transition-transform duration-300">
-                {exposicoes.map((expo) => (
-                    <div className="flex flex-col w-full" key={expo.id}>
-                        <div className="w-full">
-                            <img src={expo.capa}
-                            alt="Imagem" className="w-full transition-transform
-                            duration-300 hover:brightness-110 max-h-72" loading="lazy"/>
-                            <span className="flex items-center top-5 left-8 absolute bg-blue-100 px-4 py-1 gap-1 rounded-2xl">
-                                {/* <LuStar size={20} className="text-[#F97B17]"/> */}
-                                <p className="text-[#f97b17] font-semibold">Destaque</p> 
-                            </span>
+                    {/* CONTEÚDO */}
+                    <div className="flex flex-col gap-2 py-5 px-5">
+                        <h1 className="text-2xl">{expo.titulo}</h1>
+
+                        <p className="text-black/60">{expo.descricao}</p>
+
+                        <div className="flex flex-col gap-2 mt-2">
+                            <div className="flex items-center gap-2 text-black/80">
+                                <IoCalendarClearOutline size={18} />
+                                <p>{expo.data_inicio}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-black/80">
+                                <LuClock size={18} />
+                                <p>{expo.local}</p>
+                            </div>
                         </div>
-                        <div className="flex flex-col gap-1 py-5 px-5">
-                            {/* <span className=" text-blue-500 font-medium bg-blue-200 py-1 px-3 rounded-2xl max-w-36 text-center">Evento</span> */}
-                            <h1 className="text-2xl">{expo.titulo}</h1>
-                            <p className="text-black/57">{expo.descricao}</p>
-                            <div className="flex flex-col">
-                                <div className="bg-branco-50 text-cinza-900 flex gap-2"> 
-                                    <IoCalendarClearOutline size={20}/> 
-                                    <p>{expo.data_inicio}</p>
-                                </div>
-                                <div className="text-black/85 flex gap-2" > 
-                                    <LuClock size={20}/> 
-                                    <p>{expo.local}</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-10 py-2">
-                                <button onClick={reservar(expo.id)}
-                                    className="text-white px-10 p-2 rounded-lg bg-[#F97B27] cursor-pointer hover:bg-[#F86417]">Participar
-                                </button>
-                                <button className="cursor-pointer p-2 px-10 border border-black/30 rounded-lg hover:bg-black/30 hover:text-white">Ver Mais</button>
-                            </div>
 
+                        {/* AÇÕES */}
+                        <div className="flex gap-4 mt-3">
+                            <button
+                                onClick={() => reservar(expo.id)}
+                                className="flex-1 text-white py-2 rounded-lg bg-[#F97B27] hover:bg-[#F86417] transition cursor-pointer"
+                            >
+                                Participar
+                            </button>
+
+                            <button className="flex-1 border border-black/10 rounded-lg hover:bg-black/10 transition cursor-pointer">
+                                Ver Mais
+                            </button>
                         </div>
                     </div>
-                ))}
-            
-
-
+                </div>
+            ))}
         </motion.div>
     );
 }
+
 export default CardExposicoes;

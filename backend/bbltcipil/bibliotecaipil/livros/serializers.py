@@ -203,7 +203,7 @@ class ExposicaoSerializer(serializers.ModelSerializer):
         return obj.vagas_disponiveis()
 
     def get_descricao_estado(self, obj):
-        return obj.dscricao_estado()
+        return obj.estado
 
 
 class EventoSerializer(serializers.ModelSerializer):
@@ -218,7 +218,7 @@ class EventoSerializer(serializers.ModelSerializer):
         return obj.vagas_disponiveis()
 
     def get_descricao_estado(self, obj):
-        return obj.dscricao_estado()
+        return obj.estado
     
 
 

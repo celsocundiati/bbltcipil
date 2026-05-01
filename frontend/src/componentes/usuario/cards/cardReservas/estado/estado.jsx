@@ -29,6 +29,8 @@ function EstadoCard({estado, label}){
                     <FiCheckCircle size={22}/>
                 ) : estado === "Pendente" ? (
                     <LuClock size={22}/>
+                ) : estado === "Emprestado" ? (
+                    <FiXCircle size={22}/>
                 ) : estado === "Atrasado" ? (
                     <FiXCircle size={22}/>
                 ) : estado === "Expirada" ? (

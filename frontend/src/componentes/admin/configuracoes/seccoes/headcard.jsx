@@ -3,8 +3,8 @@ import {LuClock} from "react-icons/lu"
 import {AiOutlineMail} from "react-icons/ai";
 
 
-function HeaderCardInfo({tipo})
-{
+function HeaderCardInfo({tipo}){
+    
     return(
         <section>
             {tipo === "emprestimos" ?(

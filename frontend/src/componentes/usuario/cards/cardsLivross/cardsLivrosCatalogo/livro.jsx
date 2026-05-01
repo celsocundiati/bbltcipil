@@ -7,12 +7,14 @@ import { useState, useEffect } from "react";
 import api from "../../../../service/api/api";
 import { FiFilter, FiChevronDown, FiChevronUp  } from "react-icons/fi";
 import {FiSearch} from "react-icons/fi";
+import Skeleton from "../../../../layout/motion/skeleton/skeleton";
+
 
 function CardLivroCatalogo() {
   const [livros, setLivros] = useState([]);
   const navigate = useNavigate();
   const [mostrarFiltro, setMostrarFiltros] = useState(true)
-
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [estadoFilter, setEstadoFilter] = useState("");
 
@@ -23,18 +25,21 @@ function CardLivroCatalogo() {
         const params = {};
         if (search) params.search = search;
         if (estadoFilter) params.estado = estadoFilter;
-
+        setLoading(true)
         const res = await api.get("livros/livros/", {params});
         const data = Array.isArray(res.data.results) ? res.data.results : res.data;
         setLivros(data);
       } catch (err) {
         console.error("Erro ao capturar livros", err);
         if (err.response?.status === 401) navigate("/login");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchLivros();
   }, [navigate, search, estadoFilter]);
+
 
   
 
@@ -115,40 +120,45 @@ function CardLivroCatalogo() {
             >
           
           <h2 className="py-5 text-xl text-[#000000]/57">{livros.length} Livros encontrados</h2>
+          
+          {loading ? (
+            <Skeleton type="card" count={8} />
+          ) : (
+            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {livros.map((livro) => (
+                <section
+                  key={livro.id}
+                  className="bg-white rounded-md shadow overflow-hidden relative hover:scale-105 duration-300 ease-in-out transition-transform cursor-pointer"
+                >
+                  <img
+                    src={livro.capa}
+                    alt={livro.livro_nome || livro.titulo}
+                    className="w-full h-60 object-cover"
+                    loading="lazy"
+                  />
 
-          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {livros.map((livro) => (
-              <section
-                key={livro.id}
-                className="bg-white rounded-md shadow overflow-hidden relative hover:scale-105 duration-300 ease-in-out transition-transform cursor-pointer"
-              >
-                <img
-                  src={livro.capa}
-                  alt={livro.livro_nome || livro.titulo}
-                  className="w-full h-60 object-cover"
-                  loading="lazy"
-                />
+                  <Estado estado={livro.estado_label || livro.estado_atual} />
 
-                <Estado estado={livro.estado_label || livro.estado_atual} />
-
-                <section className="p-3">
-                  <p className="font-medium text-sm">{livro.livro_nome || livro.titulo}</p>
-                  <p className="flex gap-2 mt-2 items-center text-gray-700">
-                    <MdPersonOutline size={20} /> {livro.autor_nome}
-                  </p>
-                  <p className="flex gap-2 mt-2 items-center text-gray-700">
-                    <IoCalendarClearOutline size={20} /> {livro.data_formatada || livro.publicado_em} • {livro.categoria_nome}
-                  </p>
-                  <Link
-                    to={`/detalhes/${livro.id}`}
-                    className="bg-[#F97B17] text-white w-full mt-3 py-2 rounded-lg hover:bg-[#F96518] transition block text-center"
-                  >
-                    Ver Detalhes
-                  </Link>
+                  <section className="p-3">
+                    <p className="font-medium text-sm">{livro.livro_nome || livro.titulo}</p>
+                    <p className="flex gap-2 mt-2 items-center text-gray-700">
+                      <MdPersonOutline size={20} /> {livro.autor_nome}
+                    </p>
+                    <p className="flex gap-2 mt-2 items-center text-gray-700">
+                      <IoCalendarClearOutline size={20} /> {livro.data_formatada || livro.publicado_em} • {livro.categoria_nome}
+                    </p>
+                    <Link
+                      to={`/detalhes/${livro.id}`}
+                      className="bg-[#F97B17] text-white w-full mt-3 py-2 rounded-lg hover:bg-[#F96518] transition block text-center"
+                    >
+                      Ver Detalhes
+                    </Link>
+                  </section>
                 </section>
-              </section>
-            ))}
-          </section>
+              ))}
+            </section>
+          )}
+
         </motion.section>
     </motion.main>
   );

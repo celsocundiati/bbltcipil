@@ -16,7 +16,6 @@ import CategoriasAutores from './componentes/admin/categorias_autores/catautores
 import ExposicoesEventos from './componentes/admin/exposicoes_eventos/exposicoes_eventos';
 import Relatorios from './componentes/admin/relatorios/Relatorios';
 import Admins from './componentes/admin/admins/admins';
-import Configuracoesadmin from './componentes/admin/configuracoes/Configuracoes';
 import Sair from './componentes/auth/sair/sair';
 import Admin from './componentes/admin/administrador';
 import Multas from './componentes/admin/multas/multa';
@@ -32,6 +31,7 @@ import AlterarSenha from './componentes/auth/alterarsenha/alterarsenha';
 import Privacidade from './componentes/auth/privacidadeuser/privacidade';
 import PrivateRoute from './componentes/auth/rotasprivadas/rotasprivadas';
 import {RoleRoute} from './componentes/auth/adminrotas/adminrotas';
+import Configuracoesadmin from './componentes/admin/configuracoes/configuracoes';
 
 
 function App() {
@@ -72,8 +72,8 @@ function App() {
               <Route path="acervo" element={<Acervo />} />
               <Route path="categoriasautores" element={<CategoriasAutores />} />
               <Route path="exposicoes_eventos" element={<ExposicoesEventos />} />
-              <Route path="relatorios" element={<Relatorios />} />
               <Route path="configuracoesadmin" element={<Configuracoesadmin />} />
+              <Route path="relatorios" element={<Relatorios />} />
               <Route path="admins" element={<Admins />} />
               <Route path="audit-log" element={<AdminAuditLog />} />
               <Route path="" element={<Sair />} />

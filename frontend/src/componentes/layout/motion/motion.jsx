@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export default function Loading({ message = "Carregando dados..." }) {
   return (
-    <div className="fixed inset-0 bg-black/5 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/1 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
       {/* 🔹 Bolinhas animadas */}
       <motion.div 
         className="flex space-x-2"

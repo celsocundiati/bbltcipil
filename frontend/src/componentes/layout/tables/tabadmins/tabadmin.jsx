@@ -7,6 +7,8 @@ import api from "../../../service/api/api";
 import ModalEditAdmin from "../../modais/modaladmineditar/editaradmin";
 import { useAuth } from "../../../auth/userAuth/useauth"; 
 import Permissao from "../../../auth/hooks/gerir/gerenciamento";
+import { useToast } from "../../../usuario/toastcontext/toastcontext";
+
 
 function TabAdmins() {
     const [admins, setAdmins] = useState([]);
@@ -20,9 +22,8 @@ function TabAdmins() {
 
 
     const { user } = useAuth(); // usa o logout do AuthContext
+    const toast = useToast();
 
-
-    const priv = user?.user || {};
 
     // ==========================
     // 🔥 BUSCAR DADOS
@@ -92,10 +93,11 @@ function TabAdmins() {
                     : res.data;
 
                 setAdmins(data);
+                toast.success("Utilizador eliminado com sucesso");
             }
         } catch (err) {
             console.error("Erro na ação:", err);
-            alert("Erro ao executar ação.");
+            toast.error("Erro ao executar ação");
         } finally {
             closeModal();
         }
@@ -109,14 +111,34 @@ function TabAdmins() {
                 params: { search, estado: estadoFilter },
             });
             const data = Array.isArray(res.data.results) ? res.data.results : res.data;
+            toast.success("Utilizador atualizado com sucesso");
             console.log(res.data)
             setAdmins(data);
         } catch (err) {
             console.error("Erro ao atualizar lista de admins:", err);
+            toast.error("Erro ao atualizar lista de admins");
         } finally {
             closeEditModal();
         }
     };
+
+    function canManageUser(current, target) {
+        const u = current?.user || current; // 🔥 chave aqui
+
+        const isSuperuser = u?.is_superuser;
+        const isAdmin = u?.grupos_display?.includes("Admin");
+
+        const targetIsSuperuser = target?.is_superuser;
+        const targetIsAdmin = target?.grupos_display?.includes("Admin");
+
+        if (isSuperuser) return true;
+
+        if (isAdmin) {
+            return !targetIsSuperuser && !targetIsAdmin;
+        }
+
+        return false;
+    }
     
 
     // ==========================
@@ -195,16 +217,44 @@ function TabAdmins() {
                                             </span>
                                         </td>
 
-                                        <Permissao roles={["Admin"]}>
+                                        {/* <Permissao roles={["Admin"]}>
                                             <td className="px-5 py-4 text-center">
-                                                    <div className="flex gap-3 justify-center">
-                                                        <button onClick={() => openModal("update", adm)} className="hover:text-black/70 cursor-pointer transition">
-                                                            <LuFilePen size={25}/>
-                                                        </button>
+                                                <div className="flex gap-3 justify-center">
+                                                    <button onClick={() => openModal("update", adm)} className="hover:text-black/70 cursor-pointer transition">
+                                                        <LuFilePen size={25}/>
+                                                    </button>
+                                                    <Permissao>
                                                         <button onClick={() => openModal("delete", adm)} className="text-red-500 hover:text-red-700 cursor-pointer transition">
                                                             <FiTrash2 size={25}/>
                                                         </button>
-                                                    </div>
+                                                    </Permissao>
+                                                </div>
+                                            </td>
+                                        </Permissao> */}
+
+                                        <Permissao roles={["Admin"]}>
+                                            <td className="px-5 py-4 text-center">
+                                                <div className="flex gap-3 justify-center">
+
+                                                    {canManageUser(user, adm) && (
+                                                        <button
+                                                            onClick={() => openModal("update", adm)}
+                                                            className="hover:text-black/70 cursor-pointer transition"
+                                                        >
+                                                            <LuFilePen size={25} />
+                                                        </button>
+                                                    )}
+
+                                                    {canManageUser(user, adm) && (
+                                                        <button
+                                                            onClick={() => openModal("delete", adm)}
+                                                            className="text-red-500 hover:text-red-700 cursor-pointer transition"
+                                                        >
+                                                            <FiTrash2 size={25} />
+                                                        </button>
+                                                    )}
+
+                                                </div>
                                             </td>
                                         </Permissao>
 
@@ -240,3 +290,5 @@ function TabAdmins() {
 }
 
 export default TabAdmins;
+
+

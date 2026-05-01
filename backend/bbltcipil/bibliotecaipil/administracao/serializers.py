@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Multa, ConfiguracaoSistema
-from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
+from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro, Exposicao, Evento, Participacao
 from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
 from django.contrib.auth.models import User, Group
 from audit.models import AuditLog
@@ -341,5 +341,56 @@ class PromoteUserSerializer(serializers.Serializer):
             user.save()
 
         return user
+
+
+# =============================
+# EXPOSIÇÃO
+# =============================
+class ExposicaoAdminSerializer(serializers.ModelSerializer):
+    vagas_disponiveis = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Exposicao
+        fields = "__all__"
+
+    def get_vagas_disponiveis(self, obj):
+        return obj.vagas_disponiveis()
+
+
+# =============================
+# EVENTO
+# =============================
+class EventoAdminSerializer(serializers.ModelSerializer):
+    vagas_disponiveis = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Evento
+        fields = "__all__"
+
+    def get_vagas_disponiveis(self, obj):
+        return obj.vagas_disponiveis()
+
+
+# =============================
+# PARTICIPAÇÃO
+# =============================
+class ParticipacaoAdminSerializer(serializers.ModelSerializer):
+    usuario_nome = serializers.CharField(source="usuario.username", read_only=True)
+    alvo = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Participacao
+        fields = "__all__"
+
+    def get_alvo(self, obj):
+        if obj.evento:
+            return f"Evento: {obj.evento.titulo}"
+        if obj.exposicao:
+            return f"Exposição: {obj.exposicao.titulo}"
+        return None
+    
+
+
+
 
 
