@@ -237,6 +237,11 @@ class SistemaPermission(permissions.BasePermission):
 
         action = getattr(view, "action", None)
         resource = view.basename
+        
+        FULL_ACCESS = ["evento", "eventos", "exposicao", "exposicoes"]
+
+        if resource in FULL_ACCESS:
+            return True
 
         # 🚫 LOGS → apenas superuser
         if resource == "audit-admin":
@@ -280,6 +285,25 @@ class SistemaPermission(permissions.BasePermission):
         # 🔹 leitura global
         if action in ["list", "retrieve"]:
             return True
+
+        FULL_WRITE = ["evento", "eventos", "exposicao", "exposicoes"]
+
+        if resource in FULL_WRITE:
+
+            # ✔ permitir criação
+            if action == "create":
+                return True
+
+            # ✔ permitir edição
+            if action in ["update", "partial_update"]:
+                return True
+
+            # ✔ permitir eliminar
+            if action == "destroy":
+                return True
+
+            return False
+
 
         # =========================
         # 📌 RESERVAS

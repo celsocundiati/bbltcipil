@@ -74,7 +74,7 @@ export default function MeuPerfil() {
               <p className="text-[#000000]/57 text-sm">
                 {info?.n_processo && <>Nº Processo: {info.n_processo}</>}
                 {info?.n_agente && <> Nº Agente: {info.n_agente}</>}
-                {info?.n_bilhete && <> Bilhete: {info.n_bilhete}</>}
+                {info?.n_bilhete && <> BI: {info.n_bilhete}</>}
                 {!info?.n_processo && !info?.n_agente && !info?.n_bilhete && <>Sem informação adicional</>}
               </p>
             </span>

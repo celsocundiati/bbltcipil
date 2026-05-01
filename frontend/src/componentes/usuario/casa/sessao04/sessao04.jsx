@@ -2,6 +2,7 @@ import { FiArrowRight, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { LuClock } from "react-icons/lu";
 import { motion } from "framer-motion";
 import CardLivro from "../../cards/cardsLivross/cardsLivrosHome/livro";
+import { Link } from "react-router-dom";
 
 function Sessao04() {
 
@@ -20,10 +21,10 @@ function Sessao04() {
                 <p className="text-black/57 cursor-pointer">Novidades no acervo</p>
             </div>
 
-            <div className="flex items-center text-[#f97b17] cursor-pointer">
+            <Link to="/exposicao" className="flex items-center text-[#f97b17] cursor-pointer">
                 <h4>Ver exposições</h4>
                 <FiArrowRight/>
-            </div>
+            </Link>
         </div>
 
         <CardLivro props="recente"/>

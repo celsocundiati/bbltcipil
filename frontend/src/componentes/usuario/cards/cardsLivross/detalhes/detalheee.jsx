@@ -7,22 +7,26 @@ import { HiOutlineHashtag } from "react-icons/hi";
 import { IoCalendarClearOutline } from "react-icons/io5";
 import EstadoDetalhes from "./estadoDetalhes/estado";
 import { motion } from "framer-motion";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../../../auth/userAuth/useauth";
 import api from "../../../../service/api/api";
-import Loading from "../../../../layout/motion/motion";
+import Toast from "../../../stylenotificacao/toast";
+import SkeletonLivro from "../../../../layout/motion/skeleton/skeleton";
+
 
 function Detalhes() {
   const { id } = useParams()
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [livro, setLivro] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(null);
+  const [toast, setToast] = useState(null);
+  const isLoading = loading;
 
 
   // Buscar livro
   const fetchLivros = async () => {
     try {
+      setLoading(true)
       const res = await api.get(`livros/livros/${id}/`);
       setLivro(res.data);
     } catch (err) {
@@ -36,8 +40,7 @@ function Detalhes() {
     fetchLivros();
   }, [id]);
 
-  if (loading) return <Loading message=""/>;
-  if (!livro) return <p className="text-red-600 text-center mt-20">Nenhum livro encontrado.</p>;
+  // if(loading) return <SkeletonLivro />
 
   // Estilo do botão
   const btnEstilo = (estado) => {
@@ -51,7 +54,14 @@ function Detalhes() {
   const handleReservar = async () => {
 
     if (!user) {
-      alert("Usuário não logado");
+      setToast({
+        message: "Precisas estar logado para reservar.",
+        type: "info",
+      });
+      return;
+    }
+
+    if (livro.estado_atual.toLowerCase() !== "disponível") {
       return;
     }
 
@@ -59,28 +69,66 @@ function Detalhes() {
 
       await api.post("/livros/reservas/", { livro: livro.id });
 
-      await fetchLivros(); // atualiza estado
+      setToast({
+        message: "Reserva realizada com sucesso!",
+        type: "success",
+      });
 
-      alert("Reserva realizada com sucesso!");
+      await fetchLivros(); // atualiza estado
 
     } catch (error) {
 
-      if (error.response && error.response.data) {
+      const data = error.response?.data;
 
-        const data = error.response.data;
-        const msg = data.livro || data.non_field_errors || JSON.stringify(data);
+      if (data) {
 
-        alert(`Erro ao fazer reserva: ${msg}`);
+        setToast({
+          message: data.mensagem + " " + data.acao || "Erro inesperado",
+          type: "error",
+        });
+
+        // 🔥 opcional: ação inteligente
+        if (data.acao) {
+          console.warn("AÇÃO SUGERIDA:", data.acao);
+        }
 
       } else {
 
-        alert("Erro ao fazer reserva. Tente novamente mais tarde.");
+        setToast({
+          message: "Erro de ligação ao servidor. Tente novamente.",
+          type: "error",
+        });
 
       }
 
-      console.error(error.response || error);
+      console.error(error);
 
     }
+
+    // } catch (error) {
+
+    //   if (error.response && error.response.data) {
+
+    //     const data = error.response.data;
+    //     const msg = data.livro || data.non_field_errors || JSON.stringify(data);
+
+    //     setToast({
+    //       message: `Erro: ${msg}`,
+    //       type: "error",
+    //     });
+
+    //   } else {
+
+    //     setToast({
+    //       message: "Erro ao fazer reserva. Tente novamente.",
+    //       type: "error",
+    //     });
+
+    //   }
+
+    //   console.error(error.response || error);
+
+    // }
 
   };
   // Renderiza sumário
@@ -93,6 +141,9 @@ function Detalhes() {
         ))
       : "Sem sumário disponível";
 
+      
+  if (!livro) return <p className="text-red-600 text-center mt-20">Nenhum livro encontrado.</p>;
+
   return (
     <motion.main
       initial={{ opacity: 0, y: 20 }}
@@ -101,6 +152,8 @@ function Detalhes() {
       transition={{ duration: 0.8 }}
       className="w-full h-full py-15 px-5 space-y-10"
     >
+      {isLoading && <SkeletonLivro type="detail" />}
+      
       <div className="flex items-center gap-3">
         <Link to="/catalogo">
           <FiArrowLeft size={30} />
@@ -206,6 +259,15 @@ function Detalhes() {
           </div>
         </motion.article>
       </section>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
     </motion.main>
   );
 }

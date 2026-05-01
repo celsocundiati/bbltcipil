@@ -17,7 +17,7 @@ export default function Privacidade() {
   const baselabel = "block text-sm font-semibold text-gray-700 mb-1";
 
   const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validarTelefone = (tel) => /^\d{8,15}$/.test(tel);
+  const validarTelefone = (tel) => /^\d{9,15}$/.test(tel);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +29,7 @@ export default function Privacidade() {
       return;
     }
     if (!validarTelefone(telefone)) {
-      setErro("Telefone inválido. Use apenas números (8-15 dígitos).");
+      setErro("Telefone inválido. Use apenas números (9-15 dígitos).");
       return;
     }
 

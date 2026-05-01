@@ -2,9 +2,8 @@ import Cabecalho from "../casa/cabecalho/cabecalho";
 import { motion } from "framer-motion";
 import { BsStars } from "react-icons/bs";
 import CardExposicoes from "../cards/cardExposicao/CardExposicoes";
-import CardExposicoesMaster from "../cards/cardExposicao/Cardexposicaomaster";
-import CardExposicoesEvento from "../cards/cardExposicao/CardExposicoesEvento";
 import Footer from "../casa/footer/footer";
+import CardEventos from "../cards/cardExposicao/CardEvento";
 
 function Exposicao() {
     return (
@@ -24,18 +23,18 @@ function Exposicao() {
                 </article>          
             </motion.section>
 
-            <section className="grid grid-rows-[auto_auto] grid-cols-1 gap-4 py-10 px-5">
+            {/* <section className="grid grid-rows-[auto_auto] grid-cols-1 gap-4 py-10 px-5">
                 <article className="col-span-1">
                     <CardExposicoesMaster/>
                 </article>
-            </section>
+            </section> */}
 
             <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-10 px-5">
                 <div>
                     <CardExposicoes/>
                 </div>
                 <div>
-                    <CardExposicoesEvento/>
+                    <CardEventos/>
                 </div>
             </section>
 

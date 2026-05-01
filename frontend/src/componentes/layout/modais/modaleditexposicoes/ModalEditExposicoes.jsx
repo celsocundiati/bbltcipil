@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import {HiOutlineXMark} from "react-icons/hi2";
+import { HiOutlineXMark } from "react-icons/hi2";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
 
-
-function ModalEditExposicoes({exposicoes, onClose, setExposicoes})
-{
+function ModalEditExposicoes({ exposicoes, onClose, setExposicoes }) {
     const [form, setForm] = useState({
         titulo: "",
         capa: "",
@@ -18,95 +16,105 @@ function ModalEditExposicoes({exposicoes, onClose, setExposicoes})
 
     const [modal, setModal] = useState({
         open: false,
-        type: "success", // "success" ou "error"
+        type: "success",
         message: "",
     });
 
     const [loading, setLoading] = useState(false);
-    const [erro, setErro] = useState(false);
+    const [saving, setSaving] = useState(false);
 
-  // 🔹 Buscar dados da categoria selecionada ao abrir
-  useEffect(() => {
-    if (exposicoes?.id) {
-      setLoading(true);
+    // 🔹 LOAD DADOS
+    useEffect(() => {
+        if (exposicoes?.id) {
+            setLoading(true);
 
-      api.get(`/livros/gestao-exposicoes/${exposicoes.id}/`)
-        .then(res => {
-          setForm(res.data);
-          setLoading(false);
-        })
-        .catch(err => {
-            if (err.response?.data) {
-                const erros = Object.values(error.response.data)
-                    .flat()
-                    .join("\n");
+            api.get(`/admin/exposicoes/${exposicoes.id}/`)
+                .then((res) => {
+                    setForm(res.data);
+                    setLoading(false);
+                })
+                .catch((err) => {
+                    setLoading(false);
 
-                setModal({
-                    open: true,
-                    type: "error",
-                    message: erros,
+                    const erros = Object.values(
+                        err.response?.data || {}
+                    )
+                        .flat()
+                        .join("\n");
+
+                    setModal({
+                        open: true,
+                        type: "error",
+                        message: erros || "Erro ao carregar dados",
+                    });
                 });
-                setErro(erros);
-            }
-        });
-    }
-  }, [exposicoes]);
+        }
+    }, [exposicoes]);
 
     const handleChange = (e) => {
         setForm({
             ...form,
-            [e.target.name]:
-            e.target.value,
+            [e.target.name]: e.target.value,
         });
     };
 
+    // 🔹 UPDATE
     async function handleUpdate(e) {
-    e.preventDefault();
+        e.preventDefault();
+        setSaving(true);
 
-    try {
-      const response = await api.put(`/livros/gestao-exposicoes/${exposicoes.id}/`,
-        form
-      );
-      setModal({
-          open: true,
-          type: "success",
-          message: "Exposição atualizada com sucesso!",
-      });
+        try {
+            const response = await api.put(
+                `/admin/exposicoes/${exposicoes.id}/`,
+                form
+            );
 
-      // Atualizar lista sem recarregar tudo
-      setExposicoes(prev =>
-        prev.map(expo => (expo.id === exposicoes.id ? response.data : expo))
-      );
+            setExposicoes((prev) =>
+                prev.map((expo) =>
+                    expo.id === exposicoes.id ? response.data : expo
+                )
+            );
 
-    } catch (error) {
-      if (error.response?.data) {
-        const erros = Object.values(error.response.data)
-            .flat()
-            .join("\n");
+            setModal({
+                open: true,
+                type: "success",
+                message: "Exposição atualizada com sucesso!",
+            });
+        } catch (error) {
+            const erros = Object.values(
+                error.response?.data || {}
+            )
+                .flat()
+                .join("\n");
 
             setModal({
                 open: true,
                 type: "error",
-                message: erros,
+                message: erros || "Erro ao atualizar",
             });
-        setErro(erros);
-      }
+        } finally {
+            setSaving(false);
+        }
     }
-  }
 
-  if (!exposicoes) return null;
+    if (!exposicoes) return null;
 
-    return(
+    return (
         <section>
             <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-                    viewport={{ once: true }}             // anima apenas uma vez 
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
                     className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative"
                 >
-                    <button onClick={onClose} className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black">
-                        <HiOutlineXMark size={35}/>
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black"
+                    >
+                        <HiOutlineXMark size={35} />
                     </button>
+
                     <article className="py-4 text-left">
                         <h2 className="text-xl font-medium">
                             Editar Exposições
@@ -115,54 +123,93 @@ function ModalEditExposicoes({exposicoes, onClose, setExposicoes})
                             Edite exposições literárias
                         </p>
                     </article>
+
                     {loading ? (
-                        <div className="py-6 text-center text-black/60 animate-pulse">A carregar...</div>
+                        <div className="py-6 text-center text-black/60 animate-pulse">
+                            A carregar...
+                        </div>
                     ) : (
+
                         <form onSubmit={handleUpdate} className="space-y-4">
-                            <div className="grid grid-cols-1 gap-2">
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-black/75 text-lg text-left">Titulo:</label>
-                                    <input type="text" required name="titulo" id="titulo" value={form.titulo} onChange={handleChange} placeholder="titulo da exposição" className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"/>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-black/75 text-lg text-left">
-                                        Descrição
-                                    </label>
-                                    <textarea placeholder="Breve descrição da exposição..." required name="descricao" value={form.descricao} onChange={handleChange}
-                                    className="mt-1 w-full h-24 rounded-md border border-black/10 bg-black/5 outline-none px-3 py-2 text-black/70  font-medium focus:ring-2 focus:ring-green-500" />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-black/75 text-lg text-left">Local:</label>
-                                    <input type="text" required name="local" id="local" value={form.local} onChange={handleChange} placeholder="titulo da exposição" className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"/>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-black/75 text-lg text-left">Capacidade Máxima:</label>
-                                    <input type="number" required name="capacidade_maxima" id="capacidade_maxima" value={form.capacidade_maxima} onChange={handleChange} placeholder="titulo da exposição" className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"/>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-black/75 text-lg">Data Ínicio</label>
-                                    <input type="date" name="data_inicio"
-                                        max={dataMaximaPermitida} required placeholder="2000-01-01"
-                                        value={form.data_inicio} onChange={handleChange} 
-                                        className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-black/75 text-lg">Data Fim</label>
-                                    <input type="date" name="data_fim"
-                                        max={dataMaximaPermitida} required placeholder="2000-01-01"
-                                        value={form.data_fim} onChange={handleChange} 
-                                        className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-black/75 text-lg">URL da capa</label>
-                                    <input type="text" name="capa" required placeholder="htpps://google.com/image.jpeg" value={form.capa} onChange={handleChange}
-                                        className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-                            </div>
                             
+                                {/* Título */}
+                                <input
+                                    name="titulo"
+                                    value={form.titulo}
+                                    onChange={handleChange}
+                                    placeholder="Título da exposição (ex: Feira do Livro 2026)"
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                                />
+
+                                {/* Descrição */}
+                                <textarea
+                                    name="descricao"
+                                    value={form.descricao}
+                                    onChange={handleChange}
+                                    placeholder="Descreve brevemente o objetivo da exposição..."
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                                />
+
+                                {/* Local */}
+                                <input
+                                    name="local"
+                                    value={form.local}
+                                    onChange={handleChange}
+                                    placeholder="Local da exposição (ex: IPIL - Sala Magna)"
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                                />
+
+                                {/* Capacidade */}
+                                <input
+                                    type="number"
+                                    name="capacidade_maxima"
+                                    value={form.capacidade_maxima}
+                                    onChange={handleChange}
+                                    placeholder="Número máximo de participantes"
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                                />
+
+                                {/* Datas organizadas */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-sm text-left text-black/70">
+                                            Data de Início
+                                        </label>
+                                        <input
+                                            type="date"
+                                            name="data_inicio"
+                                            value={form.data_inicio}
+                                            onChange={handleChange}
+                                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-sm text-left text-black/70">
+                                            Data de Término
+                                        </label>
+                                        <input
+                                            type="date"
+                                            name="data_fim"
+                                            value={form.data_fim}
+                                            onChange={handleChange}
+                                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                                        />
+                                    </div>
+
+                                </div>
+
+                                {/* Capa */}
+                                <input
+                                    name="capa"
+                                    value={form.capa}
+                                    onChange={handleChange}
+                                    placeholder="URL da imagem de capa (ex: https://...)"
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                                />
+
+
                             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
                                 <button
                                     type="button"
@@ -176,7 +223,7 @@ function ModalEditExposicoes({exposicoes, onClose, setExposicoes})
                                     type="submit"
                                     className="w-full sm:w-auto bg-green-500 cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
                                 >
-                                    {loading ? "Registando...." : "Registar"}
+                                    {saving ? "A atualizar..." : "Atualizar"}
                                 </button>
                             </div>
                         </form>
@@ -185,31 +232,32 @@ function ModalEditExposicoes({exposicoes, onClose, setExposicoes})
             </dialog>
 
             {modal.open && (
-                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-                    viewport={{ once: true }}             // anima apenas uma vez 
-                    className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                    <div className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative">
-                        <h3 className="text-lg  font-semibold mb-2">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4"
+                >
+                    <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-6 text-start">
+                        <h3 className="text-lg font-semibold mb-2">
                             {modal.type === "success" ? "Sucesso" : "Erro"}
                         </h3>
+
                         <p>{modal.message}</p>
-                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+
+                        <div className="flex justify-end pt-4">
                             <button
-                                type="submit"
                                 onClick={() => {
-                                    if (modal.type === "success") {
-                                        setModal({ open: false });
-                                        onClose()
-                                    } else {
-                                        setModal({ ...modal, open: false }); // apenas fecha no erro
-                                    }
+                                    setModal({ ...modal, open: false });
+                                    if (modal.type === "success") onClose();
                                 }}
-                                className={`cursor-pointer px-6 py-2 rounded-lg border border-black/10 text-white transition ${
-                                    modal.type === "success" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                                className={`px-6 py-2 rounded-lg text-white cursor-pointer ${
+                                    modal.type === "success"
+                                        ? "bg-green-500"
+                                        : "bg-red-500"
                                 }`}
                             >
-                                {modal.type === "success" ? "Confirmado" : "Tente novamente"}
+                                Ok
                             </button>
                         </div>
                     </div>

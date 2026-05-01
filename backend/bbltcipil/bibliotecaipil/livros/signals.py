@@ -1,31 +1,61 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from .models import Reserva, Livro, Participacao
+from livros.services.counters import rebuild_categoria, rebuild_autor
+
+
+# def livro_save(sender, instance, **kwargs):
+#     if instance.categoria_id:
+#         rebuild_categoria(instance.categoria_id)
+
+
+# def livro_delete(sender, instance, **kwargs):
+#     if instance.categoria_id:
+#         rebuild_categoria(instance.categoria_id)
+
+
+# @receiver(post_save, sender=Livro)
+# def livro_save(sender, instance, created, **kwargs):
+#     if not instance.pk:
+#         return
+
+#     if instance.categoria:
+#         from livros.services.counters import rebuild_categoria
+#         rebuild_categoria(instance.categoria_id)
+
+#     if instance.autor:
+#         from livros.services.counters import rebuild_autor
+#         rebuild_autor(instance.autor_id)
+
+
+# @receiver(post_delete, sender=Livro)
+# def livro_delete(sender, instance, **kwargs):
+#     if instance.categoria:
+#         from livros.services.counters import rebuild_categoria
+#         rebuild_categoria(instance.categoria_id)
+
+#     if instance.autor:
+#         from livros.services.counters import rebuild_autor
+#         rebuild_autor(instance.autor_id)
 
 
 @receiver(post_save, sender=Livro)
-def livro_save(sender, instance, created, **kwargs):
-    if not instance.pk:
-        return
-
-    if instance.categoria:
-        from livros.services.counters import rebuild_categoria
+def livro_save(sender, instance, **kwargs):
+    if instance.categoria_id:
         rebuild_categoria(instance.categoria_id)
 
-    if instance.autor:
-        from livros.services.counters import rebuild_autor
+    if instance.autor_id:
         rebuild_autor(instance.autor_id)
 
 
 @receiver(post_delete, sender=Livro)
 def livro_delete(sender, instance, **kwargs):
-    if instance.categoria:
-        from livros.services.counters import rebuild_categoria
+    if instance.categoria_id:
         rebuild_categoria(instance.categoria_id)
 
-    if instance.autor:
-        from livros.services.counters import rebuild_autor
+    if instance.autor_id:
         rebuild_autor(instance.autor_id)
+
 
 
 # # ===============================

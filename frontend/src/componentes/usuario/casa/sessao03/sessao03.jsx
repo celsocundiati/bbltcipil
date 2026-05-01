@@ -1,6 +1,7 @@
 import { FiArrowRight} from "react-icons/fi";
 import { motion } from "framer-motion";
 import CardLivro from "../../cards/cardsLivross/cardsLivrosHome/livro";
+import { Link } from "react-router-dom";
 
 
 function Sessao03() {
@@ -19,10 +20,10 @@ function Sessao03() {
             <p className="text-black/57">Os mais procurados pelos estudantes</p>
           </div>
 
-          <div className="flex items-center text-[#f97b17] cursor-pointer">
-            <h4 >Ver todos</h4>
+          <Link to="/catalogo" className="flex items-center text-[#f97b17] cursor-pointer">
+            <h4>Ver todos</h4>
             <FiArrowRight/>
-          </div>
+          </Link>
       </div>
       
       <CardLivro props="popular"/>

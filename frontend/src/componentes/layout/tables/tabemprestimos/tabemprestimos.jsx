@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../../service/api/api";
 import { podeGerir } from "../../../auth/podegerir/permissao";
 import { useAuth } from "../../../auth/userAuth/useauth";
+import Skeleton from "../../motion/skeleton/skeleton";
 
 function TabelaEmprestimos() {
 
@@ -189,7 +190,11 @@ function TabelaEmprestimos() {
 
                     <tbody className="divide-y divide-black/10">
 
-                        {emprestimos.length === 0 ? (
+                        {loading ? (
+                            
+                            <Skeleton type="table" count={6} />
+
+                        ) : emprestimos.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="text-center py-4 text-red-600">
                                     Nenhum empréstimo encontrado.
@@ -266,7 +271,6 @@ function TabelaEmprestimos() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="space-y-10"
                     className="fixed inset-0 z-50 bg-black/40 flex justify-center items-center">
 
                     <div className="bg-white p-6 rounded-xl w-full max-w-md">

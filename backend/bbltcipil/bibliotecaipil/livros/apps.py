@@ -5,4 +5,4 @@ class LivrosConfig(AppConfig):
     name = 'livros'
 
     def ready(self):
-        from . import signals
+        import livros.events  # 🔥 REGISTA EVENTOS

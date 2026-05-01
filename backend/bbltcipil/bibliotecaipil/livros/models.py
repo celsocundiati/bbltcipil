@@ -356,9 +356,9 @@ class Notificacao(models.Model):
 
 
 # =============================
-# EXPOSIÇÃO
+# BASE ABSTRACT (EVITA DUPLICAÇÃO)
 # =============================
-class Exposicao(models.Model):
+class BaseEvento(models.Model):
 
     ESTADOS = [
         ('Disponível', 'Disponível'),
@@ -373,49 +373,90 @@ class Exposicao(models.Model):
     local = models.CharField(max_length=255)
 
     capacidade_maxima = models.PositiveIntegerField()
-    estado = models.CharField(max_length=15, choices=ESTADOS, default='Disponível')
 
-    data_inicio = models.DateTimeField()
-    data_fim = models.DateTimeField()
+    estado = models.CharField(
+        max_length=15,
+        choices=ESTADOS,
+        default='Disponível'
+    )
 
+    # ✅ CORRETO: apenas data (dia/mês/ano)
+    data_inicio = models.DateField()
+    data_fim = models.DateField()
+
+    class Meta:
+        abstract = True
+
+    # =========================
+    # HELPERS
+    # =========================
     def vagas_disponiveis(self):
+        if not self.pk:
+            return self.capacidade_maxima
+
         return self.capacidade_maxima - self.participacoes.count()
 
+    def hoje(self):
+        return timezone.now().date()
+
+    # =========================
+    # BUSINESS LOGIC
+    # =========================
     def atualizar_estado(self):
-        if self.vagas_disponiveis() <= 0:
+
+        if self.data_fim < self.hoje():
+            self.estado = 'Encerrado'
+
+        elif self.pk and self.vagas_disponiveis() <= 0:
             self.estado = 'Esgotado'
+
         else:
             self.estado = 'Disponível'
 
+    # =========================
+    # VALIDATION
+    # =========================
     def clean(self):
+
         if self.capacidade_maxima <= 0:
             raise ValidationError("Capacidade deve ser maior que zero.")
 
+        if self.data_inicio >= self.data_fim:
+            raise ValidationError("Data de início deve ser menor que a data de fim.")
+
+    # =========================
+    # SAVE (SEGURO E CORRIGIDO)
+    # =========================
     def save(self, *args, **kwargs):
+
+        # valida antes de salvar
         self.full_clean()
+
+        # salva primeiro para garantir PK
         super().save(*args, **kwargs)
+
+        # atualiza estado com segurança
+        self.atualizar_estado()
+
+        super().save(update_fields=["estado"])
+
+
+# =============================
+# EXPOSIÇÃO
+# =============================
+class Exposicao(BaseEvento):
+
+    def __str__(self):
+        return f"Exposição: {self.titulo}"
 
 
 # =============================
 # EVENTO
 # =============================
-class Evento(models.Model):
+class Evento(BaseEvento):
 
-    ESTADOS = Exposicao.ESTADOS
-
-    titulo = models.CharField(max_length=255)
-    capa = models.URLField(max_length=500)
-    descricao = models.TextField(blank=True)
-    local = models.CharField(max_length=255)
-
-    capacidade_maxima = models.PositiveIntegerField()
-    estado = models.CharField(max_length=15, choices=ESTADOS, default='Disponível')
-
-    data_inicio = models.DateTimeField()
-    data_fim = models.DateTimeField()
-
-    def vagas_disponiveis(self):
-        return self.capacidade_maxima - self.participacoes.count()
+    def __str__(self):
+        return f"Evento: {self.titulo}"
 
 
 # =============================
@@ -424,40 +465,62 @@ class Evento(models.Model):
 class Participacao(models.Model):
 
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    exposicao = models.ForeignKey(Exposicao, related_name='participacoes', on_delete=models.CASCADE)
-    evento = models.ForeignKey(Evento, related_name='participacoes', on_delete=models.CASCADE)
+
+    exposicao = models.ForeignKey(
+        Exposicao,
+        null=True,
+        blank=True,
+        related_name='participacoes',
+        on_delete=models.CASCADE
+    )
+
+    evento = models.ForeignKey(
+        Evento,
+        null=True,
+        blank=True,
+        related_name='participacoes',
+        on_delete=models.CASCADE
+    )
 
     compareceu = models.BooleanField(default=False)
     data_registro = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.usuario} - {self.exposicao.titulo} / {self.evento.titulo}"
-
+    # =========================
+    # VALIDATION
+    # =========================
     def clean(self):
-        if self.exposicao.estado == 'Encerrado':
-            raise ValidationError("Exposição encerrada.")
 
-        if self.exposicao.vagas_disponiveis() <= 0:
+        if not self.exposicao and not self.evento:
+            raise ValidationError("Deve escolher um evento ou uma exposição.")
+
+        if self.exposicao and self.evento:
+            raise ValidationError("Escolha apenas um: evento OU exposição.")
+
+        alvo = self.exposicao or self.evento
+
+        if alvo and alvo.estado == 'Encerrado':
+            raise ValidationError("Evento/Exposição encerrado.")
+
+        if alvo and alvo.vagas_disponiveis() <= 0:
             raise ValidationError("Sem vagas disponíveis.")
 
-        if self.evento.estado == 'Encerrado':
-            raise ValidationError("Evento encerrado.")
+        if Participacao.objects.filter(
+            usuario=self.usuario,
+            exposicao=self.exposicao,
+            evento=self.evento
+        ).exclude(pk=self.pk).exists():
+            raise ValidationError("Usuário já está inscrito.")
 
-        if self.evento.vagas_disponiveis() <= 0:
-            raise ValidationError("Sem vagas disponíveis.")
+    # =========================
+    # SAVE
+    # =========================
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
-
-
-
-
-
-
-
-
-
-
-
-
+    def __str__(self):
+        alvo = self.exposicao or self.evento
+        return f"{self.usuario} - {alvo.titulo if alvo else 'Sem alvo'}"
 
 
 

@@ -13,15 +13,16 @@ from django.utils import timezone
 from django.utils.timezone import now
 from datetime import timedelta
 from audit.models import AuditLog
-from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro
+from livros.models import Reserva, Emprestimo, Autor, Categoria, Livro, Exposicao, Evento, Participacao
 from accounts.models import AlunoOficial, FuncionarioOficial, Perfil
 from .models import Multa, ConfiguracaoSistema
 from .serializers import (
     ReservaAdminSerializer, EmprestimoAdminSerializer, AutorAdminSerializer,
     CategoriaAdminSerializer, LivroAdminSerializer, AuditLogSerializer,
+    ExposicaoAdminSerializer, EventoAdminSerializer, ParticipacaoAdminSerializer,
     AlunoOficialAdminSerializer, FuncionarioOficialAdminSerializer,
     PerfilAdminSerializer, MultaSerializer, ConfiguracaoSistemaSerializer,
-    PromoteUserSerializer, UserListSerializer
+    PromoteUserSerializer, UserListSerializer,
 )
 from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo, aprovar_reserva, cancelar_reserva_admin, finalizar_reserva, remover_reserva
 from .permissions import SistemaPermission, OnlySuperUser
@@ -330,6 +331,48 @@ class MultaViewSet(viewsets.ModelViewSet):
         return Response({"status": "Multa dispensada"})
 
 
+# =============================
+# EXPOSIÇÃO ADMIN
+# =============================
+class ExposicaoAdminViewSet(viewsets.ModelViewSet):
+    queryset = Exposicao.objects.all().order_by("-data_inicio")
+    serializer_class = ExposicaoAdminSerializer
+    permission_classes = [SistemaPermission]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["titulo", "descricao", "local"]
+    ordering_fields = ["data_inicio", "data_fim"]
+
+
+# =============================
+# EVENTO ADMIN
+# =============================
+class EventoAdminViewSet(viewsets.ModelViewSet):
+    queryset = Evento.objects.all().order_by("-data_inicio")
+    serializer_class = EventoAdminSerializer
+    permission_classes = [SistemaPermission]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["titulo", "descricao", "local"]
+    ordering_fields = ["data_inicio", "data_fim"]
+
+
+# =============================
+# PARTICIPAÇÃO ADMIN
+# =============================
+class ParticipacaoAdminViewSet(viewsets.ModelViewSet):
+    queryset = Participacao.objects.select_related("usuario", "evento", "exposicao")
+    serializer_class = ParticipacaoAdminSerializer
+    permission_classes = [SistemaPermission]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ["usuario__username"]
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+
+
 # -----------------------------
 # CONFIGURAÇÕES DO SISTEMA
 # -----------------------------
@@ -481,7 +524,7 @@ class UserAdminViewSet(viewsets.ModelViewSet):
     # -------------------------
     # PROMOVER
     # -------------------------
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post", "patch"])
     def promote(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { HiOutlineXMark } from "react-icons/hi2";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
+import Permissao from "../../../auth/hooks/gerir/gerenciamento";
 
 function ModalEditAdmin({ onClose, onSuccess, adm }) {
     const [form, setForm] = useState({
+        username: "",
         grupo: "Admin",
     });
 
@@ -42,15 +44,9 @@ function ModalEditAdmin({ onClose, onSuccess, adm }) {
 
     // 🔥 Payload para backend
     const montarPayload = () => {
-        if (form.grupo === "issuperuser") {
-            return {
-                is_superuser: true,
-                grupos: [],
-            };
-        }
         return {
-            is_superuser: false,
-            grupos: [form.grupo],
+            username: form.username, // 🔥 OBRIGATÓRIO
+            grupos: form.grupo === "issuperuser" ? [] : [form.grupo],
         };
     };
 
@@ -113,8 +109,9 @@ function ModalEditAdmin({ onClose, onSuccess, adm }) {
                         <input
                             type="text"
                             name="username"
-                            value={adm.username}
-                            className="w-full px-3 py-2 border border-black/10 outline-none rounded-lg bg-gray-100 cursor-not-allowed"
+                            value={form.username}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-black/10 outline-none rounded-lg bg-gray-100"
                         />
 
                         <select
@@ -123,7 +120,9 @@ function ModalEditAdmin({ onClose, onSuccess, adm }) {
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-black/10 cursor-pointer outline-none rounded-lg"
                         >
-                            <option value="issuperuser">Super User</option>
+                            <Permissao>
+                                <option value="issuperuser">Super User</option>
+                            </Permissao>
                             <option value="Admin">Admin</option>
                             <option value="Bibliotecario">Bibliotecário</option>
                         </select>
