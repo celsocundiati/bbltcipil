@@ -25,7 +25,7 @@ function EstadoCard({estado, label}){
         <span className={estiloEstado(estado)}>
             {estado === "Reservado" ? (
                     <FiCheckCircle size={22}/>
-                ) : estado === "Em uso" ? (
+                ) : estado === "Em Uso" ? (
                     <FiCheckCircle size={22}/>
                 ) : estado === "Pendente" ? (
                     <LuClock size={22}/>

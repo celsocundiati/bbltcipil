@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import api from "../../service/api/api";
 import CardLivroCatalogo from "../cards/cardsLivross/cardsLivrosCatalogo/livro";
+import HelpChatIcon from "../casa/ajuda/chat";
 
 
 function Catalogo() {
@@ -27,6 +28,7 @@ function Catalogo() {
     return(
         <div>
             <Cabecalho/>
+            <HelpChatIcon/>
             <motion.main initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
                 whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
                 viewport={{ once: true }}             // anima apenas uma vez

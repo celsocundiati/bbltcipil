@@ -1,7 +1,9 @@
 import { useState } from "react";
 import api from "../../../service/api/api";
+import { motion } from "framer-motion";
+import { HiOutlineXMark } from "react-icons/hi2";
 
-function ModalAddEvento()
+function ModalAddEvento({ onClose, showToast })
 {
     const [form, setForm] = useState({
         titulo: "",
@@ -13,33 +15,30 @@ function ModalAddEvento()
         data_fim: "",
     });
 
-    const [modal, setModal] = useState({
-        open: false,
-        type: "success", // "success" ou "error"
-        message: "",
-    });
-
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         setForm({
             ...form,
-            [e.target.name]:
-            e.target.value,
+            [e.target.name]: e.target.value,
         });
     };
+
+    const hoje = new Date();
+
+    const dataMaximaPermitida = new Date(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        hoje.getDate() + 1
+    ).toISOString().split("T")[0];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        try {
-            api.post("/livros/gestao-eventos/", form);
 
-            setModal({
-                open: true,
-                type: "success",
-                message: "Evento criado com sucesso!",
-            });
+        try {
+
+            await api.post("/admin/eventos/", form);
 
             setForm({
                 titulo: "",
@@ -49,144 +48,193 @@ function ModalAddEvento()
                 capacidade_maxima: "",
                 data_inicio: "",
                 data_fim: "",
-            })
+            });
+
+            showToast({
+                message: "Evento cadastrado com sucesso",
+                type: "success",
+            });
+
+            onClose();
+
         } catch (error) {
+
             if (error.response?.data) {
+
                 const erros = Object.values(error.response.data)
                     .flat()
                     .join(" ");
 
-                setModal({
-                    open: true,
-                    type: "error",
+                showToast({
                     message: erros,
+                    type: "error",
                 });
-                setErro(erros);
+
             } else {
-                alert("Erro ao comunicar com o servidor");
+
+                showToast({
+                    message: "Erro ao comunicar com o servidor",
+                    type: "error",
+                });
+
             }
+
+        } finally {
+            setLoading(false);
         }
+    };
 
-        setLoading(false);
-    }
+    return (
+        <>
+            <section className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
 
-
-    return(
-        <section>
-            <dialog className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-                    viewport={{ once: true }}             // anima apenas uma vez 
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative"
                 >
-                    <button onClick={onClose} className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black">
-                        <HiOutlineXMark size={35}/>
+
+                    {/* FECHAR */}
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black"
+                    >
+                        <HiOutlineXMark size={35} />
                     </button>
+
+                    {/* HEADER */}
                     <article className="py-4 text-left">
+
                         <h2 className="text-xl font-medium">
                             Registar Evento
                         </h2>
+
                         <p className="text-lg">
                             Registre eventos escolares
                         </p>
+
                     </article>
+
+                    {/* FORM */}
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-2">
+
+                        {/* TÍTULO */}
+                        <input
+                            type="text"
+                            required
+                            name="titulo"
+                            value={form.titulo}
+                            onChange={handleChange}
+                            placeholder="Título do evento"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                        />
+
+                        {/* DESCRIÇÃO */}
+                        <textarea
+                            required
+                            name="descricao"
+                            value={form.descricao}
+                            onChange={handleChange}
+                            placeholder="Breve descrição do evento..."
+                            className="w-full h-24 p-2 bg-black/5 rounded outline-none border border-black/5"
+                        />
+
+                        {/* LOCAL */}
+                        <input
+                            type="text"
+                            required
+                            name="local"
+                            value={form.local}
+                            onChange={handleChange}
+                            placeholder="Local do evento"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                        />
+
+                        {/* CAPACIDADE */}
+                        <input
+                            type="number"
+                            required
+                            name="capacidade_maxima"
+                            value={form.capacidade_maxima}
+                            onChange={handleChange}
+                            placeholder="Capacidade máxima"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                        />
+
+                        {/* DATAS */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
                             <div className="flex flex-col gap-1">
-                                <label className="text-black/75 text-lg text-left">Titulo:</label>
-                                <input type="text" required name="titulo" id="titulo" value={form.titulo} onChange={handleChange} placeholder="titulo da exposição" className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"/>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-black/75 text-lg text-left">
-                                    Descrição
+
+                                <label className="text-sm text-left text-black/70">
+                                    Data de Início
                                 </label>
-                                <textarea placeholder="Breve descrição da exposição..." required name="descricao" value={form.descricao} onChange={handleChange}
-                                className="mt-1 w-full h-24 rounded-md border border-black/10 bg-black/5 outline-none px-3 py-2 text-black/70  font-medium focus:ring-2 focus:ring-green-500" />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-black/75 text-lg text-left">Local:</label>
-                                <input type="text" required name="local" id="local" value={form.local} onChange={handleChange} placeholder="titulo da exposição" className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"/>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-black/75 text-lg text-left">Capacidade Máxima:</label>
-                                <input type="number" required name="capacidade_maxima" id="capacidade_maxima" value={form.capacidade_maxima} onChange={handleChange} placeholder="titulo da exposição" className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"/>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-black/75 text-lg">Data Ínicio</label>
-                                <input type="date" name="data_inicio"
-                                    max={dataMaximaPermitida} required placeholder="2000-01-01"
-                                    value={form.data_inicio} onChange={handleChange} 
-                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"
+
+                                <input
+                                    type="date"
+                                    name="data_inicio"
+                                    value={form.data_inicio}
+                                    onChange={handleChange}
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                                 />
+
                             </div>
+
                             <div className="flex flex-col gap-1">
-                                <label className="text-black/75 text-lg">Data Fim</label>
-                                <input type="date" name="data_fim"
-                                    max={dataMaximaPermitida} required placeholder="2000-01-01"
-                                    value={form.data_fim} onChange={handleChange} 
-                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"
+
+                                <label className="text-sm text-left text-black/70">
+                                    Data de Término
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="data_fim"
+                                    value={form.data_fim}
+                                    onChange={handleChange}
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                                 />
+
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-black/75 text-lg">URL da capa</label>
-                                <input type="text" name="capa" required placeholder="htpps://google.com/image.jpeg" value={form.capa} onChange={handleChange}
-                                    className="bg-black/5 outline-none py-2 px-2 rounded-lg text-black/70  font-medium focus:ring-2 focus:ring-green-500"
-                                />
-                            </div>
+
                         </div>
-                        
-                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+
+                        {/* CAPA */}
+                        <input
+                            type="text"
+                            name="capa"
+                            required
+                            value={form.capa}
+                            onChange={handleChange}
+                            placeholder="URL da capa"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+                        />
+
+                        {/* BOTÕES */}
+                        <div className="flex justify-end gap-3">
+
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="w-full sm:w-auto border border-black/10 cursor-pointer text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
+                                className="px-4 py-2 rounded bg-black/10 cursor-pointer hover:bg-red-500 hover:text-white transition"
                             >
                                 Cancelar
                             </button>
 
                             <button
                                 type="submit"
-                                className="w-full sm:w-auto bg-green-500 cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                                className="bg-green-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-green-600 transition"
                             >
-                                {loading ? "Registando...." : "Registar"}
+                                {loading ? "Registando..." : "Registar"}
                             </button>
-                        </div>
-                    </form>
-                </motion.div>
-            </dialog>
 
-            {modal.open && (
-                <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
-                    whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
-                    viewport={{ once: true }}             // anima apenas uma vez 
-                    className="fixed inset-0 z-50 bg-black/40 flex items-center w-full h-screen justify-center p-4">
-                    <div className="w-full text-start max-w-96 md:max-w-lg bg-white shadow-xl rounded-2xl p-6 relative">
-                        <h3 className="text-lg  font-semibold mb-2">
-                            {modal.type === "success" ? "Sucesso" : "Erro"}
-                        </h3>
-                        <p>{modal.message}</p>
-                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-                            <button
-                                type="submit"
-                                onClick={() => {
-                                    if (modal.type === "success") {
-                                        setModal({ open: false });
-                                        onClose()
-                                    } else {
-                                        setModal({ ...modal, open: false }); // apenas fecha no erro
-                                    }
-                                }}
-                                className={`cursor-pointer px-6 py-2 rounded-lg border border-black/10 text-white transition ${
-                                    modal.type === "success" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                                }`}
-                            >
-                                {modal.type === "success" ? "Confirmado" : "Tente novamente"}
-                            </button>
                         </div>
-                    </div>
+
+                    </form>
+
                 </motion.div>
-            )}
-        </section>
+
+            </section>
+        </>
     );
 }
 

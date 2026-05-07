@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     CategoriaViewSet, AutorViewSet, LivroViewSet, ReservaViewSet, EmprestimoViewSet, NotificacaoViewSet, 
-    MinhasExposicoesViewSet, ExposicaoViewSet, ParticipacaoViewSet, EventoViewSet, MeusEventosViewSet
+    MinhasExposicoesViewSet, ExposicaoViewSet, ParticipacaoViewSet, EventoViewSet, MeusEventosViewSet, ConfiguracaoSistemaViewSet
     )
 
 router = DefaultRouter()
@@ -17,6 +17,7 @@ router.register(r'eventos', EventoViewSet, basename="eventos")
 router.register(r'participacoes', ParticipacaoViewSet, basename="participacoes")
 router.register(r'minhas-exposicoes', MinhasExposicoesViewSet, basename="minhas-exposicoes")  
 router.register(r'meus-eventos', MeusEventosViewSet, basename="meus-eventos")
+router.register(r'configuracoes', MeusEventosViewSet, basename="configuracoes")
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -104,33 +104,8 @@ function Detalhes() {
       console.error(error);
 
     }
-
-    // } catch (error) {
-
-    //   if (error.response && error.response.data) {
-
-    //     const data = error.response.data;
-    //     const msg = data.livro || data.non_field_errors || JSON.stringify(data);
-
-    //     setToast({
-    //       message: `Erro: ${msg}`,
-    //       type: "error",
-    //     });
-
-    //   } else {
-
-    //     setToast({
-    //       message: "Erro ao fazer reserva. Tente novamente.",
-    //       type: "error",
-    //     });
-
-    //   }
-
-    //   console.error(error.response || error);
-
-    // }
-
   };
+  
   // Renderiza sumário
   const renderSumario = () =>
     livro.sumario

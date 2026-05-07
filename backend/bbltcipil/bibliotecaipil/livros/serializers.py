@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.apps import apps
 from django.utils import timezone
 from .models import Livro, Autor, Categoria, Reserva, Emprestimo, Notificacao, Exposicao, Evento, Participacao
+from administracao.models import ConfiguracaoSistema
 
 
 # ==============================
@@ -178,6 +179,13 @@ class EmprestimoSerializer(serializers.ModelSerializer):
         if value < timezone.now().date():
             raise serializers.ValidationError("A data de devolução não pode ser inferior à data atual.")
         return value
+
+
+
+class ConfiguracaoSistemaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConfiguracaoSistema
+        fields = "__all__"
 
 
 

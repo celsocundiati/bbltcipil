@@ -13,7 +13,7 @@ import Skeleton from "../../../../layout/motion/skeleton/skeleton";
 function CardLivroCatalogo() {
   const [livros, setLivros] = useState([]);
   const navigate = useNavigate();
-  const [mostrarFiltro, setMostrarFiltros] = useState(true)
+  const [mostrarFiltro, setMostrarFiltros] = useState(false)
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [estadoFilter, setEstadoFilter] = useState("");
@@ -61,7 +61,7 @@ function CardLivroCatalogo() {
                         <button className="h-full rounded-l-lg px-2 py-2 hover:text-[#f97b17] transition cursor-pointer"> <FiSearch size={22}/> </button>
         
                         <input type="text" placeholder="Pesquisar por titulo, autor e categoria..."
-                        className="flex-1 px-4 py-2.5 bg-white/17 outline-none
+                        className="flex-1 px-4 py-2.5 bg-white/17 outline-none text-sm sm:text-lg
                         " value={search} onChange={(e) => setSearch(e.target.value)}/>
                     </div>
                 </div>

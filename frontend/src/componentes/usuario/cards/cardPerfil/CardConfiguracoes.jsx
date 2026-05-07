@@ -39,7 +39,7 @@ function Configuracoes() {
    }, [navigate]);
 
   // 🔎 Filtragem real baseada no backend
-  const reservasAtivas = reservas.filter(r => r.estado === "reservado" || r.estado === "pendente");
+  const reservasAtivas = reservas.filter(r => r.estado === "reservado" || r.estado === "pendente" || r.estado === "em_uso");
   const emprestimosAtivos = emprestimos.filter(e => e.acoes !== "devolvido");
 
   const randomReservado = reservasAtivas.length > 0
@@ -116,9 +116,21 @@ function Configuracoes() {
                 <h1 className="text-sm">{randomReservado.livro_nome}</h1>
                 <p className="text-black/57 text-sm">{randomReservado.autor_nome}</p>
                 <div className="text-[#f97b17]">
-                  <p className="text-sm bg-[#f97b17]/15 px-4 py-0.5 rounded">
+                  {randomReservado.estado === "em_uso" ?
+                    (
+                      <p className="text-sm bg-green-100 text-[#22C55E] text-center px-4 py-0.5 rounded max-w-32">
+                        {randomReservado.estado_label}
+                      </p>
+                    ) : (
+                      <p className="text-sm bg-[#f97b17]/15 text-center px-4 py-0.5 rounded max-w-32">
+                        {randomReservado.estado_label}
+                      </p>
+                    )
+
+                  }
+                  {/* <p className="text-sm bg-[#f97b17]/15 text-center px-4 py-0.5 rounded max-w-32">
                     {randomReservado.estado_label}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </article>

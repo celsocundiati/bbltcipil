@@ -7,9 +7,10 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from .models import Categoria, Autor, Livro, Reserva, Emprestimo, Notificacao, Exposicao, Evento, Participacao
+from administracao.models import ConfiguracaoSistema
 from .serializers import (
     CategoriaSerializer, AutorSerializer, LivroSerializer, ReservaSerializer, EmprestimoSerializer, 
-    NotificacaoSerializer, ExposicaoSerializer, EventoSerializer, ParticipacaoSerializer
+    NotificacaoSerializer, ExposicaoSerializer, EventoSerializer, ParticipacaoSerializer, ConfiguracaoSistemaSerializer
 )
 from .service import criar_reserva, cancelar_reserva, reservar_exposicao, reservar_evento, cancelar_participacao
 User = get_user_model()
@@ -171,6 +172,25 @@ class EmprestimoViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return Emprestimo.objects.filter(reserva__usuario=self.request.user)
+
+
+# -----------------------------
+# CONFIGURAÇÕES DO SISTEMA
+# -----------------------------
+class ConfiguracaoSistemaViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ConfiguracaoSistema.objects.all()
+    serializer_class = ConfiguracaoSistemaSerializer
+    permission_classes = [IsAuthenticated]
+
+
+    def get_object(self):
+        obj, created = ConfiguracaoSistema.objects.get_or_create(id=1)
+        return obj
+
+    def list(self, request):
+        config = self.get_object()
+        serializer = ConfiguracaoSistemaSerializer(config)
+        return Response(serializer.data)
 
 
 # ==============================

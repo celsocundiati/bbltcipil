@@ -4,11 +4,15 @@ import { BsStars } from "react-icons/bs";
 import CardExposicoes from "../cards/cardExposicao/CardExposicoes";
 import Footer from "../casa/footer/footer";
 import CardEventos from "../cards/cardExposicao/CardEvento";
+import HelpChatIcon from "../casa/ajuda/chat";
 
 function Exposicao() {
     return (
         <div>
             <Cabecalho/>
+
+            <HelpChatIcon/>
+
             <motion.section  initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
                 whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela
                 viewport={{ once: true }}             // anima apenas uma vez
@@ -22,12 +26,6 @@ function Exposicao() {
                     <p className="text-xl text-white/80">Descubra eventos literários, novos livros e coleções especiais</p>
                 </article>          
             </motion.section>
-
-            {/* <section className="grid grid-rows-[auto_auto] grid-cols-1 gap-4 py-10 px-5">
-                <article className="col-span-1">
-                    <CardExposicoesMaster/>
-                </article>
-            </section> */}
 
             <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-10 px-5">
                 <div>

@@ -32,6 +32,7 @@ import Privacidade from './componentes/auth/privacidadeuser/privacidade';
 import PrivateRoute from './componentes/auth/rotasprivadas/rotasprivadas';
 import {RoleRoute} from './componentes/auth/adminrotas/adminrotas';
 import Configuracoesadmin from './componentes/admin/configuracoes/configuracoes';
+import PasswordResetForm from './componentes/auth/recuperacaosenhas/recuperacaosenhas';
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             {/* Rotas públicas */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/cadastro" element={<CadastroAluno />} />
+            <Route path="/recuperacaosenha" element={<PasswordResetForm />} />
 
             {/* Rotas privadas */}
             <Route path="/" element={<PrivateRoute><Casa /></PrivateRoute>} />

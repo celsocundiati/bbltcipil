@@ -1,8 +1,37 @@
 import { HiOutlineInformationCircle, HiOutlineBookOpen, HiOutlineClipboardDocumentCheck, 
         HiOutlineClipboardDocumentList, HiOutlineShieldCheck } from "react-icons/hi2";
 import { FiArrowRight } from "react-icons/fi";
+import { useEffect, useState } from "react";
+
 
 function Seccao2() {
+
+    const [loading, setLoading] = useState(false);
+
+    // const [formData, setFormData] = useState()
+    
+    // 🔄 CARREGAR CONFIG
+    useEffect(() => {
+        async function fetchConfig() {
+            try {
+            setLoading(true);
+            const res = await api.get("/livros/configuracoes/");
+            setFormData(res.data);
+            } catch (error) {
+            console.error("Erro ao carregar configurações:", error);
+            } finally {
+            setLoading(false);
+            }
+        }
+
+        fetchConfig();
+        
+    }, []);
+
+    
+  const [formData, setFormData] = useState({});
+
+
     return (
         <section className="bg-[#f9fafc] p-4 sm:p-6 md:p-8 shadow-sm mb-6 rounded-2xl">
             
@@ -26,7 +55,7 @@ function Seccao2() {
                         </h3>
                     </div>
                     <p className="text-gray-600 text-sm sm:text-base mt-2">
-                        Os usuários podem emprestar livros por um período determinado.
+                        Os professores podem emprestar livros apartir de reservas por um período determinado.
                         Utilize o sistema para verificar a disponibilidade e realizar empréstimos.
                     </p>
                 </div>
@@ -40,7 +69,7 @@ function Seccao2() {
                         </h3>
                     </div>
                     <p className="text-gray-600 text-sm sm:text-base mt-2">
-                        Reserve livros facilmente pelo sistema para uso na biblioteca sem processos desnecessários.
+                        Reserve livros facilmente pelo sistema para uso na biblioteca ou empréstimo sem processos desnecessários.
                     </p>
                 </div>
 
@@ -58,14 +87,14 @@ function Seccao2() {
                         <div className="flex items-start gap-2">
                             <FiArrowRight size={18} className="text-[#F86417] mt-1" />
                             <span className="text-gray-600 text-sm sm:text-base">
-                                Respeitar prazos e manter o silêncio é fundamental.
+                                Respeitar os prazos de entrega dos livros e manter o silêncio é fundamental.
                             </span>
                         </div>
 
                         <div className="flex items-start gap-2">
                             <FiArrowRight size={18} className="text-[#F86417] mt-1" />
                             <span className="text-gray-600 text-sm sm:text-base">
-                                Máximo de 3 livros por usuário.
+                                Máximo de {formData.limite_reservas_uso} livros por usuário.
                             </span>
                         </div>
 

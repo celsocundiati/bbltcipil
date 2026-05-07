@@ -10,7 +10,7 @@ function Toast({
   type = "success",
   onClose,
   duration = 3000,
-}) {
+  }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose?.();
