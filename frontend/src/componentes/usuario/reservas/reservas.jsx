@@ -4,11 +4,15 @@ import Welcome from "../catalogo/seccoes/Welcome";
 import Footer from "../casa/footer/footer";
 import { motion } from "framer-motion";
 import CardReservas from "../cards/cardReservas/reservas";
+import HelpChatIcon from "../casa/ajuda/chat";
 
 function Reservas(){
     return(
         <div>
             <Cabecalho/>
+
+            <HelpChatIcon/>
+            
             <Welcome titulo="Minhas Reservas" paragrafo="Gerencie suas reservas e empréstimos"/>
             <motion.div initial={{ opacity: 0, y: 20 }}       // começa invisível e levemente abaixo
                     whileInView={{ opacity: 1, y: 0 }}   // anima quando entra na tela

@@ -240,7 +240,7 @@ def aprovar_reservas_automaticamente():
 
 @shared_task
 def expirar_reservas():
-    limite = timezone.now() - timedelta(days=3)
+    limite = timezone.now() - timedelta(days=1)
 
     reservas = Reserva.objects.filter(
         estado="reservado",

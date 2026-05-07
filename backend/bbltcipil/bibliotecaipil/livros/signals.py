@@ -4,41 +4,6 @@ from .models import Reserva, Livro, Participacao
 from livros.services.counters import rebuild_categoria, rebuild_autor
 
 
-# def livro_save(sender, instance, **kwargs):
-#     if instance.categoria_id:
-#         rebuild_categoria(instance.categoria_id)
-
-
-# def livro_delete(sender, instance, **kwargs):
-#     if instance.categoria_id:
-#         rebuild_categoria(instance.categoria_id)
-
-
-# @receiver(post_save, sender=Livro)
-# def livro_save(sender, instance, created, **kwargs):
-#     if not instance.pk:
-#         return
-
-#     if instance.categoria:
-#         from livros.services.counters import rebuild_categoria
-#         rebuild_categoria(instance.categoria_id)
-
-#     if instance.autor:
-#         from livros.services.counters import rebuild_autor
-#         rebuild_autor(instance.autor_id)
-
-
-# @receiver(post_delete, sender=Livro)
-# def livro_delete(sender, instance, **kwargs):
-#     if instance.categoria:
-#         from livros.services.counters import rebuild_categoria
-#         rebuild_categoria(instance.categoria_id)
-
-#     if instance.autor:
-#         from livros.services.counters import rebuild_autor
-#         rebuild_autor(instance.autor_id)
-
-
 @receiver(post_save, sender=Livro)
 def livro_save(sender, instance, **kwargs):
     if instance.categoria_id:
@@ -72,63 +37,6 @@ def atualizar_perfil(usuario):
             perfil.atualizar_estado()
     except Exception as e:
         print("❌ Erro ao atualizar perfil:", e)
-
-# ===============================
-# LIVRO → CONTADOR CATEGORIA
-# ===============================
-
-# @receiver(post_save, sender=Livro)
-# def atualizar_total_livro(sender, instance, created, **kwargs):
-#     try:
-#         if created and instance.categoria:
-#             Categoria.objects.filter(pk=instance.categoria.pk).update(
-#                 n_livros=F('n_livros') + 1
-#             )
-#     except Exception as e:
-#         print("❌ Erro categoria livro:", e)
-
-
-# @receiver(post_delete, sender=Livro)
-# def reduzir_total_livro(sender, instance, **kwargs):
-#     try:
-#         if instance.categoria:
-#             Categoria.objects.filter(pk=instance.categoria.pk).update(
-#                 n_livros=F('n_livros') - 1
-#             )
-
-#             # 🔒 segurança pós-update (opcional mas recomendado)
-#             Categoria.objects.filter(pk=instance.categoria.pk, n_livros__lt=0).update(
-#                 n_livros=0
-#             )
-#     except Exception as e:
-#         print("❌ Erro remover livro categoria:", e)
-        
-
-
-# ===============================
-# LIVRO → CONTADOR AUTOR
-# ===============================
-
-# @receiver(post_save, sender=Livro)
-# def incrementar_total_obras(sender, instance, created, **kwargs):
-#     try:
-#         if created and instance.autor:
-#             type(instance.autor).objects.filter(pk=instance.autor.pk).update(
-#                 total_obras=F('total_obras') + 1
-#             )
-#     except Exception as e:
-#         print("❌ Erro autor +1:", e)
-
-
-# @receiver(post_delete, sender=Livro)
-# def decrementar_total_obras(sender, instance, **kwargs):
-#     try:
-#         if instance.autor:
-#             type(instance.autor).objects.filter(pk=instance.autor.pk).update(
-#                 total_obras=F('total_obras') - 1
-#             )
-#     except Exception as e:
-#         print("❌ Erro autor -1:", e)
 
 
 # ===============================

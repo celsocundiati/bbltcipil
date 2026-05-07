@@ -69,12 +69,17 @@ export default function CadastroUsuario() {
     }
   };
 
+  const capa="https://res.cloudinary.com/degsmhalt/image/upload/v1765812599/livro02_hawwht.webp"
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md space-y-6"
       >
+        <div>
+          <img src={capa} alt="LOGO"/>
+        </div>
         <h1 className="text-2xl font-bold text-center text-[#F97B17]">
           Cadastro de Usuário
         </h1>

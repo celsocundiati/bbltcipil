@@ -5,6 +5,7 @@ import { HiOutlineQuestionMarkCircle } from "react-icons/hi2";
 import Seccao1 from "./seccoes/seccao1";
 import Seccao2 from "./seccoes/seccao2";
 import Seccao3 from "./seccoes/seccao3";
+import HelpChatIcon from "../casa/ajuda/chat";
 
 function Institucional() {
     return (
@@ -15,6 +16,8 @@ function Institucional() {
             className="bg-gray-100 min-h-screen"
         >
             <Cabecalho />
+
+            <HelpChatIcon />
 
             {/* CONTAINER PRINCIPAL */}
             <section className="py-24 md:pt-32 pt-36 px-4 md:px-10">

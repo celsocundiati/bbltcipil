@@ -1,8 +1,13 @@
 import { HiOutlineXMark } from "react-icons/hi2";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
+import Toast from "../../../usuario/stylenotificacao/toast";
+import { useState } from "react";
+
 
 function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
+
+  const [toast, setToast] = useState(null);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -12,6 +17,10 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
         reserva: reserva.id
       });
 
+      setToast({
+        message: "Livro emprestado com sucesso!",
+        type: "sucess",
+      });
       onSave(res.data);
       onClose();
 
@@ -20,9 +29,17 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
         const erros = Object.values(error.response.data)
           .flat()
           .join("\n");
-        alert(erros);
+          
+          setToast({
+            message: erros,
+            type: "error",
+          });
+
       } else {
-        alert("Erro ao comunicar com o servidor.");
+        setToast({
+          message: "Erro de ligação ao servidor. Tente novamente.",
+          type: "error",
+        });
       }
 
       console.error(error);
@@ -104,6 +121,15 @@ function ModalAprovarEmprestimo({ reserva, onClose, onSave }) {
 
         </motion.div>
       </div>
+      
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
     </section>
   );
 }

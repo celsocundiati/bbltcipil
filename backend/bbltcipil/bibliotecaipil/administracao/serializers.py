@@ -260,7 +260,7 @@ class MultaSerializer(serializers.ModelSerializer):
             "valor",
             "criado_por",
         ]
-        
+
 
 class ConfiguracaoSistemaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -389,8 +389,6 @@ class ParticipacaoAdminSerializer(serializers.ModelSerializer):
             return f"Exposição: {obj.exposicao.titulo}"
         return None
     
-
-
 
 
 

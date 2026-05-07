@@ -5,13 +5,15 @@ import { FiSearch } from "react-icons/fi";
 import api from "../../../service/api/api";
 import ModalAprovarEmprestimo from "../../modais/modalaprovaremprestimo/modalaprovaremprestimo";
 import Permissao from "../../../auth/hooks/gerir/gerenciamento";
+import Toast from "../../../usuario/stylenotificacao/toast";
+
 
 function TabelaReservas() {
 
     const [idDestacado, setIdDestacado] = useState(null);
     const [reservas, setReservas] = useState([]);
     const [reservaSelecionada, setReservaSelecionada] = useState(null);
-
+    const [toast, setToast] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -50,9 +52,11 @@ function TabelaReservas() {
         } catch (err) {
             console.error("Erro ao buscar reservas", err);
 
-            if (err.response?.status === 401) {
-                navigate("/login");
-            }
+            setToast({
+            message: "Erro de ligação ao servidor. Tente novamente.",
+            type: "error",
+            });
+            
         }
     };
 
@@ -79,9 +83,28 @@ function TabelaReservas() {
         try {
             await aprovarReserva(id);
             await fetchReservas(); // 🔥 REFRESH REAL DO BACKEND
-        } catch (err) {
-            console.error(err);
-            alert("Erro ao aprovar reserva");
+        } catch (error) {
+            if (error.response?.data) {
+                const erros = Object.values(error.response.data)
+                .flat()
+                .join("\n");
+                
+                setToast({
+                    message: erros,
+                    type: "error",
+                });
+
+            } else {
+                setToast({
+                    message: "Erro de ligação ao servidor. Tente novamente.",
+                    type: "error",
+                });
+            }
+
+            setToast({
+                message: "Erro ao aprovar reserva",
+                type: "error",
+            });
         }
     };
 
@@ -89,15 +112,39 @@ function TabelaReservas() {
         try {
             await finalizarReserva(id);
             await fetchReservas(); // 🔥 REFRESH REAL DO BACKEND
-        } catch (err) {
-            console.error(err);
-            alert("Erro ao finalizar reserva");
+        } catch (error) {
+            if (error.response?.data) {
+                const erros = Object.values(error.response.data)
+                .flat()
+                .join("\n");
+                
+                setToast({
+                    message: erros,
+                    type: "error",
+                });
+
+            } else {
+                setToast({
+                message: "Erro de ligação ao servidor. Tente novamente.",
+                type: "error",
+                });
+            }
+
+            console.error(error);
+            setToast({
+            message: "Erro ao finalizar reserva",
+            type: "error",
+            });
         }
     };
     
     const handleEmprestar = (reserva) => {
         if (!podeEmprestar(reserva)) {
-            alert("Usuário da reserva não tem perfil de funcionário.");
+            console.error(error);
+            setToast({
+                message: "Usuário da reserva não tem perfil de funcionário.",
+                type: "error",
+            });
             return;
         }
         setReservaSelecionada(reserva);
@@ -127,12 +174,17 @@ function TabelaReservas() {
     };
 
     const podeFinalizar = (reserva) => {
-        return reserva.estado === "em_uso" && reserva.usuario_grupos?.includes("Funcionario");
+        return reserva.estado === "em_uso";
     };
+
+    // const podeFinalizar = (reserva) => {
+    //     return reserva.estado === "em_uso" && reserva.usuario_grupos?.includes("Funcionario");
+    // };
 
     // ==========================
     // 🔹 RENDERIZAÇÃO AÇÃO PRINCIPAL
     // ==========================
+    
     const renderAcaoPrincipal = (reserva) => {
         return (
             <Permissao roles={["Admin", "Bibliotecario"]}>
@@ -291,6 +343,14 @@ function TabelaReservas() {
                     />
                 )}
             </section>
+
+            {toast && (
+                <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(null)}
+                />
+            )}
         </motion.main>
     );
 }

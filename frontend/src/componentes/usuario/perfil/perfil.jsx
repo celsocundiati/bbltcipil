@@ -1,11 +1,13 @@
 import Configuracoes from "../cards/cardPerfil/CardConfiguracoes";
 import MeuPerfil from "../cards/cardPerfil/CardMeuPerfil";
+import HelpChatIcon from "../casa/ajuda/chat";
 import Cabecalho from "../casa/cabecalho/cabecalho";
 
 
 function Perfil() {
     return(
         <div>
+            <HelpChatIcon/>
             <section>
                 <Cabecalho/>
             </section>

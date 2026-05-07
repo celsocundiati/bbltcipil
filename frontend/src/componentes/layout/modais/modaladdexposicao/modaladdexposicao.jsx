@@ -2,6 +2,8 @@ import { useState } from "react";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
 import { HiOutlineXMark } from "react-icons/hi2";
+import Toast from "../../../usuario/stylenotificacao/toast";
+
 
 function ModalAddExposicao({ onClose, onSuccess }) {
 
@@ -16,12 +18,8 @@ function ModalAddExposicao({ onClose, onSuccess }) {
     });
 
     const [loading, setLoading] = useState(false);
+    const [toast, setToast] = useState(null);
 
-    const [modal, setModal] = useState({
-        open: false,
-        type: "success",
-        message: "",
-    });
 
     function handleChange(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,10 +35,9 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                 form
             );
 
-            setModal({
-                open: true,
+            setToast({
+                message: "Exposição criada com sucesso!",
                 type: "success",
-                message: "Exposição criada com sucesso!"
             });
 
             setForm({
@@ -60,14 +57,14 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                 ? Object.values(err.response.data).flat().join(" ")
                 : "Erro ao criar exposição";
 
-            setModal({
-                open: true,
+            setToast({
+                message: msg,
                 type: "error",
-                message: msg
             });
 
         } finally {
             setLoading(false);
+            onClose()
         }
     }
 
@@ -78,7 +75,7 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative"
+                    className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl outline-none-2xl p-6 relative"
                 >
 
                     <button
@@ -101,7 +98,7 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                             value={form.titulo}
                             onChange={handleChange}
                             placeholder="Título da exposição (ex: Feira do Livro 2026)"
-                            className="w-full p-2 bg-black/5 rounded"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                         />
 
                         {/* Descrição */}
@@ -110,7 +107,7 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                             value={form.descricao}
                             onChange={handleChange}
                             placeholder="Descreve brevemente o objetivo da exposição..."
-                            className="w-full p-2 bg-black/5 rounded"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                         />
 
                         {/* Local */}
@@ -119,7 +116,7 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                             value={form.local}
                             onChange={handleChange}
                             placeholder="Local da exposição (ex: IPIL - Sala Magna)"
-                            className="w-full p-2 bg-black/5 rounded"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                         />
 
                         {/* Capacidade */}
@@ -129,7 +126,7 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                             value={form.capacidade_maxima}
                             onChange={handleChange}
                             placeholder="Número máximo de participantes"
-                            className="w-full p-2 bg-black/5 rounded"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                         />
 
                         {/* Datas organizadas */}
@@ -144,7 +141,7 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                                     name="data_inicio"
                                     value={form.data_inicio}
                                     onChange={handleChange}
-                                    className="w-full p-2 bg-black/5 rounded"
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                                 />
                             </div>
 
@@ -157,7 +154,7 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                                     name="data_fim"
                                     value={form.data_fim}
                                     onChange={handleChange}
-                                    className="w-full p-2 bg-black/5 rounded"
+                                    className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                                 />
                             </div>
 
@@ -169,19 +166,19 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                             value={form.capa}
                             onChange={handleChange}
                             placeholder="URL da imagem de capa (ex: https://...)"
-                            className="w-full p-2 bg-black/5 rounded"
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
                         />
 
                         {/* Ações */}
                         <div className="flex justify-end gap-3">
 
-                            <button type="button" className="px-4 py-2 rounded bg-black/10 cursor-pointer" onClick={onClose}>
+                            <button type="button" className="px-4 py-2 rounded outline-none bg-black/10 cursor-pointer" onClick={onClose}>
                                 Cancelar
                             </button>
 
                             <button
                                 type="submit"
-                                className="bg-green-500 text-white px-4 py-2 rounded cursor-pointer"
+                                className="bg-green-500 text-white px-4 py-2 rounded outline-none cursor-pointer"
                             >
                                 {loading ? "A guardar..." : "Guardar"}
                             </button>
@@ -193,26 +190,12 @@ function ModalAddExposicao({ onClose, onSuccess }) {
                 </motion.div>
             </section>
 
-            {/* FEEDBACK PADRÃO ADMIN */}
-            {modal.open && (
-                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-                    <div className="bg-white p-5 rounded-lg w-80">
-                        <h3 className="font-semibold">
-                            {modal.type === "success" ? "Sucesso" : "Erro"}
-                        </h3>
-                        <p>{modal.message}</p>
-
-                        <button
-                            onClick={() => {
-                                setModal({ open: false });
-                                if (modal.type === "success") onClose();
-                            }}
-                            className="mt-3 w-full bg-green-500 text-white py-2 rounded cursor-pointer"
-                        >
-                            OK
-                        </button>
-                    </div>
-                </div>
+            {toast && (
+                <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(null)}
+                />
             )}
 
         </>
