@@ -202,6 +202,7 @@ class NotificacaoSerializer(serializers.ModelSerializer):
 class ExposicaoSerializer(serializers.ModelSerializer):
     vagas_disponiveis = serializers.SerializerMethodField()
     descricao_estado = serializers.SerializerMethodField()
+    inscrito = serializers.SerializerMethodField()
 
     class Meta:
         model = Exposicao
@@ -213,10 +214,22 @@ class ExposicaoSerializer(serializers.ModelSerializer):
     def get_descricao_estado(self, obj):
         return obj.estado
 
+    def get_inscrito(self, obj):
+        request = self.context.get("request")
+
+        if request and request.user.is_authenticated:
+            return Participacao.objects.filter(
+                usuario=request.user,
+                exposicao=obj
+            ).exists()
+
+        return False
+
 
 class EventoSerializer(serializers.ModelSerializer):
     vagas_disponiveis = serializers.SerializerMethodField()
     descricao_estado = serializers.SerializerMethodField()
+    inscrito = serializers.SerializerMethodField()
 
     class Meta:
         model = Evento
@@ -227,7 +240,17 @@ class EventoSerializer(serializers.ModelSerializer):
 
     def get_descricao_estado(self, obj):
         return obj.estado
-    
+
+    def get_inscrito(self, obj):
+        request = self.context.get("request")
+
+        if request and request.user.is_authenticated:
+            return Participacao.objects.filter(
+                usuario=request.user,
+                evento=obj
+            ).exists()
+
+        return False
 
 
 class ParticipacaoSerializer(serializers.ModelSerializer):

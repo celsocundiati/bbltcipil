@@ -5,6 +5,7 @@ import { AiOutlineMail } from "react-icons/ai";
 import api from "../../../service/api/api";
 import { useAuth } from "../../../auth/userAuth/useauth";
 import { podeGerir } from "../../../auth/podegerir/permissao";
+import Toast from "../../../usuario/stylenotificacao/toast";
 
 
 function CardInfo() {
@@ -15,6 +16,7 @@ function CardInfo() {
     limite_reservas_mensal: 0,
     dias_emprestimo: 0,
     limite_livros_estudante: 0,
+    cobranca_ativa: true,
     multa_por_dia: 0,
     multa_por_dano: 0,
     multa_por_perda: 0,
@@ -29,6 +31,7 @@ function CardInfo() {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // 🔄 CARREGAR CONFIG
   useEffect(() => {
@@ -38,24 +41,32 @@ function CardInfo() {
         const res = await api.get("/admin/configuracoes/");
         setFormData(res.data);
       } catch (error) {
+        
+        setToast({
+          message: "Erro ao carregar configurações:",
+          type: "error",
+        });
+
         console.error("Erro ao carregar configurações:", error);
       } finally {
+
         setLoading(false);
+        
       }
     }
 
     fetchConfig();
   }, []);
 
-  // 🔄 ALTERAÇÃO DINÂMICA
   function handleChange(e) {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
 
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === "checkbox" ? checked : value
     }));
   }
+
 
   // 💾 GUARDAR
   async function handleSubmit(e) {
@@ -66,12 +77,21 @@ function CardInfo() {
       setLoading(true);
 
       await api.put("/admin/configuracoes/1/", formData);
+      
+      setToast({
+        message: "Configurações atualizadas com sucesso",
+        type: "success",
+      });
 
-      alert("Configurações atualizadas com sucesso 🚀");
 
     } catch (error) {
       console.error(error);
-      alert("Erro ao salvar configurações");
+      
+      setToast({
+        message: "Erro de ligação ao servidor. Tente novamente.",
+        type: "error",
+      });
+
     } finally {
       setLoading(false);
     }
@@ -158,6 +178,42 @@ function CardInfo() {
         <HeaderCardInfo tipo="multas" />
 
         <article className="grid md:grid-cols-3 gap-6 p-5">
+
+          <div className="md:col-span-3 flex items-center justify-between p-4 bg-black/3 rounded-2xl border border-black/5">
+            <div>
+              <h3 className="font-medium">Cobrança de Multas</h3>
+              <p className="text-sm text-gray-500">
+                Ativar ou desativar cobranças manualmente
+              </p>
+            </div>
+
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="cobranca_ativa"
+                checked={formData.cobranca_ativa}
+                onChange={handleChange}
+                className="sr-only peer"
+              />
+
+              <div
+                className="
+                  w-14 h-7 bg-gray-300 rounded-full
+                  peer peer-checked:bg-green-500
+                  after:content-['']
+                  after:absolute
+                  after:top-1
+                  after:left-1
+                  after:bg-white
+                  after:w-5
+                  after:h-5
+                  after:rounded-full
+                  after:transition-all
+                  peer-checked:after:translate-x-7
+                "
+              ></div>
+            </label>
+          </div>
           
           <div>
             <h3>Multa por dia</h3>
@@ -269,6 +325,14 @@ function CardInfo() {
             {loading ? "Salvando..." : "Guardar Alterações"}
           </button>
         </div>
+      )}
+
+      {toast && (
+          <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          />
       )}
 
     </form>

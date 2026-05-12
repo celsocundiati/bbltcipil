@@ -1,11 +1,217 @@
+// import { useState } from "react";
+// import api from "../../../service/api/api";
+// import { motion } from "framer-motion";
+// import { HiOutlineXMark } from "react-icons/hi2";
+// import Toast from "../../../usuario/stylenotificacao/toast";
+
+
+// function ModalAddExposicao({ onClose, onSuccess }) {
+
+//     const [form, setForm] = useState({
+//         titulo: "",
+//         capa: "",
+//         descricao: "",
+//         local: "",
+//         capacidade_maxima: "",
+//         data_inicio: "",
+//         data_fim: "",
+//     });
+
+//     const [loading, setLoading] = useState(false);
+//     const [toast, setToast] = useState(null);
+
+
+//     function handleChange(e) {
+//         setForm({ ...form, [e.target.name]: e.target.value });
+//     }
+
+//     async function handleSubmit(e) {
+//         e.preventDefault();
+//         setLoading(true);
+
+//         try {
+//             const res = await api.post(
+//                 "/admin/exposicoes/",
+//                 form
+//             );
+
+//             setToast({
+//                 message: "Exposição criada com sucesso!",
+//                 type: "success",
+//             });
+
+//             setForm({
+//                 titulo: "",
+//                 capa: "",
+//                 descricao: "",
+//                 local: "",
+//                 capacidade_maxima: "",
+//                 data_inicio: "",
+//                 data_fim: "",
+//             });
+
+//             onSuccess?.(res.data);
+
+//         } catch (err) {
+//             const msg = err.response?.data
+//                 ? Object.values(err.response.data).flat().join(" ")
+//                 : "Erro ao criar exposição";
+
+//             setToast({
+//                 message: msg,
+//                 type: "error",
+//             });
+
+//         } finally {
+//             setLoading(false);
+//             onClose()
+//         }
+//     }
+
+//     return (
+//         <>
+            // <section className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+            //     <motion.div
+            //         initial={{ opacity: 0, y: 20 }}
+            //         animate={{ opacity: 1, y: 0 }}
+            //         className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl outline-none-2xl p-6 relative"
+            //     >
+
+            //         <button
+            //             onClick={onClose}
+            //             className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black"
+            //         >
+            //             <HiOutlineXMark size={35} />
+            //         </button>
+
+            //         <article className="py-4 text-left">
+            //             <h2 className="text-xl font-medium">Registar Exposições</h2>
+            //             <p className="text-lg">Registre exposições literárias</p>
+            //         </article>
+
+            //         <form onSubmit={handleSubmit} className="space-y-4">
+
+            //             {/* Título */}
+            //             <input
+            //                 name="titulo"
+            //                 value={form.titulo}
+            //                 onChange={handleChange}
+            //                 placeholder="Título da exposição (ex: Feira do Livro 2026)"
+            //                 className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+            //             />
+
+            //             {/* Descrição */}
+            //             <textarea
+            //                 name="descricao"
+            //                 value={form.descricao}
+            //                 onChange={handleChange}
+            //                 placeholder="Descreve brevemente o objetivo da exposição..."
+            //                 className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+            //             />
+
+            //             {/* Local */}
+            //             <input
+            //                 name="local"
+            //                 value={form.local}
+            //                 onChange={handleChange}
+            //                 placeholder="Local da exposição (ex: IPIL - Sala Magna)"
+            //                 className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+            //             />
+
+            //             {/* Capacidade */}
+            //             <input
+            //                 type="number"
+            //                 name="capacidade_maxima"
+            //                 value={form.capacidade_maxima}
+            //                 onChange={handleChange}
+            //                 placeholder="Número máximo de participantes"
+            //                 className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+            //             />
+
+            //             {/* Datas organizadas */}
+            //             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+            //                 <div className="flex flex-col gap-1">
+            //                     <label className="text-sm text-left text-black/70">
+            //                         Data de Início
+            //                     </label>
+            //                     <input
+            //                         type="date"
+            //                         name="data_inicio"
+            //                         value={form.data_inicio}
+            //                         onChange={handleChange}
+            //                         className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+            //                     />
+            //                 </div>
+
+            //                 <div className="flex flex-col gap-1">
+            //                     <label className="text-sm text-left text-black/70">
+            //                         Data de Término
+            //                     </label>
+            //                     <input
+            //                         type="date"
+            //                         name="data_fim"
+            //                         value={form.data_fim}
+            //                         onChange={handleChange}
+            //                         className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+            //                     />
+            //                 </div>
+
+            //             </div>
+
+            //             {/* Capa */}
+            //             <input
+            //                 name="capa"
+            //                 value={form.capa}
+            //                 onChange={handleChange}
+            //                 placeholder="URL da imagem de capa (ex: https://...)"
+            //                 className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
+            //             />
+
+            //             {/* Ações */}
+            //             <div className="flex justify-end gap-3">
+
+            //                 <button type="button" className="px-4 py-2 rounded outline-none bg-black/10 cursor-pointer" onClick={onClose}>
+            //                     Cancelar
+            //                 </button>
+
+            //                 <button
+            //                     type="submit"
+            //                     className="bg-green-500 text-white px-4 py-2 rounded outline-none cursor-pointer"
+            //                 >
+            //                     {loading ? "A guardar..." : "Guardar"}
+            //                 </button>
+
+            //             </div>
+
+            //         </form>
+
+            //     </motion.div>
+            // </section>
+
+//             {toast && (
+//                 <Toast
+//                 message={toast.message}
+//                 type={toast.type}
+//                 onClose={() => setToast(null)}
+//                 />
+//             )}
+
+//         </>
+//     );
+// }
+
+// export default ModalAddExposicao;
+
+
+
 import { useState } from "react";
 import api from "../../../service/api/api";
 import { motion } from "framer-motion";
 import { HiOutlineXMark } from "react-icons/hi2";
-import Toast from "../../../usuario/stylenotificacao/toast";
 
-
-function ModalAddExposicao({ onClose, onSuccess }) {
+function ModalAddExposicao({ onClose, showToast, setExposicoes }) {
 
     const [form, setForm] = useState({
         titulo: "",
@@ -18,8 +224,6 @@ function ModalAddExposicao({ onClose, onSuccess }) {
     });
 
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState(null);
-
 
     function handleChange(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -30,47 +234,70 @@ function ModalAddExposicao({ onClose, onSuccess }) {
         setLoading(true);
 
         try {
-            const res = await api.post(
-                "/admin/exposicoes/",
-                form
-            );
+            const res = await api.post("/admin/exposicoes/", form);
 
-            setToast({
-                message: "Exposição criada com sucesso!",
+            setExposicoes(prev => [res.data, ...prev]);
+
+            showToast({
+                message: "Exposição criada com sucesso",
                 type: "success",
             });
 
-            setForm({
-                titulo: "",
-                capa: "",
-                descricao: "",
-                local: "",
-                capacidade_maxima: "",
-                data_inicio: "",
-                data_fim: "",
-            });
-
-            onSuccess?.(res.data);
+            onClose();
 
         } catch (err) {
             const msg = err.response?.data
                 ? Object.values(err.response.data).flat().join(" ")
                 : "Erro ao criar exposição";
 
-            setToast({
+            showToast({
                 message: msg,
                 type: "error",
             });
 
         } finally {
             setLoading(false);
-            onClose()
         }
     }
 
     return (
-        <>
-            <section className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        // <section className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+        //     <motion.div
+        //         initial={{ opacity: 0, y: 20 }}
+        //         animate={{ opacity: 1, y: 0 }}
+        //         className="w-full max-w-lg md:max-w-2xl bg-white rounded-2xl p-6 relative"
+        //     >
+
+        //         <button onClick={onClose} className="absolute top-4 right-4">
+        //             <HiOutlineXMark size={30} />
+        //         </button>
+
+        //         <form onSubmit={handleSubmit} className="space-y-4">
+
+        //             <input name="titulo" value={form.titulo} onChange={handleChange} placeholder="Título" className="w-full p-2 bg-black/5 rounded" />
+        //             <textarea name="descricao" value={form.descricao} onChange={handleChange} placeholder="Descrição" className="w-full p-2 bg-black/5 rounded" />
+        //             <input name="local" value={form.local} onChange={handleChange} placeholder="Local" className="w-full p-2 bg-black/5 rounded" />
+
+        //             <input type="number" name="capacidade_maxima" value={form.capacidade_maxima} onChange={handleChange} placeholder="Capacidade" className="w-full p-2 bg-black/5 rounded" />
+
+        //             <input type="date" name="data_inicio" value={form.data_inicio} onChange={handleChange} className="w-full p-2 bg-black/5 rounded" />
+        //             <input type="date" name="data_fim" value={form.data_fim} onChange={handleChange} className="w-full p-2 bg-black/5 rounded" />
+
+        //             <input name="capa" value={form.capa} onChange={handleChange} placeholder="Capa URL" className="w-full p-2 bg-black/5 rounded" />
+
+        //             <div className="flex justify-end gap-3">
+        //                 <button type="button" onClick={onClose}>Cancelar</button>
+        //                 <button type="submit">{loading ? "A guardar..." : "Guardar"}</button>
+        //             </div>
+
+        //         </form>
+
+        //     </motion.div>
+
+        // </section>
+
+         <section className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -189,16 +416,6 @@ function ModalAddExposicao({ onClose, onSuccess }) {
 
                 </motion.div>
             </section>
-
-            {toast && (
-                <Toast
-                message={toast.message}
-                type={toast.type}
-                onClose={() => setToast(null)}
-                />
-            )}
-
-        </>
     );
 }
 

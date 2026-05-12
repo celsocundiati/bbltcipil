@@ -4,6 +4,7 @@ import { FaBook } from "react-icons/fa";
 import api from "../../service/api/api";
 import { motion } from "framer-motion";
 import Loading from "../../layout/motion/motion";
+import Toast from "../../usuario/stylenotificacao/toast";
 
 
 function EditarLivro() {
@@ -18,6 +19,7 @@ function EditarLivro() {
     const [loadingPage, setLoadingPage] = useState(true);
     const [loadingSubmit, setLoadingSubmit] = useState(false);
     const [erro, setErro] = useState(null);
+    const [toast, setToast] = useState(null);
 
     const [modal, setModal] = useState({
         open: false,
@@ -56,7 +58,12 @@ function EditarLivro() {
 
             } catch (error) {
                 console.error(error);
-                setErro("Erro ao carregar dados.");
+                
+                setToast({
+                    message: "Erro ao carregar dados.",
+                    type: "error",
+                });
+
             } finally {
                 setLoadingPage(false);
             }
@@ -91,12 +98,14 @@ function EditarLivro() {
                 `/admin/livros/${id}/`,
                 livro
             );
-
-            setModal({
-                open: true,
+            
+            setToast({
+                message: "Livro atualizado com sucesso!",
                 type: "success",
-                message: "Livro atualizado com sucesso!"
             });
+            
+            navigate("/admin/gestao")
+            
 
         } catch (err) {
 
@@ -104,20 +113,16 @@ function EditarLivro() {
                 const erros = Object.values(err.response.data)
                     .flat()
                     .join("\n");
-
-                setModal({
-                    open: true,
+                
+                setToast({
+                    message: erros,
                     type: "error",
-                    message: erros
                 });
 
-                setErro(erros);
-
             } else {
-                setModal({
-                    open: true,
+                setToast({
+                    message: "Erro ao comunicar com o servidor.",
                     type: "error",
-                    message: "Erro ao comunicar com o servidor."
                 });
             }
 
@@ -370,6 +375,16 @@ function EditarLivro() {
                     </div>
                 </div>
             )}
+
+            
+            {toast && (
+                <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(null)}
+                />
+            )}
+
         </motion.main>
     );
 }

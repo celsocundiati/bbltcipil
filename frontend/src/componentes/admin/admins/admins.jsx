@@ -20,7 +20,7 @@ function Admins()
                 <TabAdmins />
             </section>
 
-            <LogsAdmins/>
+            {/* <LogsAdmins/> */}
         </motion.main>
     );
 }
