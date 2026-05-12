@@ -300,47 +300,59 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class PromoteUserSerializer(serializers.Serializer):
     username = serializers.CharField()
-    grupos = serializers.ListField(
-        child=serializers.CharField(),
-        required=True
-    )
+    grupos = serializers.ListField(child=serializers.CharField(), required=False)
+    is_superuser = serializers.BooleanField(required=False, default=False)
 
     ALLOWED_GROUPS = {"Admin", "Bibliotecario"}
 
     def validate(self, data):
         request = self.context["request"]
-        admin = request.user
 
-        username = data["username"]
-        grupos = data["grupos"]
-
-        if not admin.is_superuser and not admin.is_staff:
+        if not request.user.is_superuser:
             raise serializers.ValidationError("Sem permissão.")
 
-        invalid = set(grupos) - self.ALLOWED_GROUPS
-        if invalid:
-            raise serializers.ValidationError(f"Grupos inválidos: {invalid}")
-
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=data["username"])
         except User.DoesNotExist:
             raise serializers.ValidationError("Utilizador não encontrado.")
 
         data["user_instance"] = user
         return data
 
-    def create(self, validated_data):
-        user = validated_data["user_instance"]
-        grupos = validated_data["grupos"]
+    def update(self, instance, validated_data):
+        grupos = validated_data.get("grupos", None)
+        is_superuser = validated_data.get("is_superuser", None)
 
         with transaction.atomic():
-            groups = Group.objects.filter(name__in=grupos)
 
-            user.groups.set(groups)
-            user.is_staff = groups.exists()
-            user.save()
+            # 🔥 SUPERUSER
+            if is_superuser is not None:
+                instance.is_superuser = is_superuser
+                instance.is_staff = is_superuser or instance.is_staff
 
-        return user
+            # 🔥 GRUPOS (SÓ SE FOREM ENVIADOS)
+            if grupos is not None:
+                invalid = set(grupos) - self.ALLOWED_GROUPS
+                if invalid:
+                    raise serializers.ValidationError(f"Grupos inválidos: {invalid}")
+
+                new_groups = Group.objects.filter(name__in=grupos)
+
+                # ⚠️ NÃO destruir tudo, apenas gerir admin roles
+                admin_groups = Group.objects.filter(
+                    name__in=self.ALLOWED_GROUPS
+                )
+
+                # remove apenas grupos administrativos antigos
+                instance.groups.remove(*admin_groups)
+
+                # adiciona novos
+                instance.groups.add(*new_groups)
+
+            instance.is_staff = instance.is_superuser or instance.groups.exists()
+            instance.save()
+
+        return instance  
 
 
 # =============================

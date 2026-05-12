@@ -9,20 +9,6 @@ from .views import (
     ExposicaoAdminViewSet, EventoAdminViewSet, ParticipacaoAdminViewSet
 )
 
-# router = DefaultRouter()
-# router.register(r'reservas', ReservaAdminViewSet, basename='reserva-admin')
-# router.register(r'emprestimos', EmprestimoAdminViewSet, basename='emprestimo-admin')
-# router.register(r'autores', AutorAdminViewSet, basename='autor-admin')
-# router.register(r'categorias', CategoriaAdminViewSet, basename='categoria-admin')
-# router.register(r'livros', LivroAdminViewSet, basename='livro-admin')
-# router.register(r'auditlog', AuditLogViewSet, basename='audit-admin')
-# router.register(r'alunosoficiais', AlunoOficialAdminViewSet, basename='alunosoficiais-admin')
-# router.register(r'funcionarios', FuncionarioOficialAdminViewSet, basename='funcionario')
-# router.register(r'perfil', PerfilAdminViewSet, basename='perfil-admin')
-# router.register(r"multas", MultaViewSet, basename="multas-admin")
-# router.register(r'configuracoes', ConfiguracaoSistemaViewSet, basename='configuracoes')
-# router.register(r'users', UserAdminViewSet, basename='users')
-
 
 router = DefaultRouter()
 

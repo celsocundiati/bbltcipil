@@ -228,20 +228,32 @@ class ExposicaoViewSet(viewsets.ReadOnlyModelViewSet):
             estado='Disponível'
         ).order_by('-data_inicio')
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
     @action(detail=True, methods=['post'])
     def reservar(self, request, pk=None):
 
         exposicao = self.get_object()
 
         try:
-            participacao = reservar_exposicao(request.user, exposicao.id)
+            participacao = reservar_exposicao(
+                request.user,
+                exposicao.id
+            )
+
             return Response(
                 ParticipacaoSerializer(participacao).data,
                 status=status.HTTP_201_CREATED
             )
 
         except Exception as e:
-            return Response({"erro": str(e)}, status=400)
+            return Response(
+                {"erro": str(e)},
+                status=400
+            )
 
     @action(detail=True, methods=['post'])
     def cancelar_reserva(self, request, pk=None):
@@ -252,11 +264,19 @@ class ExposicaoViewSet(viewsets.ReadOnlyModelViewSet):
         ).first()
 
         if not participacao:
-            return Response({"erro": "Participação não encontrada."}, status=404)
+            return Response(
+                {"erro": "Participação não encontrada."},
+                status=404
+            )
 
-        cancelar_participacao(participacao, request.user)
+        cancelar_participacao(
+            participacao,
+            request.user
+        )
 
-        return Response({"mensagem": "Reserva cancelada com sucesso."})
+        return Response({
+            "mensagem": "Reserva cancelada com sucesso."
+        })
 
 
 class EventoViewSet(viewsets.ReadOnlyModelViewSet):
@@ -267,6 +287,12 @@ class EventoViewSet(viewsets.ReadOnlyModelViewSet):
         return Evento.objects.filter(
             estado='Disponível'
         ).order_by('-data_inicio')
+    
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     @action(detail=True, methods=['post'])
     def reservar(self, request, pk=None):

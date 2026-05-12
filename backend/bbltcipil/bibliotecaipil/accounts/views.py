@@ -289,6 +289,10 @@ def password_reset_request(request):
         """
     }
     response = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers)
+
+    print("STATUS:", response.status_code)
+    print("BODY:", response.text)
+    
     if response.status_code != 201 and response.status_code != 200:
         return JsonResponse({"error": "Falha ao enviar email", "details": response.json()}, status=500)
 

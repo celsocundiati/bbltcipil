@@ -24,3 +24,4 @@ def validar_devolucao(emprestimo):
         raise ValidationError("Este empréstimo já foi devolvido.")
 
     return True
+

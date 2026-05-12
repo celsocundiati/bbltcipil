@@ -24,7 +24,9 @@ from .serializers import (
     PerfilAdminSerializer, MultaSerializer, ConfiguracaoSistemaSerializer,
     PromoteUserSerializer, UserListSerializer,
 )
-from .service import calcular_valor_multa, criar_emprestimo, devolver_emprestimo, aprovar_reserva, cancelar_reserva_admin, finalizar_reserva, remover_reserva
+from .services.multas import criar_multa, dispensar_multa, pagar_multa
+from .services.emprestimos import criar_emprestimo, devolver_emprestimo
+from .services.reservas import aprovar_reserva, cancelar_reserva_admin, finalizar_reserva, remover_reserva
 from .permissions import SistemaPermission, OnlySuperUser
 from audit.services import AuditService
 from django.http import HttpResponse
@@ -260,36 +262,81 @@ class CategoriaAdminViewSet(BaseAdminViewSet):
 # -----------------------------
 # MULTAS
 # -----------------------------
+
 class MultaViewSet(viewsets.ModelViewSet):
     queryset = Multa.objects.select_related(
-        "emprestimo", "emprestimo__reserva", "emprestimo__reserva__usuario"
+        "emprestimo",
+        "emprestimo__reserva",
+        "emprestimo__reserva__usuario"
     ).all()
+
     serializer_class = MultaSerializer
     permission_classes = [SistemaPermission]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['estado']
-    search_fields = ['usuario__first_name', 'emprestimo__reserva__livro__titulo']
-    ordering_fields = ['data_criacao', 'emprestimo__reserva__livro__titulo', 'estado']
-    ordering = ['-data_criacao']
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+
+    filterset_fields = ["estado"]
+
+    search_fields = [
+        "usuario__first_name",
+        "emprestimo__reserva__livro__titulo"
+    ]
+
+    ordering_fields = [
+        "data_criacao",
+        "emprestimo__reserva__livro__titulo",
+        "estado"
+    ]
+
+    ordering = ["-data_criacao"]
+
+
+    def registrar_auditoria_multa(self, user, multa, acao):
+        AuditService.log(
+            user=user,
+            action=acao,
+            instance=multa,
+            extra={
+                "emprestimo": multa.emprestimo.id,
+                "novo_estado": "devolvido"
+            }
+        )
+
+        AuditService.log(
+            user=user,
+            action="Atualizou",
+            instance=multa.emprestimo,
+            extra={
+                "novo_estado": "devolvido"
+            }
+        )
+
 
     def perform_create(self, serializer):
         emprestimo = serializer.validated_data.get("emprestimo")
         motivo = serializer.validated_data.get("motivo")
-        if not emprestimo:
-            raise ValidationError({"detail": "Empréstimo é obrigatório."})
-        if motivo in ["Dano", "Perda"] and Multa.objects.filter(emprestimo=emprestimo, motivo=motivo).exists():
-            raise ValidationError({"detail": f"Já existe multa de {motivo} para este empréstimo."})
-        total_multas = Multa.objects.filter(emprestimo=emprestimo).exclude(motivo="Atraso").count()
-        if total_multas >= 2:
-            raise ValidationError({"detail": "Este empréstimo já atingiu o limite de multas."})
-        valor = calcular_valor_multa(emprestimo, motivo)
-        multa = serializer.save(valor=valor, criado_por=self.request.user)
+
+        multa = criar_multa(
+            emprestimo=emprestimo,
+            motivo=motivo,
+            user=self.request.user
+        )
+
         AuditService.log(
             user=self.request.user,
             action="Criou multa",
             instance=multa,
-            extra={"emprestimo": emprestimo.id, "motivo": motivo, "valor": valor}
+            extra={
+                "emprestimo": emprestimo.id,
+                "motivo": motivo,
+                "valor": multa.valor
+            }
         )
+
 
     @action(detail=False, methods=["get"])
     def emprestimos_disponiveis(self, request):
@@ -297,7 +344,12 @@ class MultaViewSet(viewsets.ModelViewSet):
             acoes__in=["ativo", "atrasado"]
         ).exclude(
             multas__motivo__in=["Dano", "Perda"]
-        ).select_related("reserva", "reserva__usuario", "reserva__livro").distinct()
+        ).select_related(
+            "reserva",
+            "reserva__usuario",
+            "reserva__livro"
+        ).distinct()
+
         data = [
             {
                 "id": e.id,
@@ -306,29 +358,48 @@ class MultaViewSet(viewsets.ModelViewSet):
                 "estado": e.acoes,
                 "data_devolucao": e.data_devolucao,
                 "multas_total": e.multas.count(),
-                "tem_multa_grave": e.multas.filter(motivo__in=["Dano", "Perda"]).exists(),
+                "tem_multa_grave": e.multas.filter(
+                    motivo__in=["Dano", "Perda"]
+                ).exists(),
             }
             for e in emprestimos
         ]
+
         return Response(data)
+
 
     @action(detail=True, methods=["post"])
     def pagar(self, request, pk=None):
         multa = self.get_object()
-        if multa.estado == "Pago":
-            return Response({"status": "Já paga"}, status=400)
-        multa.marcar_como_pago()
-        AuditService.log(user=request.user, action="Pagou multa", instance=multa)
-        return Response({"status": "Multa paga com sucesso"})
+
+        pagar_multa(multa=multa)
+
+        self.registrar_auditoria_multa(
+            request.user,
+            multa,
+            "Pagou"
+        )
+
+        return Response({
+            "status": "Multa paga e empréstimo devolvido"
+        })
+
 
     @action(detail=True, methods=["post"])
     def dispensar(self, request, pk=None):
         multa = self.get_object()
-        if multa.estado == "Pago":
-            return Response({"error": "Não pode dispensar multa já paga"}, status=400)
-        multa.dispensar()
-        AuditService.log(user=request.user, action="Dispensou multa", instance=multa)
-        return Response({"status": "Multa dispensada"})
+
+        dispensar_multa(multa=multa)
+
+        self.registrar_auditoria_multa(
+            request.user,
+            multa,
+            "Dispensou"
+        )
+
+        return Response({
+            "status": "Multa dispensada e empréstimo devolvido"
+        })
 
 
 # =============================
@@ -370,7 +441,6 @@ class ParticipacaoAdminViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
-
 
 
 # -----------------------------
@@ -526,46 +596,57 @@ class UserAdminViewSet(viewsets.ModelViewSet):
     # -------------------------
     @action(detail=False, methods=["post", "patch"])
     def promote(self, request):
-        serializer = self.get_serializer(data=request.data)
+        user = User.objects.get(username=request.data.get("username"))
+
+        serializer = self.get_serializer(
+            instance=user,
+            data=request.data,
+            partial=True,
+            context={"request": request}
+        )
+
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response({
-            "detail": "Utilizador promovido com sucesso",
-            "user": serializer.validated_data["user_instance"].username,
+            "detail": "Utilizador atualizado com sucesso",
+            "user": user.username,
         })
 
     # -------------------------
-    # DELETE
+    # DELETE (REMOVER APENAS ADMIN ROLES)
     # -------------------------
     def destroy(self, request, *args, **kwargs):
         user = self.get_object()
 
-        # 🔥 grupos administrativos
         admin_groups = ["Admin", "Bibliotecario"]
 
-        # 🔥 remover apenas grupos admin
-        groups_to_remove = user.groups.filter(name__in=admin_groups)
-        user.groups.remove(*groups_to_remove)
+        with transaction.atomic():
 
-        # 🔥 garantir que continua funcionário
-        funcionario_group, _ = Group.objects.get_or_create(name="Funcionario")
-        
-        if not user.groups.exists():
-            user.groups.add(funcionario_group)
+            # 🔥 1. remover apenas grupos administrativos
+            admin_groups_qs = user.groups.filter(name__in=admin_groups)
+            user.groups.remove(*admin_groups_qs)
 
-        # 🔥 regra staff
-        user.is_staff = user.groups.filter(
-            name__in=["Admin", "Bibliotecario"]
-        ).exists()
+            # 🔥 2. remover superuser (revogação de privilégio)
+            user.is_superuser = False
 
-        user.save()
+            # 🔥 3. recalcular staff corretamente
+            user.is_staff = user.is_superuser or user.groups.filter(name__in=admin_groups).exists()
+
+            # 🔥 4. garantir que nunca fica sem grupo
+            if not user.groups.exists():
+                funcionario_group, _ = Group.objects.get_or_create(name="Funcionario")
+                user.groups.add(funcionario_group)
+
+            user.save()
 
         return Response({
-            "detail": "Permissões administrativas removidas",
+            "detail": "Permissões administrativas removidas com sucesso",
             "grupos": list(user.groups.values_list("name", flat=True)),
-            "is_staff": user.is_staff
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser
         })
+
 
 
 # ----------------------------------------------

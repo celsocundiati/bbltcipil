@@ -113,6 +113,8 @@ class ConfiguracaoSistema(models.Model):
     limite_livros_estudante = models.PositiveIntegerField(default=3)
 
     # 💰 Multas
+    cobranca_ativa = models.BooleanField(default=True)
+    
     multa_por_dia = models.DecimalField(max_digits=10, decimal_places=2, default=500)
     multa_por_dano = models.DecimalField(max_digits=10, decimal_places=2, default=1500)
     multa_por_perda = models.DecimalField(max_digits=10, decimal_places=2, default=5000)
