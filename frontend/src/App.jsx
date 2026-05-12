@@ -24,7 +24,7 @@ import EditarLivro from './componentes/admin/editarlivro/editarlivro';
 import CadastroAluno from './componentes/auth/cadastro/cadastro';
 import LoginPage from './componentes/auth/login/login';
 import axios from "axios";
-import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
+// import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/TabNotificacoes';
 import AdminAuditLog from './componentes/admin/notificacaoadmin/notificacaoadmin';
 import AlunosOficais from './componentes/admin/alunooficial/alunooficial';
 import AlterarSenha from './componentes/auth/alterarsenha/alterarsenha';
@@ -33,6 +33,7 @@ import PrivateRoute from './componentes/auth/rotasprivadas/rotasprivadas';
 import {RoleRoute} from './componentes/auth/adminrotas/adminrotas';
 import Configuracoesadmin from './componentes/admin/configuracoes/configuracoes';
 import PasswordResetForm from './componentes/auth/recuperacaosenhas/recuperacaosenhas';
+import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/tabnotificacoes';
 
 
 function App() {
