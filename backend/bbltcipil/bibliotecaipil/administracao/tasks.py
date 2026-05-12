@@ -6,7 +6,7 @@ from datetime import timedelta
 from livros.models import Reserva, Livro, Emprestimo
 from .models import Multa
 # from .audit_service import AuditService
-from services.multas import calcular_valor_multa
+from .services.multas import calcular_valor_multa
 from bibliotecaipil.events import emit_event
 
 
