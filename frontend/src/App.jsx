@@ -34,6 +34,8 @@ import {RoleRoute} from './componentes/auth/adminrotas/adminrotas';
 import Configuracoesadmin from './componentes/admin/configuracoes/configuracoes';
 import PasswordResetForm from './componentes/auth/recuperacaosenhas/recuperacaosenhas';
 import ListaNotificacoes from './componentes/layout/tables/tabnotificacoes/tabnotificacoes';
+import AtivacaoConta from './componentes/auth/ativacaoconta/ativacaoconta';
+import ResetPasswordPage from './componentes/auth/recuperacaoconfirme/resetsenha';
 
 
 function App() {
@@ -46,6 +48,8 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/cadastro" element={<CadastroAluno />} />
             <Route path="/recuperacaosenha" element={<PasswordResetForm />} />
+            <Route path="reset-password/:uid/:token" element={<ResetPasswordPage />} />
+            <Route path="/verify-email/:uid/:token" element={<AtivacaoConta />} />
 
             {/* Rotas privadas */}
             <Route path="/" element={<PrivateRoute><Casa /></PrivateRoute>} />
@@ -62,7 +66,7 @@ function App() {
             <Route path="detalhes/:id" element={<PrivateRoute><Detalhes /></PrivateRoute>} />
 
             {/* Rotas admin */}
-            <Route path="/admin" element={<RoleRoute><Admin /></RoleRoute>}>
+            <Route path="/admin" element={<RoleRoute allowedRoles={["Admin", "Bibliotecario"]}><Admin /></RoleRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="gestao" element={<GestaoLivros />} />

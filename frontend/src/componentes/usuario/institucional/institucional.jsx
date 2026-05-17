@@ -23,7 +23,7 @@ function Institucional() {
             <section className="py-24 md:pt-32 pt-36 px-4 md:px-10">
 
                 {/* HEADER */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                {/* <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 
                     <h1 className="text-2xl sm:text-3xl md:text-4xl  text-center sm:text-left">
                         Institucional
@@ -38,7 +38,7 @@ function Institucional() {
                         <HiOutlineQuestionMarkCircle size={28} />
                     </Link>
 
-                </div>
+                </div> */}
 
                 {/* CONTEÚDO */}
                 <div className="space-y-5 max-w-6xl mx-auto">

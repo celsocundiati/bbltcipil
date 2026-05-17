@@ -6,12 +6,6 @@ from django.apps import apps
 
 
 class Perfil(models.Model):
-    
-
-    ESTADOS = [
-        ("Ativo", "Ativo"),
-        ("Suspenso", "Suspenso"),
-    ]
 
     user = models.OneToOneField(
         User,
@@ -23,13 +17,6 @@ class Perfil(models.Model):
         max_length=20,
         blank=True,
         help_text="Número de telefone do utilizador"
-    )
-
-    estado = models.CharField(
-        max_length=20,
-        choices=ESTADOS,
-        default="Ativo",
-        help_text="Estado atual do perfil na biblioteca"
     )
 
     n_reservas = models.IntegerField(
@@ -99,9 +86,10 @@ class Perfil(models.Model):
             acoes='atrasado'
         ).count()
 
-        self.estado = 'Suspenso' if atrasados > 3 else 'Ativo'
-        self.save(update_fields=['estado'])
-
+        # bloqueia conta automaticamente
+        self.user.is_active = atrasados <= 3
+        self.user.save(update_fields=["is_active"])
+        
 
 class FuncionarioOficial(models.Model):
 
@@ -239,4 +227,3 @@ class AlunoOficial(models.Model):
 
         return idade
     
-

@@ -17,7 +17,7 @@ router.register(r'eventos', EventoViewSet, basename="eventos")
 router.register(r'participacoes', ParticipacaoViewSet, basename="participacoes")
 router.register(r'minhas-exposicoes', MinhasExposicoesViewSet, basename="minhas-exposicoes")  
 router.register(r'meus-eventos', MeusEventosViewSet, basename="meus-eventos")
-router.register(r'configuracoes', MeusEventosViewSet, basename="configuracoes")
+router.register(r'configuracoes', ConfiguracaoSistemaViewSet, basename="configuracoes")
 
 urlpatterns = [
     path('', include(router.urls)),

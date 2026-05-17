@@ -1,51 +1,60 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../../service/api/api";
 import { obterIniciais } from "../utilitarios/Utils";
 import { motion } from "framer-motion";
 import {FiSearch} from "react-icons/fi";
+import { useAuth } from "../../../auth/userAuth/useauth";
+import Permissao from "../../../auth/hooks/gerir/gerenciamento";
 
 function TabAluno() {
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
-  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [estadoFilter, setEstadoFilter] = useState("");
-  
+
+  const { user } = useAuth();
+
+  const fetchPerfis = async() => {
+      try{
+          const params = {};
+          if (search) params.search = search;
+          if (estadoFilter) params.user__is_active = estadoFilter;
+          const res = await api.get("/admin/perfil/", {params});
+          
+          // garante que temos uma lista
+          const perfis = Array.isArray(res.data.results) ? res.data.results : res.data;
+
+          // filtra apenas usuários que pertencem ao grupo "Aluno"
+          const perfisAlunos = perfis.filter((perfil) => {
+            const grupos = perfil.grupos || [];
+            return grupos.includes("Aluno");
+          });
+          
+          setAlunos(perfisAlunos);
+      }catch(err){
+          console.error("Erro ao carregar perfis.", err)
+      } finally {
+        setLoading(false);
+      }
+  }
   
   useEffect(() => {
 
-    const fetchPerfis = async() => {
-        try{
-            const params = {};
-            if (search) params.search = search;
-            if (estadoFilter) params.estado = estadoFilter;
-            const res = await api.get("/admin/perfil/", {params});
-            
-            // garante que temos uma lista
-            const perfis = Array.isArray(res.data.results) ? res.data.results : res.data;
-
-            // filtra apenas usuários que pertencem ao grupo "Aluno"
-            const perfisAlunos = perfis.filter((perfil) => {
-              const grupos = perfil.grupos || [];
-              return grupos.includes("Aluno");
-            });
-            
-            setAlunos(perfisAlunos);
-        }catch(err){
-            console.error("Erro ao carregar perfis.", err)
-            setErro("Não foi possível carregar os alunos.");
-            if (err.response?.status === 401) navigate("/login");
-        } finally {
-          setLoading(false);
-        }
-    }
-
     fetchPerfis();
 
-   }, [navigate, search, estadoFilter]);
+   }, [search, estadoFilter]);
+
+   
+  const toggleConta = async (id) => {
+    try {
+      await api.patch(`/admin/perfil/${id}/toggle_active/`);
+      await fetchPerfis(); // refresh automático
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const totalAlunos = alunos.length;
 
@@ -86,8 +95,8 @@ function TabAluno() {
                   "
               >
                   <option value="">Todos os estados</option>
-                  <option value="Ativo">Ativo</option>
-                  <option value="Suspenso">Suspenso</option>
+                  <option value="true">Ativos</option>
+                  <option value="false">Inativos</option>
               </select>
 
           </div>
@@ -116,6 +125,7 @@ function TabAluno() {
                   <th className="w-[11%] px-5 py-3 text-center">Telefone</th>
                   <th className="w-[8%] px-5 py-3 text-center">Reservas</th>
                   <th className="w-[8%] px-5 py-3 text-center">Empréstimos</th>
+                  <Permissao><th className="w-[7%] px-5 py-3 text-center">Acesso</th></Permissao>
                 </tr>
               </thead>
 
@@ -148,14 +158,15 @@ function TabAluno() {
                         <td className="px-5 py-4 truncate text-center">
                           <span
                             className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              perfil?.estado === "Ativo"
+                              perfil?.user?.is_active
                                 ? "bg-green-100 text-green-700"
                                 : "bg-red-100 text-red-700"
                             }`}
                           >
-                            {perfil?.estado}
+                            {perfil?.user?.is_active ? "Ativo" : "Desativado"}
                           </span>
                         </td>
+
                         <td className="px-5 py-4 truncate text-center">{perfil?.telefone}</td>
                         <td className="px-5 py-4 truncate text-center">
                           <span className="px-3 py-1 rounded-lg text-yellow-700 border border-yellow-700 text-sm">
@@ -167,6 +178,21 @@ function TabAluno() {
                             {perfil?.n_emprestimos} livros
                           </span>
                         </td>
+                        
+                        <Permissao>
+                          <td className="px-5 py-4 text-center flex items-center justify-center">
+                            <span
+                              onClick={() => toggleConta(perfil.id)}
+                              className={`px-3 py-1 rounded-xl cursor-pointer text-white ${
+                                perfil.user.is_active
+                                  ? "bg-red-500"
+                                  : "bg-green-500"
+                              }`}
+                            >
+                              {perfil?.user.is_active ? "Desativar" : "Ativar"}
+                            </span>
+                          </td>
+                        </Permissao>
                       </tr>
                     );
                   })

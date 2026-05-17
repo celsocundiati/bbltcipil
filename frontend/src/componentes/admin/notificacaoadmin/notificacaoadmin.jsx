@@ -5,6 +5,8 @@ import api from "../../service/api/api";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Loading from "../../layout/motion/motion";
+import Toast from "../../usuario/stylenotificacao/toast";
+
 
 export default function AdminAuditLog() {
   const [logs, setLogs] = useState([]);
@@ -13,6 +15,7 @@ export default function AdminAuditLog() {
   const [modeloFilter, setModeloFilter] = useState("");
   const [periodoDias, setPeriodoDias] = useState(7);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
 
   // 🔥 CONFIG ESCALÁVEL DE ROTAS
   const redirectConfig = {
@@ -47,6 +50,12 @@ export default function AdminAuditLog() {
           );
         } catch (err) {
           console.error("Erro ao buscar logs de auditoria", err);
+
+          setToast({
+            message: "Erro ao buscar logs de auditoria.",
+            type: "error",
+          });
+
         } finally {
           setLoading(false)
         }
@@ -77,7 +86,12 @@ export default function AdminAuditLog() {
         : response.data;
 
       if (!data || data.length === 0) {
-        alert("Sem dados para exportar neste período.");
+
+        setToast({
+          message: "Sem dados para exportar neste período.Sem dados para exportar neste período.",
+          type: "error",
+        });
+        
         return;
       }
 
@@ -167,7 +181,12 @@ export default function AdminAuditLog() {
 
     } catch (err) {
       console.error("Erro ao exportar PDF", err);
-      alert("Erro ao gerar relatório.");
+      
+      setToast({
+        message: "Erro ao gerar relatório.",
+        type: "error",
+      });
+
     } finally {
       setLoading(false);
     }
@@ -315,6 +334,14 @@ export default function AdminAuditLog() {
           </section>
         </section>
       </main>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </motion.section>
   );
 }

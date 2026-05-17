@@ -7,6 +7,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from audit.models import AuditLog
 from .models import AlunoOficial, FuncionarioOficial, Perfil
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
+
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+
+from .services.email_service import send_verification_email, validate_email, is_valid_email_basic
+
 User = get_user_model()
 
 
@@ -20,18 +28,35 @@ class SignupSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, data):
+        print("🚀 VALIDANDO SIGNUP:", data)
+
+        email = data["email"]
         n_identificacao = data["n_identificacao"]
         n_bilhete = data["n_bilhete"]
-        email = data["email"]
 
+        # 🔴 duplicado
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError("Já existe uma conta com este email.")
+            raise serializers.ValidationError({
+                "email": "Já existe uma conta com este email."
+            })
 
+        # 🔴 validação básica primeiro (rápida)
+        if not is_valid_email_basic(email):
+            raise serializers.ValidationError({
+                "email": "Email inválido."
+            })
+
+        # 🔴 validação externa (ZeroBounce)
+        # if not validate_email(email):
+        #     raise serializers.ValidationError({
+        #         "email": "Email não é válido ou não pode ser verificado."
+        #     })
+
+        # 🔹 aluno ou funcionário
         instance = None
         grupo_nome = None
         nome_completo = None
 
-        # 🔹 Aluno
         try:
             instance = AlunoOficial.objects.get(
                 n_processo=n_identificacao,
@@ -39,10 +64,10 @@ class SignupSerializer(serializers.Serializer):
             )
             grupo_nome = "Aluno"
             nome_completo = instance.nome_completo
+
         except AlunoOficial.DoesNotExist:
             pass
 
-        # 🔹 Funcionário
         if not instance:
             try:
                 instance = FuncionarioOficial.objects.get(
@@ -52,14 +77,15 @@ class SignupSerializer(serializers.Serializer):
                 grupo_nome = "Funcionario"
                 nome_completo = instance.nome
             except FuncionarioOficial.DoesNotExist:
-                raise serializers.ValidationError(
-                    "Utilizador não encontrado ou dados incorretos."
-                )
+                raise serializers.ValidationError({
+                    "identificacao": "Utilizador não encontrado ou dados incorretos."
+                })
 
+        # 🔴 já tem conta
         if instance.perfil:
-            raise serializers.ValidationError(
-                "Este utilizador já possui conta ativa."
-            )
+            raise serializers.ValidationError({
+                "identificacao": "Este utilizador já possui conta ativa."
+            })
 
         data["instance"] = instance
         data["grupo_nome"] = grupo_nome
@@ -75,33 +101,42 @@ class SignupSerializer(serializers.Serializer):
         n_identificacao = validated_data["n_identificacao"]
         nome_completo = validated_data["nome_completo"]
 
-        # 🔥 Criação do user
+        # 🔥 criar user (ainda inativo)
         user = User.objects.create_user(
             username=n_identificacao,
             email=email,
             password=password,
-            first_name=nome_completo
+            first_name=nome_completo,
+            is_active=False
         )
 
-        # 🔥 Grupo
         grupo, _ = Group.objects.get_or_create(name=grupo_nome)
         user.groups.add(grupo)
 
-        # 🔥 Perfil SEM tipo
-        perfil = Perfil.objects.create(
-            user=user,
-            telefone=""
-        )
-
-        # 🔥 Vincular ao registro oficial
+        perfil = Perfil.objects.create(user=user, telefone="")
         instance.perfil = perfil
         instance.save()
 
-        # 🔥 Auditoria
+        # 🔥 gerar link
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        verify_link = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}"
+
+        # 🔥 ENVIAR EMAIL (CRÍTICO)
+        email_sent = send_verification_email(user.email, verify_link)
+
+        if not email_sent:
+            # 🔥 rollback lógico
+            user.delete()
+            raise serializers.ValidationError({
+                "email": "Não foi possível enviar email de verificação. Tente novamente."
+            })
+
         AuditLog.objects.create(
             usuario=user,
             acao="Sign up",
-            modelo=ContentType.objects.get_for_model(user),  # ✅ CERTO
+            modelo=ContentType.objects.get_for_model(user),
             objeto_id=user.id,
             alteracoes={
                 "grupo": grupo_nome,
@@ -110,7 +145,7 @@ class SignupSerializer(serializers.Serializer):
         )
 
         return user
-    
+
 
 # =====================================================
 # LOGIN - n_processo/n_agente + senha
@@ -137,6 +172,7 @@ class LoginSerializer(serializers.Serializer):
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
+            "user_obj": user,   # 🔥 adiciona isto
             "user": {
                 "id": user.id,
                 "username": user.username,
