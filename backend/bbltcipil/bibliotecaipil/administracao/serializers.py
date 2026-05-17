@@ -63,7 +63,6 @@ class EmprestimoAdminSerializer(serializers.ModelSerializer):
 # --------------------------
 # Perfil unificado
 # --------------------------
-
 class PerfilAdminSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     nome = serializers.SerializerMethodField()
@@ -77,7 +76,6 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
             "user",
             "grupos",
             "telefone",
-            "estado",
             "n_reservas",
             "n_emprestimos",
             "nome",
@@ -100,6 +98,7 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "is_active": user.is_active,
         }
 
     def get_grupos(self, obj):

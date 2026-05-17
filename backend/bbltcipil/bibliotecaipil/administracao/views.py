@@ -525,10 +525,33 @@ class PerfilAdminViewSet(viewsets.ModelViewSet):
     permission_classes = [SistemaPermission]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['estado']
+    # filterset_fields = ['user__is_active']
+
+    filterset_fields = {
+        "user__is_active": ["exact"],
+    }
     search_fields = ['user__first_name', 'user__username', 'funcionario_oficial__cargo']
     ordering_fields = ['user__first_name', 'n_reservas', 'n_emprestimos']
     ordering = ['user__first_name']
+
+
+    @action(detail=True, methods=["patch"])
+    def toggle_active(self, request, pk=None):
+        perfil = self.get_object()
+        user = perfil.user
+
+        user.is_active = not user.is_active
+        user.save(update_fields=["is_active"])
+
+        return Response({
+            "success": True,
+            "is_active": user.is_active,
+            "message": (
+                "Conta ativada com sucesso"
+                if user.is_active
+                else "Conta desativada com sucesso"
+            )
+        }, status=status.HTTP_200_OK)
 
 
 # ----------------------------------
@@ -714,8 +737,8 @@ class DashboardResumoGeralView(APIView):
         # 📚 PERFIS (ALUNOS)
         # =======================
         total_perfis = Perfil.objects.count()
-        ativos = Perfil.objects.filter(estado__iexact="ativo").count()
-        suspensos = Perfil.objects.filter(estado__iexact="suspenso").count()
+        ativos = User.objects.filter(is_active=True).count()
+        suspensos = User.objects.filter(is_active=False).count()
         com_emprestimos = Perfil.objects.filter(n_emprestimos__gt=0).count()
 
         # =======================
@@ -778,6 +801,31 @@ class DashboardResumoGeralView(APIView):
             last_login__lt=fim_dia
         ).count()
 
+        # =======================
+        # 🚨 ALERTAS
+        # =======================
+
+        alertas = {
+            "livros_atrasados": atrasados,
+            "reservas_pendentes": reservas_pendentes + reservas_reservadas,
+            "multas_pendentes": multas_pendentes,
+
+            # alerta vermelho se > 10
+            "alerta_reservas": (
+                reservas_pendentes > 10 or
+                reservas_reservadas > 10
+            ),
+            "alerta_atrasos": atrasados > 10,
+            "alerta_multas": multas_pendentes > 10,
+
+            # inventário mensal
+            "inventario_proximo": (
+                "Inventário mensal necessário"
+                if hoje.day >= 20
+                else None
+            )
+        }
+
         return Response({
             "perfis": {
                 "total": total_perfis,
@@ -809,7 +857,8 @@ class DashboardResumoGeralView(APIView):
                 "ativos_hoje": admins_ativos_hoje,
                 "superusers": superusers
             },
-            "relatorios": relatorios
+            "relatorios": relatorios,
+            "alertas": alertas
         })
 
 

@@ -1,122 +1,3 @@
-// import { useState } from "react";
-// import { useNavigate, Link } from "react-router-dom";
-// import { useAuth } from "../userAuth/useauth"; 
-// import LogoIPIL from "../../../assets/ipillogo.png"
-// import Fundo from "../../../assets/bck.jpg"
-// import { style } from "framer-motion/client";
-
-// function LoginPage() {
-
-//   const [n_identificacao, setIdentificacao] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [erro, setErro] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   const navigate = useNavigate();
-//   const { login } = useAuth();
-
-//   const handleLogin = async (e) => {
-
-//     e.preventDefault();
-//     setErro("");
-//     setLoading(true);
-
-//     try {
-
-//       await login(n_identificacao, password);
-
-//       navigate("/");
-
-//     } catch (err) {
-
-//       const mensagem =
-//         err.response?.data?.detail ||
-//         err.response?.data?.non_field_errors?.[0] ||
-//         "Username ou senha incorretos.";
-
-//       setErro(mensagem);
-//       console.log(mensagem)
-
-//     } finally {
-
-//       setLoading(false);
-
-//     }
-//   };
-
-//   return (
-//     <main className="flex items-center justify-center min-h-screen bg-cover bg-center" style={{backgroundImage: `url(${Fundo})`}}>
-
-//       <div className="absolute min-h-screen w-full bg-black/45 backdrop-blur-xs">
-
-//       </div>
-
-//       <div className="bg-white/80 p-8 rounded-2xl shadow-lg w-full max-w-sm z-50">
-
-//         <div className="flex justify-center items-center">
-//           <img src={LogoIPIL} alt="LogoIPIL" className="w-36 h-36"/>
-//         </div>
-
-//         <h1 className="text-xl mb-10 font-medium text-center text-[#F97B17]">
-//           Bem-Vindo a Biblioteca IPIL
-//         </h1>
-
-//         {erro && (
-//           <p className="text-red-600 mb-4 text-center font-medium">
-//             {erro}
-//           </p>
-//         )}
-
-//         <form onSubmit={handleLogin} className="flex flex-col gap-4">
-
-//           <input
-//             type="text"
-//             placeholder="Username institucional"
-//             value={n_identificacao}
-//             onChange={(e) => setIdentificacao(e.target.value)}
-//             className="px-4 py-2 border bg-gray-300 border-black/10 h-11 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
-//             required
-//           />
-//           <input
-//             type="password"
-//             placeholder="Senha"
-//             value={password}
-//             onChange={(e) => setPassword(e.target.value)}
-//             className="px-4 py-2 border bg-gray-300 border-black/10 h-11 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
-//             required
-//           />
-
-//           <p className="text-gray-600 text-sm">
-//             <Link to="/recuperacaosenha" className="text-orange-500 font-medium">
-//               Esqueceu a sua senha?
-//             </Link>
-//           </p>
-
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="bg-orange-500 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50 cursor-pointer"
-//           >
-//             {loading ? "Entrando..." : "Entrar"}
-//           </button>
-
-//         </form>
-
-//         <p className="mt-4 text-center text-gray-600 text-sm">
-//           Ainda não possui conta?{" "}
-//           <Link to="/cadastro" className="text-orange-500 font-medium">
-//             Criar conta
-//           </Link>
-//         </p>
-
-//       </div>
-
-//     </main>
-//   );
-
-// }
-
-// export default LoginPage;
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -171,22 +52,40 @@ export default function AuthPage() {
     }
   };
 
-  // ---------------- REGISTER ----------------
   const handleRegister = async (e) => {
     e.preventDefault();
     setErro("");
+    setMsg("");
     setLoading(true);
 
     try {
-      await api.post("/accounts/signup/", form);
-      setMsg("Conta criada com sucesso!");
+      const res = await api.post("/accounts/signup/", form);
+
+      setMsg(res.data.message || "Conta criada com sucesso!");
       setTab("login");
+
     } catch (err) {
-      setErro("Erro ao criar conta.");
+      console.log("ERRO BACKEND:", err.response?.data);
+
+      const backendErrors = err.response?.data?.errors;
+
+      if (backendErrors) {
+        // transforma erros do DRF em texto legível
+        const firstKey = Object.keys(backendErrors)[0];
+        const firstError = backendErrors[firstKey][0];
+
+        setErro(firstError);
+      } else {
+        setErro(
+          err.response?.data?.message ||
+          "Erro inesperado ao criar conta."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   // ---------------- RESET ----------------
   const handleReset = async (e) => {

@@ -441,6 +441,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv(
 
 CORS_ALLOW_CREDENTIALS = True
 
+FRONTEND_URL = "http://localhost:5173"
 
 # ==========================================================
 # INTERNATIONALIZATION
@@ -492,28 +493,29 @@ CELERY_TIMEZONE = "Africa/Luanda"
 CELERY_BEAT_SCHEDULE = {
     "rotina-geral": {
         "task": "administracao.tasks.rotina_automatica_sistema",
-        "schedule": crontab(minute="*/1"),
+        "schedule": crontab(minute="*/5"),
     },
     "atualizar-estados": {
         "task": "livros.tasks.atualizar_estados",
-        "schedule": crontab(minute="*/1"),
+        "schedule": crontab(minute="*/5"),
     },
 }
 
 
-# ==========================================================
-# EMAIL (BREVO)
-# ==========================================================
 
+
+# ==========================================================
+# EMAIL (GMAIL SMTP - DEV)
+# ==========================================================
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp-relay.brevo.com"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "celsocundiati@gmail.com")
-EMAIL_HOST_PASSWORD = os.getenv("BREVO_API_KEY")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("GMAIL_API_KEY")
 
-DEFAULT_FROM_EMAIL = "Biblioteca IPIL <celsocundiati@gmail.com>"
+DEFAULT_FROM_EMAIL = "Biblioteca IPIL <no-reply@bibliotecaipil.com>"
 
 
 

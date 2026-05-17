@@ -5,19 +5,17 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import SignupSerializer, LoginSerializer, AlterarSenhaSerializer
-from .models import Perfil
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.contrib.auth.models import update_last_login
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
-from django.urls import reverse
 from django.conf import settings
 from django.http import JsonResponse
 import json
-import os
-import requests
 
 User = get_user_model()
 
@@ -25,22 +23,64 @@ User = get_user_model()
 # =====================================================
 # SIGNUP - Ativação de Conta
 # =====================================================
-
 class SignupView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def post(self, request):
+        print("\n📥 REQUEST DATA:", request.data)
+
         serializer = SignupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+
+        if not serializer.is_valid():
+            print("❌ ERROS SERIALIZER:", serializer.errors)
+
+            return Response(
+                {
+                    "success": False,
+                    "message": "Erro na validação dos dados",
+                    "errors": serializer.errors
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         user = serializer.save()
 
-        return Response({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "mensagem": "Conta criada com sucesso."
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "success": True,
+                "message": "Conta criada com sucesso. Verifica o teu email.",
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "is_active": user.is_active
+                },
+                "email_verification_sent": True
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+
+class VerifyEmailView(APIView):
+    permission_classes = []
+
+    def get(self, request, uid, token):
+        try:
+            user_id = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=user_id)
+
+            if default_token_generator.check_token(user, token):
+                user.is_active = True
+                user.save()
+                return Response({"message": "Conta ativada com sucesso"}, status=200)
+
+            return Response({"message": "Token inválido"}, status=400)
+
+        except Exception:
+            return Response({"message": "Erro na verificação"}, status=400)
+
 
 
 class RefreshTokenView(APIView):
@@ -86,6 +126,36 @@ class RefreshTokenView(APIView):
 # =====================================================
 # LOGIN - n_processo + senha
 # =====================================================
+# class LoginView(APIView):
+#     permission_classes = [AllowAny]
+#     authentication_classes = []
+
+#     def post(self, request):
+#         serializer = LoginSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         refresh = serializer.validated_data["refresh"]
+#         user = serializer.validated_data["user_obj"]
+
+#         # atualiza último login
+#         update_last_login(None, user)
+
+#         response = Response({
+#             "message": "Login efetuado com sucesso",
+#             "user": serializer.validated_data["user"]
+#         }, status=200)
+
+#         # Cookie HttpOnly para cross-domain
+#         response.set_cookie(
+#             key="refresh_token",
+#             value=refresh,
+#             httponly=True,
+#             secure=False,   # True em produção com HTTPS
+#             samesite="Lax", # 🔥 cross-domain
+#             max_age=7*24*60*60
+#         )
+
+#         return response
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -93,25 +163,28 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         refresh = serializer.validated_data["refresh"]
+        user = serializer.validated_data["user_obj"]   # vamos usar o objeto user
+
+        # atualiza último login
+        update_last_login(None, user)
 
         response = Response({
             "message": "Login efetuado com sucesso",
             "user": serializer.validated_data["user"]
         }, status=200)
 
-        # Cookie HttpOnly para cross-domain
         response.set_cookie(
             key="refresh_token",
             value=refresh,
             httponly=True,
-            secure=False,   # True em produção com HTTPS
-            samesite="Lax", # 🔥 cross-domain
-            max_age=7*24*60*60
+            secure=False,   # True em produção
+            samesite="Lax",
+            max_age=7 * 24 * 60 * 60
         )
 
         return response
-    
 
 # =====================================================
 # LOGOUT
@@ -190,7 +263,6 @@ class MeView(APIView):
 
             perfil_data = {
                 "telefone": perfil.telefone,
-                "estado": perfil.estado,
                 "n_reservas": perfil.n_reservas,
                 "n_emprestimos": perfil.n_emprestimos
             }
@@ -246,83 +318,89 @@ class AlterarSenhaView(APIView):
 @csrf_exempt
 def password_reset_request(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Método não permitido"}, status=405)
+        return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
     try:
         data = json.loads(request.body)
         email = data.get("email")
     except Exception:
-        return JsonResponse({"error": "JSON inválido"}, status=400)
+        return JsonResponse({"success": False, "error": "JSON inválido"}, status=400)
 
     if not email:
-        return JsonResponse({"error": "Email é obrigatório"}, status=400)
+        return JsonResponse({"success": False, "error": "Email é obrigatório"}, status=400)
 
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        return JsonResponse({"error": "Email não encontrado"}, status=404)
+        return JsonResponse({"success": False, "error": "Email não encontrado"}, status=404)
 
     token = default_token_generator.make_token(user)
     uid = user.pk
     reset_link = f"http://localhost:5173/reset-password/{uid}/{token}"
 
-    # Envia email via Brevo API
-    headers = {
-        "accept": "application/json",
-        "api-key": os.getenv("BREVO_API_KEY"),
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "sender": {"name": "Biblioteca IPIL", "email": "celsocundiati@gmail.com"},
-        "to": [{"email": email}],
-        "subject": "Recuperação de senha - Biblioteca IPIL",
-        "htmlContent": f"""
-            <h2>Recuperação de senha</h2>
-            <p>Clique no botão abaixo para redefinir sua senha:</p>
-            <a href="{reset_link}" style="
-                padding:10px 20px;
-                background:#2563eb;
-                color:white;
-                text-decoration:none;
-                border-radius:5px;
-            ">Redefinir senha</a>
-        """
-    }
-    response = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers)
+    try:
+        send_mail(
+            subject="Recuperação de senha - Biblioteca IPIL",
+            message=f"""
+                Olá,
 
-    print("STATUS:", response.status_code)
-    print("BODY:", response.text)
-    
-    if response.status_code != 201 and response.status_code != 200:
-        return JsonResponse({"error": "Falha ao enviar email", "details": response.json()}, status=500)
+                Recebeste este email porque pediste recuperação de senha.
 
-    return JsonResponse({"message": "Email de recuperação enviado"})
+                Clica no link abaixo para redefinir:
+
+                {reset_link}
+
+                Se não foste tu, ignora este email.
+            """,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Email de recuperação enviado"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": "Falha ao enviar email",
+            "details": str(e)
+        }, status=500)
+
 
 
 @csrf_exempt
 def password_reset_confirm(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Método não permitido"}, status=405)
+        return JsonResponse({"success": False, "error": "Método não permitido"}, status=405)
 
-    data = json.loads(request.body)
-    uid = data.get("uid")
-    token = data.get("token")
-    new_password = data.get("new_password")
+    try:
+        data = json.loads(request.body)
+        uid = data.get("uid")
+        token = data.get("token")
+        new_password = data.get("new_password")
+    except Exception:
+        return JsonResponse({"success": False, "error": "JSON inválido"}, status=400)
 
     if not uid or not token or not new_password:
-        return JsonResponse({"error": "Dados incompletos"}, status=400)
+        return JsonResponse({"success": False, "error": "Dados incompletos"}, status=400)
 
     try:
         user = User.objects.get(pk=uid)
     except User.DoesNotExist:
-        return JsonResponse({"error": "Usuário não encontrado"}, status=404)
+        return JsonResponse({"success": False, "error": "Usuário não encontrado"}, status=404)
 
     if not default_token_generator.check_token(user, token):
-        return JsonResponse({"error": "Token inválido ou expirado"}, status=400)
+        return JsonResponse({"success": False, "error": "Token inválido ou expirado"}, status=400)
 
     user.set_password(new_password)
     user.save()
 
-    return JsonResponse({"message": "Senha redefinida com sucesso"})
+    return JsonResponse({
+        "success": True,
+        "message": "Senha redefinida com sucesso"
+    })
 
 
