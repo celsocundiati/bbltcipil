@@ -47,9 +47,89 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
       [e.target.name]: e.target.value,
     });
   }
+  
+
+    const validarCategoria = (nome) => {
+        // apenas letras e espaços
+        const regex = /^[A-Za-zÀ-ÿ\s]{3,50}$/;
+
+        if (!regex.test(nome)) {
+            return "A categoria deve conter apenas letras e entre 3 e 50 caracteres.";
+        }
+
+        const palavras = nome.trim().split(/\s+/);
+
+        // impede nomes completos
+        if (palavras.length > 3) {
+            return "Categoria inválida. Evite nomes completos.";
+        }
+
+        // bloqueia repetições tipo kkk ou aaa
+        if (/^(.)\1+$/.test(nome.toLowerCase())) {
+            return "Categoria inválida.";
+        }
+
+        // impede palavras sem sentido como kkkNNN
+        if (!/[aeiouáéíóúàèìòùãõ]/i.test(nome)) {
+            return "Categoria inválida.";
+        }
+
+        return null;
+    };
+
+    const validarDescricao = (descricao) => {
+        const texto = descricao.trim();
+
+        // mínimo e máximo
+        if (texto.length < 10 || texto.length > 250) {
+            return "A descrição deve ter entre 10 e 250 caracteres.";
+        }
+
+        // bloqueia só símbolos
+        if (!/[A-Za-zÀ-ÿ]/.test(texto)) {
+            return "A descrição deve conter letras.";
+        }
+
+        // bloqueia repetições tipo kkkkk
+        if (/^(.)\1+$/.test(texto.toLowerCase())) {
+            return "Descrição inválida.";
+        }
+
+        // impede strings sem vogais (ex: kkkNNN)
+        if (!/[aeiouáéíóúàèìòùãõ]/i.test(texto)) {
+            return "Descrição inválida.";
+        }
+
+        return null;
+    };
 
   async function handleUpdate(e) {
     e.preventDefault();
+
+    const erroValidacao = validarCategoria(categoria.nome);
+    const erroDescricao = validarDescricao(categoria.descricao);
+
+    if (erroValidacao) {
+        setModal({
+            open: true,
+            type: "error",
+            message: erroValidacao
+        });
+
+        setLoading(false);
+        return;
+    }
+
+    if (erroDescricao) {
+        setModal({
+            open: true,
+            type: "error",
+            message: erroDescricao
+        });
+
+        setLoading(false);
+        return;
+    }
 
     try {
       const response = await api.put(`/admin/categorias/${categoria.id}/`,
@@ -141,13 +221,13 @@ function CategoriaEditar({ categoria ,onClose, setCategorias }) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="bg-white text-black px-8 py-2 rounded-lg border border-black/10 cursor-pointer hover:text-white hover:bg-red-500 transition-all duration-200"
+                            className="bg-white text-black px-8 py-2 rounded-xl border border-black/10 cursor-pointer hover:text-white hover:bg-red-500 transition-all duration-200"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 text-lg rounded-lg cursor-pointer hover:opacity-90 transition-all duration-200"
+                            className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 text-lg rounded-xl cursor-pointer hover:opacity-90 transition-all duration-200"
                         >
                             Atualizar Categoria
                         </button>

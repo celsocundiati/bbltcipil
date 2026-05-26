@@ -6,6 +6,7 @@ import {GiGreekTemple} from "react-icons/gi";
 import {RiBookShelfLine} from "react-icons/ri"
 import { motion } from "framer-motion";
 import { useAuth } from "../../../auth/userAuth/useauth";
+import LogoIPIL from "../../../../assets/ipillogo.png";
 
 function Cabecalho() {
    const { user } = useAuth(); // pega o usuário autenticado
@@ -46,12 +47,18 @@ function Cabecalho() {
             <div className="flex justify-between px-5 py-3 items-center w-full">
 
                 <div className="flex items-center gap-1">
-                    <LuBookOpen className="bg-[#f97b17] text-white p-1.5 size-10 rounded-sm"/>
+                    {/* <LuBookOpen className="bg-[#f97b17] text-white p-1.5 size-10 rounded-sm"/> */}
+
+                    <div className="flex justify-center items-center text-white rounded-sm">
+                        <img src={LogoIPIL} className="w-15 h-15" />
+                    </div>
+
                     <div className="flex flex-col gap-0">
-                        <h2 className="text-[#f97b17] text-xl">IPIL
-                            <span className="text-sm text-black/60 block">Biblioteca</span>
+                        <h2 className="text-[#f97b17] text-xl">Biblioteca
+                            <span className="text-sm text-black/60 block">IPIL</span>
                         </h2>
                     </div>
+
                 </div>
 
                 <div className="flex items-center gap-5 overflow-hidden ml-6">

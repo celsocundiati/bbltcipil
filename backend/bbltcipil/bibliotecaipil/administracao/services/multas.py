@@ -34,49 +34,6 @@ def calcular_valor_multa(emprestimo, motivo):
     return 0
 
 
-# def criar_multa(*, emprestimo, motivo, user):
-#     config = get_config()
-
-#     # 1. verificar se cobrança está ativa
-#     if not multas_ativas():
-#         raise ValidationError(
-#             "A cobrança de multas está desativada pelo sistema."
-#         )
-
-
-#     if not emprestimo:
-#         raise ValidationError("Empréstimo é obrigatório.")
-
-#     if motivo in ["Dano", "Perda"] and Multa.objects.filter(
-#         emprestimo=emprestimo,
-#         motivo=motivo
-#     ).exists():
-#         raise ValidationError("Multa duplicada.")
-
-#     total = Multa.objects.filter(
-#         emprestimo=emprestimo
-#     ).exclude(motivo="Atraso").count()
-
-#     if total >= 2:
-#         raise ValidationError("Limite de multas atingido.")
-
-#     valor = calcular_valor_multa(emprestimo, motivo)
-
-#     multa = Multa.objects.create(
-#         emprestimo=emprestimo,
-#         motivo=motivo,
-#         valor=valor,
-#         criado_por=user
-#     )
-
-#     # ✅ EVENTO CERTO AQUI
-#     emit_event("multa_criada", {
-#         "multa_id": multa.id
-#     })
-
-#     return multa
-
-
 def criar_multa(*, emprestimo, motivo, user):
 
     # 1. verificar se cobrança está ativa

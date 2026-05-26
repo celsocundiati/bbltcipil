@@ -5,6 +5,9 @@ from accounts.models import Perfil, AlunoOficial, FuncionarioOficial
 from django.contrib.auth.models import User, Group
 from audit.models import AuditLog
 from django.db import transaction
+import re
+from datetime import date
+
 
 
 # --------------------------
@@ -174,11 +177,96 @@ class AutorAdminSerializer(serializers.ModelSerializer):
         model = Autor
         fields = '__all__'
 
+    def validate_nome(self, value):
+        value = value.strip()
+
+        if not re.match(r'^[A-Za-zÀ-ÿ\s]{5,100}$', value):
+            raise serializers.ValidationError(
+                "Nome inválido."
+            )
+
+        # bloqueia repetições
+        if re.match(r'^(.)\1+$', value.lower()):
+            raise serializers.ValidationError(
+                "Nome inválido."
+            )
+
+        return value.title()
+
+    def validate_nacionalidade(self, value):
+        value = value.strip()
+
+        if not re.match(r'^[A-Za-zÀ-ÿ\s]{3,40}$', value):
+            raise serializers.ValidationError(
+                "Nacionalidade inválida."
+            )
+
+        if re.match(r'^(.)\1+$', value.lower()):
+            raise serializers.ValidationError(
+                "Nacionalidade inválida."
+            )
+
+        return value.title()
+
 
 class CategoriaAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
         fields = '__all__'
+
+    def validate_nome(self, value):
+        value = value.strip()
+
+        # apenas letras e espaços
+        if not re.match(r'^[A-Za-zÀ-ÿ\s]{3,50}$', value):
+            raise serializers.ValidationError(
+                "O nome deve conter apenas letras e entre 3 e 50 caracteres."
+            )
+
+        # impede nomes completos
+        palavras = value.split()
+        if len(palavras) > 3:
+            raise serializers.ValidationError(
+                "Categoria inválida. Evite nomes completos."
+            )
+
+        # bloqueia repetições tipo kkkk
+        if re.match(r'^(.)\1+$', value.lower()):
+            raise serializers.ValidationError(
+                "Categoria inválida."
+            )
+
+        # exige ao menos uma vogal
+        if not re.search(r'[aeiouáéíóúàèìòùãõ]', value.lower()):
+            raise serializers.ValidationError(
+                "Categoria inválida."
+            )
+
+        return value.title()
+
+
+    def validate_descricao(self, value):
+        value = value.strip()
+
+        # tamanho
+        if len(value) < 10 or len(value) > 250:
+            raise serializers.ValidationError(
+                "A descrição deve ter entre 10 e 250 caracteres."
+            )
+
+        # precisa conter letras
+        if not re.search(r'[A-Za-zÀ-ÿ]', value):
+            raise serializers.ValidationError(
+                "A descrição deve conter texto válido."
+            )
+
+        # bloqueia repetições
+        if re.match(r'^(.)\1+$', value.lower()):
+            raise serializers.ValidationError(
+                "Descrição inválida."
+            )
+
+        return value
 
 
 class LivroAdminSerializer(serializers.ModelSerializer):
@@ -367,6 +455,82 @@ class ExposicaoAdminSerializer(serializers.ModelSerializer):
     def get_vagas_disponiveis(self, obj):
         return obj.vagas_disponiveis()
 
+    def validate_titulo(self, value):
+        value = value.strip()
+
+        if len(value) < 5 or len(value) > 100:
+            raise serializers.ValidationError(
+                "Título deve ter entre 5 e 100 caracteres."
+            )
+
+        # bloqueia repetições
+        if re.match(r'^(.)\1+$', value.lower()):
+            raise serializers.ValidationError(
+                "Título inválido."
+            )
+
+        # precisa ter pelo menos uma vogal
+        if not re.search(r'[aeiouáéíóúãõ]', value.lower()):
+            raise serializers.ValidationError(
+                "Título inválido."
+            )
+
+        return value.title()
+
+
+    def validate_descricao(self, value):
+        value = value.strip()
+
+        if len(value) < 10 or len(value) > 500:
+            raise serializers.ValidationError(
+                "Descrição inválida."
+            )
+
+        if re.match(r'^(.)\1+$', value.lower()):
+            raise serializers.ValidationError(
+                "Descrição inválida."
+            )
+
+        return value
+
+
+    def validate_local(self, value):
+        value = value.strip()
+
+        if len(value) < 3:
+            raise serializers.ValidationError(
+                "Local inválido."
+            )
+
+        if re.match(r'^(.)\1+$', value.lower()):
+            raise serializers.ValidationError(
+                "Local inválido."
+            )
+
+        return value.title()
+
+
+    def validate(self, data):
+        if data["data_inicio"] < date.today():
+            raise serializers.ValidationError({
+                "data_inicio":
+                "A data inicial não pode ser anterior a hoje."
+            })
+
+        if data["data_fim"] < data["data_inicio"]:
+            raise serializers.ValidationError({
+                "data_fim":
+                "A data final não pode ser menor que a inicial."
+            })
+
+        if data["capacidade_maxima"] <= 0:
+            raise serializers.ValidationError({
+                "capacidade_maxima":
+                "Capacidade inválida."
+            })
+
+        return data
+    
 
 # =============================
 # EVENTO

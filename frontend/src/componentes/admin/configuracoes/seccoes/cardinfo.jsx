@@ -32,6 +32,10 @@ function CardInfo() {
 
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  
+  const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validarTelefone = (tel) => /^\d{9}$/.test(tel);
+
 
   // 🔄 CARREGAR CONFIG
   useEffect(() => {
@@ -71,6 +75,22 @@ function CardInfo() {
   // 💾 GUARDAR
   async function handleSubmit(e) {
     if (!podeGerir(user)) return;
+    
+    if (!validarEmail(formData.email)) {
+      setToast({
+        message: "Email inválido.",
+        type: "error",
+      });
+      return;
+    }
+    if (!validarTelefone(formData.telefone)) {
+      setToast({
+        message: "Telefone inválido. Use apenas números (9 dígitos).",
+        type: "error",
+      });
+      return;
+    }
+
     e.preventDefault();
 
     try {
@@ -292,6 +312,7 @@ function CardInfo() {
             <input
               type="email"
               name="email"
+              required
               value={formData.email}
               onChange={handleChange}
               className="w-full h-10 px-5 py-2 bg-black/3 border border-black/5 rounded-2xl flex items-center outline-none focus-within:ring-2 focus-within:ring-[#f97b17]"

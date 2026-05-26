@@ -38,17 +38,77 @@ function ModalEditarAutor({ onClose, form, setForm }){
 
     }, [form]);
 
+    
+    const validarNomeAutor = (nome) => {
+        nome = nome.trim();
+
+        if (!/^[A-Za-zÀ-ÿ\s]{5,100}$/.test(nome)) {
+            return "Nome inválido. Use apenas letras.";
+        }
+
+        // pelo menos nome e sobrenome
+        if (nome.split(/\s+/).length < 2) {
+            return "Informe o nome completo do autor.";
+        }
+
+        // bloqueia kkkkk
+        if (/^(.)\1+$/.test(nome.toLowerCase())) {
+            return "Nome inválido.";
+        }
+
+        return null;
+    };
+
+    const validarNacionalidade = (nacionalidade) => {
+        nacionalidade = nacionalidade.trim();
+
+        if (!/^[A-Za-zÀ-ÿ\s]{3,40}$/.test(nacionalidade)) {
+            return "Nacionalidade inválida.";
+        }
+
+        if (/^(.)\1+$/.test(nacionalidade.toLowerCase())) {
+            return "Nacionalidade inválida.";
+        }
+
+        return null;
+    };
+
     const handleChange = (e) => {
         setAutor({
             ...autor,
             [e.target.name]: e.target.value,
         });
-        };
+    };
   
-        const handleSubmit = async (e) => {
-            e.preventDefault();
-            setLoading(true);
-            setErro(null);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setErro(null);
+
+            
+        const erroNome = validarNomeAutor(autor.nome);
+        const erroNacionalidade = validarNacionalidade(autor.nacionalidade); 
+
+        if (erroNome) {
+            setModal({
+                open: true,
+                type: "error",
+                message: erroNome
+            });
+            setLoading(false);
+            return;
+        }
+
+        if (erroNacionalidade) {
+            setModal({
+                open: true,
+                type: "error",
+                message: erroNacionalidade
+            });
+            setLoading(false);
+            return;
+        }
+  
         
         try {
             await api.put(`/admin/autores/${autor?.id}/`, autor);
@@ -119,10 +179,10 @@ function ModalEditarAutor({ onClose, form, setForm }){
                             </div>
                         </div>
                         <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-                            <button onClick={onClose} type="button" className="bg-white text-black px-8 py-2 rounded-lg border border-black/10 cursor-pointer hover:text-white hover:bg-red-500 transition-all duration-200">
+                            <button onClick={onClose} type="button" className="bg-white text-black px-8 py-2 rounded-xl border border-black/10 cursor-pointer hover:text-white hover:bg-red-500 transition-all duration-200">
                                 Cancelar
                             </button>
-                            <button type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-lg cursor-pointer hover:bg-green-600 transition-all duration-200">
+                            <button type="submit" className="bg-green-500 text-white py-2 px-4 text-lg rounded-xl cursor-pointer hover:bg-green-600 transition-all duration-200">
                                 Salvar Alterações
                             </button>
                         </div>

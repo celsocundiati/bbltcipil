@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../service/api/api";
+import { FiArrowLeft } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import Cabecalho from "../../../usuario/casa/cabecalho/cabecalho";
+
 
 function ListaNotificacoes() {
   const [notificacoes, setNotificacoes] = useState([]);
@@ -57,8 +61,18 @@ function ListaNotificacoes() {
   const exibidas = notificacoes.slice(0, limit);
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-6 flex flex-col gap-4">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Notificações</h2>
+    <div className="w-full max-w-7xl mx-auto py-6 flex flex-col gap-4">
+
+      <Cabecalho/>
+
+      {/* Botão voltar */}
+      <div className="absolute top-25 left-3">
+        <Link to="/perfil">
+          <FiArrowLeft size={30} />
+        </Link>
+      </div>
+
+      <h2 className="text-2xl font-semibold mb-4 mt-20 text-gray-800">Notificações</h2>
       <AnimatePresence>
         {exibidas.map((notif) => (
           <motion.div

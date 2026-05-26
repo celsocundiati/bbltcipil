@@ -107,7 +107,7 @@ export default function TabMultas() {
                             <tr className="transition">
                                 <th className="w-[15%] px-5 py-3 text-left">Usuário</th>
                                 <th className="w-[9%] px-5 py-3 text-left">Motivo</th>
-                                <th className="w-[9%] px-5 py-3 text-left">Valor</th>
+                                <th className="w-[9%] px-5 py-3 text-left">Falta</th>
                                 <th className="w-[10%] px-5 py-3 text-left">Data</th>
                                 <th className="w-[11%] px-5 py-3 text-center">Estado</th>
                                 <th className="w-[20%] px-5 py-3 text-center">Acções</th>
