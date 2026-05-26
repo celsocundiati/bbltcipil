@@ -73,7 +73,7 @@ function RotulosOutle({ page }) {
                     <Card titulo="Total" valor={resumo.multas.total} cor="#F97B17" />
                     <Card titulo="Pendentes" valor={resumo.multas.pendentes} cor="#EF4444" />
                     <Card titulo="Pagas" valor={resumo.multas.pagas} cor="#22C55E" />
-                    <Card titulo="Valor Total" valor={`$${resumo.multas.valor_total}`} cor="#3B82F6" />
+                    <Card titulo="Total Faltas" valor={`$${resumo.multas.valor_total}`} cor="#3B82F6" />
                 </section>
             )}
 

@@ -59,6 +59,7 @@ export default function Privacidade() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
     >
+      
       <div className="absolute top-4 left-3 gap-4">
         <Link to="/perfil">
           <FiArrowLeft size={30} />

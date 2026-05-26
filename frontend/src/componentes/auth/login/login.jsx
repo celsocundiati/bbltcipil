@@ -1,9 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../userAuth/useauth";
 import api from "../../service/api/api";
-
 import LogoIPIL from "../../../assets/ipillogo.png";
 import Fundo from "../../../assets/bck.jpg";
 

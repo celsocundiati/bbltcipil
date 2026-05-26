@@ -16,43 +16,92 @@ function ModalEditEventos({ evento, onClose, setEventos, showToast }) {
     });
 
     const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const hoje = new Date().toISOString().split("T")[0];
 
-    // 🔹 Load evento
+    // =============================
+    // LOAD EVENTO
+    // =============================
     useEffect(() => {
-        if (evento?.id) {
-            setLoading(true);
+        if (!evento?.id) return;
 
-            api.get(`/admin/eventos/${evento.id}/`)
-                .then(res => {
-                    setForm(res.data);
-                    setLoading(false);
-                })
-                .catch(err => {
-                    const erros = err.response?.data
-                        ? Object.values(err.response.data).flat().join(" ")
-                        : "Erro ao carregar evento";
+        setLoading(true);
 
-                    showToast({
-                        message: erros,
-                        type: "error",
-                    });
+        api.get(`/admin/eventos/${evento.id}/`)
+            .then(res => {
+                setForm(res.data);
+            })
+            .catch(err => {
+                const msg = formatBackendError(err);
+                showToast({ message: msg, type: "error" });
+            })
+            .finally(() => setLoading(false));
 
-                    setLoading(false);
-                });
-        }
     }, [evento]);
 
+    // =============================
+    // HANDLE CHANGE
+    // =============================
     const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value,
-        });
+        const { name, value } = e.target;
+
+        setForm(prev => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
+    // =============================
+    // BACKEND ERROR HANDLER
+    // =============================
+    const formatBackendError = (err) => {
+        const data = err?.response?.data;
+
+        if (!data) return "Erro de comunicação com o servidor";
+
+        if (typeof data === "string") return data;
+
+        return Object.entries(data)
+            .map(([field, messages]) => {
+                if (Array.isArray(messages)) {
+                    return `${field}: ${messages.join(" ")}`;
+                }
+                return `${field}: ${messages}`;
+            })
+            .join(" | ");
+    };
+
+    // =============================
+    // FRONT VALIDATION (leve)
+    // =============================
+    const validate = () => {
+
+        if (!form.titulo?.trim()) return "Título obrigatório";
+        if (!form.descricao?.trim()) return "Descrição obrigatória";
+        if (!form.local?.trim()) return "Local obrigatório";
+
+        if (Number(form.capacidade_maxima) <= 0)
+            return "Capacidade deve ser maior que 0";
+
+        if (new Date(form.data_fim) < new Date(form.data_inicio))
+            return "Data final não pode ser menor que a inicial";
+
+        return null;
+    };
+
+    // =============================
+    // UPDATE
+    // =============================
     async function handleUpdate(e) {
         e.preventDefault();
 
-        setLoading(true);
+        const erro = validate();
+        if (erro) {
+            showToast({ message: erro, type: "error" });
+            return;
+        }
+
+        setSaving(true);
 
         try {
             const response = await api.put(
@@ -74,171 +123,139 @@ function ModalEditEventos({ evento, onClose, setEventos, showToast }) {
             onClose();
 
         } catch (error) {
-            const erros = error.response?.data
-                ? Object.values(error.response.data).flat().join(" ")
-                : "Erro ao atualizar evento";
-
             showToast({
-                message: erros,
+                message: formatBackendError(error),
                 type: "error",
             });
 
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     }
 
     if (!evento) return null;
 
+
     return (
-        <>
-            {/* MODAL EDIT */}
-            <section className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <section className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative"
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-lg md:max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative"
+            >
+
+                {/* CLOSE */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-black/50 hover:text-black cursor-pointer"
                 >
+                    <HiOutlineXMark size={35} />
+                </button>
 
-                    {/* FECHAR */}
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 text-black/50 cursor-pointer hover:text-black"
-                    >
-                        <HiOutlineXMark size={35} />
-                    </button>
+                <article className="py-4 text-left">
+                    <h2 className="text-xl font-medium">Editar Evento</h2>
+                    <p className="text-lg">Actualizar eventos escolares</p>
+                </article>
 
-                    {/* HEADER */}
-                    <article className="py-4 text-left">
-                        <h2 className="text-xl font-medium">
-                            Editar Evento
-                        </h2>
-                        <p className="text-lg">
-                            Atualize os dados do evento
-                        </p>
-                    </article>
+                {loading ? (
+                    <div className="py-6 text-center text-black/60 animate-pulse">
+                        A carregar...
+                    </div>
+                ) : (
 
-                    {/* FORM */}
-                    {loading ? (
-                        <div className="py-6 text-center text-black/60 animate-pulse">
-                            A carregar...
+                    <form onSubmit={handleUpdate} className="space-y-4">
+
+                        <input
+                            name="titulo"
+                            value={form.titulo}
+                            onChange={handleChange}
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5 focus:ring-2 focus:ring-green-500"
+                            placeholder="Título"
+                        />
+
+                        <textarea
+                            name="descricao"
+                            value={form.descricao}
+                            onChange={handleChange}
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5 focus:ring-2 focus:ring-green-500"
+                            placeholder="Descrição"
+                        />
+
+                        <input
+                            name="local"
+                            value={form.local}
+                            onChange={handleChange}
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5 focus:ring-2 focus:ring-green-500"
+                            placeholder="Local"
+                        />
+
+                        <input
+                            type="number"
+                            name="capacidade_maxima"
+                            value={form.capacidade_maxima}
+                            onChange={handleChange}
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5 focus:ring-2 focus:ring-green-500"
+                            placeholder="Capacidade"
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                            <input
+                                type="date"
+                                name="data_inicio"
+                                value={form.data_inicio}
+                                onChange={handleChange}
+                                min={hoje}
+                                className="w-full p-2 bg-black/5 rounded outline-none border border-black/5 focus:ring-2 focus:ring-green-500"
+                            />
+
+                            <input
+                                type="date"
+                                name="data_fim"
+                                value={form.data_fim}
+                                onChange={handleChange}
+                                min={form.data_inicio}
+                                className="w-full p-2 bg-black/5 rounded outline-none border border-black/5 focus:ring-2 focus:ring-green-500"
+                            />
+
                         </div>
-                    ) : (
-                        <form onSubmit={handleUpdate} className="space-y-4">
 
-                            {/* TÍTULO */}
-                            <input
-                                type="text"
-                                required
-                                name="titulo"
-                                value={form.titulo}
-                                onChange={handleChange}
-                                placeholder="Título do evento"
-                                className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
-                            />
+                        <input
+                            name="capa"
+                            value={form.capa}
+                            onChange={handleChange}
+                            className="w-full p-2 bg-black/5 rounded outline-none border border-black/5 focus:ring-2 focus:ring-green-500"
+                            placeholder="URL da capa"
+                        />
 
-                            {/* DESCRIÇÃO */}
-                            <textarea
-                                required
-                                name="descricao"
-                                value={form.descricao}
-                                onChange={handleChange}
-                                placeholder="Breve descrição do evento..."
-                                className="w-full h-24 p-2 bg-black/5 rounded outline-none border border-black/5"
-                            />
+                        <div className="flex justify-end gap-3 pt-3">
 
-                            {/* LOCAL */}
-                            <input
-                                type="text"
-                                required
-                                name="local"
-                                value={form.local}
-                                onChange={handleChange}
-                                placeholder="Local do evento"
-                                className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
-                            />
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="px-4 py-2 bg-black/10 rounded-xl hover:bg-red-500 hover:text-white"
+                            >
+                                Cancelar
+                            </button>
 
-                            {/* CAPACIDADE */}
-                            <input
-                                type="number"
-                                required
-                                name="capacidade_maxima"
-                                value={form.capacidade_maxima}
-                                onChange={handleChange}
-                                placeholder="Capacidade máxima"
-                                className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
-                            />
+                            <button
+                                type="submit"
+                                disabled={saving}
+                                className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 disabled:opacity-50"
+                            >
+                                {saving ? "A atualizar..." : "Atualizar"}
+                            </button>
 
-                            {/* DATAS */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        </div>
 
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-sm text-left text-black/70">
-                                        Data de Início
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="data_inicio"
-                                        value={form.data_inicio}
-                                        onChange={handleChange}
-                                        className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
-                                    />
-                                </div>
+                    </form>
 
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-sm text-left text-black/70">
-                                        Data de Término
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="data_fim"
-                                        value={form.data_fim}
-                                        onChange={handleChange}
-                                        className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
-                                    />
-                                </div>
+                )}
 
-                            </div>
+            </motion.div>
 
-                            {/* CAPA */}
-                            <input
-                                type="text"
-                                name="capa"
-                                required
-                                value={form.capa}
-                                onChange={handleChange}
-                                placeholder="URL da capa"
-                                className="w-full p-2 bg-black/5 rounded outline-none border border-black/5"
-                            />
-
-                            {/* BOTÕES */}
-                            <div className="flex justify-end gap-3 pt-4">
-
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="px-4 py-2 rounded bg-black/10 cursor-pointer hover:bg-red-500 hover:text-white transition"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="bg-green-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-green-600 transition"
-                                >
-                                    {loading ? "Atualizando..." : "Atualizar"}
-                                </button>
-
-                            </div>
-
-                        </form>
-                    )}
-
-                </motion.div>
-
-            </section>
-        </>
+        </section>
     );
 }
 

@@ -22,44 +22,127 @@ function ModalAddCategoria({onClose}){
           ...categoria,
           [e.target.name]: e.target.value,
         });
-      };
+    };
+
+    const validarCategoria = (nome) => {
+        // apenas letras e espaços
+        const regex = /^[A-Za-zÀ-ÿ\s]{3,50}$/;
+
+        if (!regex.test(nome)) {
+            return "A categoria deve conter apenas letras e entre 3 e 50 caracteres.";
+        }
+
+        const palavras = nome.trim().split(/\s+/);
+
+        // impede nomes completos
+        if (palavras.length > 3) {
+            return "Categoria inválida. Evite nomes completos.";
+        }
+
+        // bloqueia repetições tipo kkk ou aaa
+        if (/^(.)\1+$/.test(nome.toLowerCase())) {
+            return "Categoria inválida.";
+        }
+
+        // impede palavras sem sentido como kkkNNN
+        if (!/[aeiouáéíóúàèìòùãõ]/i.test(nome)) {
+            return "Categoria inválida.";
+        }
+
+        return null;
+    };
+
+    const validarDescricao = (descricao) => {
+        const texto = descricao.trim();
+
+        // mínimo e máximo
+        if (texto.length < 10 || texto.length > 250) {
+            return "A descrição deve ter entre 10 e 250 caracteres.";
+        }
+
+        // bloqueia só símbolos
+        if (!/[A-Za-zÀ-ÿ]/.test(texto)) {
+            return "A descrição deve conter letras.";
+        }
+
+        // bloqueia repetições tipo kkkkk
+        if (/^(.)\1+$/.test(texto.toLowerCase())) {
+            return "Descrição inválida.";
+        }
+
+        // impede strings sem vogais (ex: kkkNNN)
+        if (!/[aeiouáéíóúàèìòùãõ]/i.test(texto)) {
+            return "Descrição inválida.";
+        }
+
+        return null;
+    };
     
-      const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setErro(null);
-    
+
+        const erroValidacao = validarCategoria(categoria.nome);
+        const erroDescricao = validarDescricao(categoria.descricao);
+
+        if (erroValidacao) {
+            setModal({
+                open: true,
+                type: "error",
+                message: erroValidacao
+            });
+
+            setLoading(false);
+            return;
+        }
+
+        if (erroDescricao) {
+            setModal({
+                open: true,
+                type: "error",
+                message: erroDescricao
+            });
+
+            setLoading(false);
+            return;
+        }
+
         try {
-          setLoading(true)
-          await api.post("/admin/categorias/", categoria);
-          setModal({
+            setLoading(true)
+            await api.post("/admin/categorias/", categoria);
+            setModal({
             open: true,
             type: "success",
             message: "Categoria registrada com sucesso!",
         });
         
-        setCategoria("");
-        } catch (err) {
-            if (err.response?.data) {
-                const erros = Object.values(err.response.data)
-                    .flat()
-                    .join("\n");
+        setCategoria({
+            nome: "",
+            descricao: ""
+        });
 
-                setModal({
-                    open: true,
-                    type: "error",
-                    message: erros,
-                });
-                setErro(erros);
-            } else {
-                alert("Erro ao comunicar com o servidor");
-            }
+    } catch (err) {
+        if (err.response?.data) {
+            const erros = Object.values(err.response.data)
+                .flat()
+                .join("\n");
 
-            console.error(err);
-        } finally {
-          setLoading(false);
+            setModal({
+                open: true,
+                type: "error",
+                message: erros,
+            });
+            setErro(erros);
+        } else {
+            alert("Erro ao comunicar com o servidor");
         }
-      };
+
+        console.error(err);
+    } finally {
+        setLoading(false);
+    }
+    };
 
 
     return(
@@ -91,7 +174,7 @@ function ModalAddCategoria({onClose}){
                                 <label className="text-black/75 text-lg text-left">
                                     Descrição
                                 </label>
-                                <textarea placeholder="Breve descrição do livro..." required name="descricao" value={categoria.descricao} onChange={handleChange}
+                                <textarea placeholder="Breve descrição do livro..." maxLength={250} required name="descricao" value={categoria.descricao} onChange={handleChange}
                                 className="mt-1 w-full h-24 rounded-md border border-black/10 bg-black/5 outline-none px-3 py-2 text-black/70  font-medium focus:ring-2 focus:ring-green-500" />
                             </div>
                         </div>
@@ -100,14 +183,14 @@ function ModalAddCategoria({onClose}){
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="w-full sm:w-auto border border-black/10 cursor-pointer text-black/70 px-6 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
+                                className="w-full sm:w-auto border border-black/10 cursor-pointer text-black/70 px-6 py-2 rounded-xl hover:bg-red-500 hover:text-white transition"
                             >
                                 Cancelar
                             </button>
 
                             <button
                                 type="submit"
-                                className="w-full sm:w-auto bg-green-500 cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                                className="w-full sm:w-auto bg-green-500 cursor-pointer text-white px-6 py-2 rounded-xl hover:bg-green-600 transition"
                             >
                                 {!loading ? "Adicionar categoria" : "Adicionando categoria..."}
                             </button>
