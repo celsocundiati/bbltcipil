@@ -2,6 +2,10 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from livros.models import Emprestimo
+from django.core.validators import MinValueValidator, RegexValidator
+from django.core.exceptions import ValidationError
+from decimal import Decimal
+from datetime import time
 
 User = get_user_model()
 
@@ -34,7 +38,7 @@ class Multa(models.Model):
     )
 
     motivo = models.CharField(max_length=50, choices=MOTIVO_CHOICES)
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    valor = models.PositiveIntegerField()
 
     estado = models.CharField(
         max_length=20,
@@ -93,54 +97,121 @@ class Multa(models.Model):
 
     def __str__(self):
         return f"{self.usuario} - {self.motivo} - {self.valor} Kz"
-    
 
 
 class ConfiguracaoSistema(models.Model):
 
-        # 📌 Reservas (NOVO)
+    # =========================
+    # 📌 RESERVAS
+    # =========================
     limite_reservas_ativas = models.PositiveIntegerField(default=5)
     limite_reservas_uso = models.PositiveIntegerField(default=3)
-
-    # 🧱 Limite global (TOTAL VIDA)
     limite_reservas_total = models.PositiveIntegerField(null=True, blank=True)
-
-    # 📆 Limite mensal
     limite_reservas_mensal = models.PositiveIntegerField(default=10)
 
-    # 📚 Regras de Empréstimos
+    # =========================
+    # 📚 EMPRÉSTIMOS
+    # =========================
     dias_emprestimo = models.PositiveIntegerField(default=14)
     limite_livros_estudante = models.PositiveIntegerField(default=3)
 
-    # 💰 Multas
+    # =========================
+    # 💰 MULTAS (TOTALMENTE SEGURAS)
+    # =========================
     cobranca_ativa = models.BooleanField(default=True)
-    
-    multa_por_dia = models.DecimalField(max_digits=10, decimal_places=2, default=500)
-    multa_por_dano = models.DecimalField(max_digits=10, decimal_places=2, default=1500)
-    multa_por_perda = models.DecimalField(max_digits=10, decimal_places=2, default=5000)
 
-    # ⏰ Horário
-    horario_semana_abertura = models.TimeField(default="08:00")
-    horario_semana_fecho = models.TimeField(default="16:00")
+    multa_por_dia = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=1,
+        validators=[MinValueValidator(Decimal("0"))]
+    )
 
-    horario_fim_semana_abertura = models.TimeField(default="08:00")
-    horario_fim_semana_fecho = models.TimeField(default="12:00")
+    multa_por_perda_ou_dano = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=5,
+        validators=[MinValueValidator(Decimal("0"))]
+    )
 
-    # 📞 Contactos
-    email = models.EmailField(default="biblioteca@example.com")
-    telefone = models.CharField(max_length=20, default="")
+    dias_tolerancia = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=5,
+        validators=[MinValueValidator(Decimal("0"))]
+    )
 
-    # 🔒 Controle
+    # =========================
+    # ⏰ HORÁRIOS
+    # =========================
+    horario_semana_abertura = models.TimeField(default=time(8, 0))
+    horario_semana_fecho = models.TimeField(default=time(16, 0))
+
+    horario_fim_semana_abertura = models.TimeField(default=time(8, 0))
+    horario_fim_semana_fecho = models.TimeField(default=time(12, 0))
+
+    # =========================
+    # 📞 CONTACTOS
+    # =========================
+    email = models.EmailField(blank=True, null=True)
+
+    telefone = models.CharField(
+        max_length=20,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r"^\+?[0-9]{7,15}$",
+                message="Número de telefone inválido."
+            )
+        ]
+    )
+
+    # =========================
+    # 🔒 CONTROLO
+    # =========================
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    # =========================
+    # 🧠 VALIDAÇÃO GLOBAL (REGRA DE NEGÓCIO)
+    # =========================
+    def clean(self):
+        errors = {}
+
+        # ⏰ horários semana
+        if self.horario_semana_abertura >= self.horario_semana_fecho:
+            errors["horario_semana"] = "Abertura deve ser antes do fecho (semana)."
+
+        # ⏰ horários fim de semana
+        if self.horario_fim_semana_abertura >= self.horario_fim_semana_fecho:
+            errors["horario_fim_semana"] = "Abertura deve ser antes do fecho (fim de semana)."
+
+        # 💰 segurança extra contra negativos (backup da validação)
+        for field in ["multa_por_dia", "multa_por_dano", "multa_por_perda"]:
+            value = getattr(self, field)
+            if value is not None and value < 0:
+                errors[field] = "Valores de multa não podem ser negativos."
+
+        if errors:
+            raise ValidationError(errors)
+
+    # =========================
+    # 🔒 SINGLETON (1 CONFIG SÓ)
+    # =========================
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    # =========================
+    # 📌 DISPLAY
+    # =========================
     def __str__(self):
         return "Configurações do Sistema"
-    
+
     class Meta:
+        verbose_name = "Configuração do Sistema"
+        verbose_name_plural = "Configuração do Sistema"
+
         permissions = [
             ("gerir_usuarios", "Pode gerir usuários"),
             ("ver_relatorios", "Pode ver relatórios"),
         ]
-
-
-

@@ -9,7 +9,7 @@ export default function AuthPage() {
   const [tab, setTab] = useState("login"); // login | register | reset
 
   // LOGIN
-  const [n_identificacao, setIdentificacao] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
 
   // REGISTER
@@ -32,19 +32,41 @@ export default function AuthPage() {
   const { login } = useAuth();
 
   // ---------------- LOGIN ----------------
+  // ---------------- LOGIN ----------------
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
     setLoading(true);
 
     try {
-      await login(n_identificacao, password);
+      await login(emailOrUsername, password);
       navigate("/");
     } catch (err) {
-      setErro(
-        err.response?.data?.detail ||
-          "Credenciais inválidas."
-      );
+      const data = err.response?.data;
+
+      // 🔥 PRIORIDADE 1: erro "detail" (DRF simples)
+      if (data?.detail) {
+        setErro(data.detail);
+      }
+
+      // 🔥 PRIORIDADE 2: erros de campos (serializer validation)
+      else if (data) {
+        const firstKey = Object.keys(data)[0];
+        const firstError = data[firstKey];
+
+        if (Array.isArray(firstError)) {
+          setErro(firstError[0]);
+        } else if (typeof firstError === "string") {
+          setErro(firstError);
+        } else {
+          setErro("Erro ao autenticar utilizador.");
+        }
+      }
+
+      // 🔥 fallback final
+      else {
+        setErro("Erro inesperado no servidor.");
+      }
     } finally {
       setLoading(false);
     }
@@ -159,9 +181,9 @@ export default function AuthPage() {
         {tab === "login" && (
           <form onSubmit={handleLogin} className="flex flex-col gap-3">
             <input
-              placeholder="Username"
-              value={n_identificacao}
-              onChange={(e) => setIdentificacao(e.target.value)}
+              placeholder="Email ou Nº Processo"
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
               className="px-4 py-2 border bg-gray-300 border-black/10 h-11 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
               required
             />

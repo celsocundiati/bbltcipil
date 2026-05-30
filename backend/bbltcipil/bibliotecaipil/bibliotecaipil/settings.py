@@ -265,6 +265,8 @@ from datetime import timedelta
 import os
 from celery.schedules import crontab
 import dj_database_url
+import cloudinary
+
 
 # ==========================================================
 # BASE
@@ -311,6 +313,9 @@ INSTALLED_APPS = [
     "administracao.apps.AdministracaoConfig",
     "ai_assistant.apps.AiAssistantConfig",
     "audit.apps.AuditConfig",
+
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
 
@@ -518,5 +523,10 @@ EMAIL_HOST_PASSWORD = os.getenv("GMAIL_API_KEY")
 DEFAULT_FROM_EMAIL = "Biblioteca IPIL <no-reply@bibliotecaipil.com>"
 
 
-
-
+cloudinary.config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("CLOUD_API_KEY"),
+    api_secret=os.getenv("CLOUD_API_SECRET"),
+    secure=True
+)
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"

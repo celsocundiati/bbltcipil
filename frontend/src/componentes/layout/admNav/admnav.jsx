@@ -64,10 +64,34 @@ function AdminNav() {
 
           {/* Perfil - versão compacta no mobile */}
           <Link to="/perfil" className="flex items-center gap-3">
+            
+            {
+              user?.perfil?.foto ? (
 
-            <div className="flex items-center justify-center rounded-full w-10 h-10 md:w-12 md:h-12 bg-[#f97b17] text-white text-lg md:text-xl">
-              {obterIniciais(nome)}
-            </div>
+                <img
+                  src={user?.perfil?.foto}
+                  alt={nome}
+                  className="
+                    w-12
+                    h-12
+                    rounded-full
+                    object-cover
+                    shrink-0
+                    border
+                    border-black/10
+                  "
+                />
+
+              ) : (
+
+                <div
+                  className="flex items-center justify-center rounded-full w-10 h-10 md:w-12 md:h-12 bg-[#f97b17] text-white text-lg md:text-xl"
+                >
+                  {obterIniciais(nome)}
+                </div>
+
+              )
+            }
 
             {/* Nome escondido no mobile */}
             <div className="hidden md:flex flex-col font-semibold">

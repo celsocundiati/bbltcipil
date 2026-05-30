@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
 from django.apps import apps
+from cloudinary.models import CloudinaryField
 
 
 class Perfil(models.Model):
@@ -17,6 +18,20 @@ class Perfil(models.Model):
         max_length=20,
         blank=True,
         help_text="Número de telefone do utilizador"
+    )
+
+
+    # 🔥 NOVO CAMPO (imagem de perfil)
+    foto = CloudinaryField(
+        "foto_perfil",
+        blank=True,
+        null=True,
+        transformation={
+            "width": 400,
+            "height": 400,
+            "crop": "fill",
+            "gravity": "face"
+        }
     )
 
     n_reservas = models.IntegerField(

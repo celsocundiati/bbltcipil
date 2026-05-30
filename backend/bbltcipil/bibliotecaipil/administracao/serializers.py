@@ -71,6 +71,7 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
     nome = serializers.SerializerMethodField()
     dados_oficiais = serializers.SerializerMethodField()
     grupos = serializers.SerializerMethodField()
+    foto = serializers.SerializerMethodField()
 
     class Meta:
         model = Perfil
@@ -79,6 +80,7 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
             "user",
             "grupos",
             "telefone",
+            "foto",
             "n_reservas",
             "n_emprestimos",
             "nome",
@@ -103,6 +105,13 @@ class PerfilAdminSerializer(serializers.ModelSerializer):
             "last_name": user.last_name,
             "is_active": user.is_active,
         }
+    
+    def get_foto(self, obj):
+
+        if obj.foto:
+            return obj.foto.url
+
+        return None
 
     def get_grupos(self, obj):
         """Retorna uma lista com os nomes dos grupos do usuário"""
@@ -366,6 +375,8 @@ class ConfiguracaoSistemaSerializer(serializers.ModelSerializer):
 
 class UserListSerializer(serializers.ModelSerializer):
     grupos_display = serializers.SerializerMethodField()
+    foto = serializers.SerializerMethodField()
+    
 
     class Meta:
         model = User
@@ -378,8 +389,17 @@ class UserListSerializer(serializers.ModelSerializer):
             "is_active",
             "is_superuser",
             "is_staff",
-            "grupos_display"
+            "grupos_display",
+            "foto"
         ]
+
+    def get_foto(self, obj):
+        perfil = getattr(obj, "perfil", None)
+
+        if perfil and perfil.foto:
+            return perfil.foto.url
+
+        return None
 
     def get_grupos_display(self, obj):
         return list(obj.groups.values_list("name", flat=True))

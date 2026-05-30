@@ -28,10 +28,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // 🔹 Login
-  const login = async (n_identificacao, password) => {
+  const login = async (email_or_username, password) => {
     setLoading(true);
     try {
-      await api.post("/accounts/login/", { n_identificacao, password });
+      await api.post("/accounts/login/", { email_or_username, password });
       await fetchUser();
     } catch (error) {
       setUser(null);

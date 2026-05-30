@@ -245,9 +245,45 @@ function TabAdmins() {
                                     <td className="px-5 py-4 truncate">
                                         <div className="flex items-center gap-3">
 
-                                            <div className="min-w-12 h-12 rounded-full bg-[#f97b17] text-white flex items-center justify-center font-bold">
+                                                            
+                                            {
+                                            adm?.foto ? (
+
+                                                <img
+                                                src={adm.foto}
+                                                alt={adm.first_name || adm.username}
+                                                className="
+                                                    w-12
+                                                    h-12
+                                                    rounded-full
+                                                    object-cover
+                                                    shrink-0
+                                                    border
+                                                    border-black/10
+                                                "
+                                                />
+
+                                            ) : (
+
+                                                <div
+                                                className="
+                                                    w-12
+                                                    h-12
+                                                    rounded-full
+                                                    bg-[#f97b17]
+                                                    text-white
+                                                    flex
+                                                    items-center
+                                                    justify-center
+                                                    font-bold
+                                                    shrink-0
+                                                "
+                                                >
                                                 {obterIniciais(adm.first_name || adm.username)}
-                                            </div>
+                                                </div>
+
+                                            )
+                                            }
 
                                             <div>
                                                 <p>{adm.first_name || adm.username}</p>

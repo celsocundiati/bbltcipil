@@ -209,16 +209,17 @@ class MeView(APIView):
         return self._get_data(request.user)
 
     def put(self, request):
-        return self._update_user(request.user, request.data)
+        return self._update_user(request.user, request.data, request=request)
 
     def patch(self, request):
-        return self._update_user(request.user, request.data, partial=True)
+        return self._update_user(request.user, request.data, partial=True, request=request)
 
-    def _update_user(self, user, data, partial=False):
+    def _update_user(self, user, data, partial=False, request=None):
         perfil = getattr(user, "perfil", None)
 
         email = data.get("email")
         telefone = data.get("telefone")
+        foto = request.FILES.get("foto")
 
         if email:
             user.email = email
@@ -227,6 +228,10 @@ class MeView(APIView):
         if telefone and perfil:
             perfil.telefone = telefone
             perfil.save(update_fields=["telefone"])
+            
+        if foto and perfil:
+            perfil.foto = foto
+            perfil.save(update_fields=["foto"])
 
         return self._get_data(user)
 
@@ -263,6 +268,7 @@ class MeView(APIView):
 
             perfil_data = {
                 "telefone": perfil.telefone,
+                "foto": perfil.foto.url if perfil.foto else None,
                 "n_reservas": perfil.n_reservas,
                 "n_emprestimos": perfil.n_emprestimos
             }
@@ -270,6 +276,7 @@ class MeView(APIView):
         else:
             perfil_data = {
                 "telefone": None,
+                "foto": None,
                 "estado": "ativo",
                 "n_reservas": 0,
                 "n_emprestimos": 0

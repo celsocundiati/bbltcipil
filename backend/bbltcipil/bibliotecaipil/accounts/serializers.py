@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-
+from django.db.models import Q
 from .services.email_service import send_verification_email, validate_email, is_valid_email_basic
 
 User = get_user_model()
@@ -150,18 +150,23 @@ class SignupSerializer(serializers.Serializer):
 # =====================================================
 # LOGIN - n_processo/n_agente + senha
 # =====================================================
-
 class LoginSerializer(serializers.Serializer):
-    n_identificacao = serializers.CharField(max_length=20)
+    email_or_username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        n_identificacao = data["n_identificacao"]
+        identifier = data["email_or_username"]
         password = data["password"]
 
-        user = authenticate(username=n_identificacao, password=password)
+        user = User.objects.filter(
+            Q(username=identifier) | Q(email=identifier)
+        ).first()
 
         if not user:
+            raise AuthenticationFailed("Utilizador não encontrado.")
+
+        # 🔥 VERIFICA PASSWORD DIRETAMENTE
+        if not user.check_password(password):
             raise AuthenticationFailed("Credenciais inválidas.")
 
         if not user.is_active:
@@ -172,15 +177,15 @@ class LoginSerializer(serializers.Serializer):
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
-            "user_obj": user,   # 🔥 adiciona isto
+            "user_obj": user,  # 🔥 adicionar isto
             "user": {
                 "id": user.id,
                 "username": user.username,
                 "email": user.email,
-                "groups": [group.name for group in user.groups.all()],
+                "groups": list(user.groups.values_list("name", flat=True)),
             }
-        }
-    
+        }  
+
 
 class AlterarSenhaSerializer(serializers.Serializer):
     senha_atual = serializers.CharField(required=True)

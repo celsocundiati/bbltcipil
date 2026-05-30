@@ -111,7 +111,8 @@ def notificar_reserva_cancelada(payload):
 # ===============================
 @register_event("multa_paga")
 def notificar_multa_paga(payload):
-    from livros.models import Multa, Notificacao
+    from livros.models import Notificacao
+    from administracao.models import Multa
 
     m = Multa.objects.select_related("emprestimo").get(id=payload["multa_id"])
     usuario = m.emprestimo.reserva.usuario
@@ -130,7 +131,8 @@ def notificar_multa_paga(payload):
 # ===============================
 @register_event("multa_dispensada")
 def notificar_multa_dispensada(payload):
-    from livros.models import Multa, Notificacao
+    from livros.models import Notificacao
+    from administracao.models import Multa
 
     m = Multa.objects.select_related("emprestimo").get(id=payload["multa_id"])
     usuario = m.emprestimo.reserva.usuario
@@ -143,13 +145,16 @@ def notificar_multa_dispensada(payload):
         link=f"/multas#multa-{m.id}"
     )
 
+    print("DEBUG MULTA:", m.id, m.estado)
+
 
 # ===============================
 # MULTA CRIADA (RECOMENDADO)
 # ===============================
 @register_event("multa_criada")
 def notificar_multa_criada(payload):
-    from livros.models import Multa, Notificacao
+    from livros.models import Notificacao
+    from administracao.models import Multa
 
     m = Multa.objects.select_related("emprestimo").get(id=payload["multa_id"])
     usuario = m.emprestimo.reserva.usuario
@@ -161,9 +166,6 @@ def notificar_multa_criada(payload):
         tipo="Multa",
         link=f"/multas#multa-{m.id}"
     )
-
-
-
 
 
 @register_event("emprestimo_criado")
@@ -217,8 +219,5 @@ def notificar_emprestimo_devolvido(payload):
         descricao=f"O livro '{e.livro.titulo}' foi devolvido com sucesso.",
         defaults={"tipo": "Emprestimo", "link": f"/reservas#reserva-{e.reserva.id}"}
     )
-
-
-
 
 
