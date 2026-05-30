@@ -7,15 +7,18 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import SignupSerializer, LoginSerializer, AlterarSenhaSerializer
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
+from audit.models import AuditLog
+from .models import AlunoOficial, FuncionarioOficial, Perfil
 from django.contrib.auth.tokens import default_token_generator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
 import json
+from django.core import signing
+from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 
 User = get_user_model()
 
@@ -28,13 +31,12 @@ class SignupView(APIView):
     authentication_classes = []
 
     def post(self, request):
-        print("\n📥 REQUEST DATA:", request.data)
 
-        serializer = SignupSerializer(data=request.data)
+        serializer = SignupSerializer(
+            data=request.data
+        )
 
         if not serializer.is_valid():
-            print("❌ ERROS SERIALIZER:", serializer.errors)
-
             return Response(
                 {
                     "success": False,
@@ -44,43 +46,138 @@ class SignupView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = serializer.save()
+        result = serializer.save()
 
         return Response(
             {
                 "success": True,
-                "message": "Conta criada com sucesso. Verifica o teu email.",
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "is_active": user.is_active
-                },
+                "message": (
+                    "Email de ativação enviado. "
+                    "Verifica a tua caixa de entrada."
+                ),
+                "email": result["email"],
                 "email_verification_sent": True
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_200_OK
         )
 
 
-
 class VerifyEmailView(APIView):
-    permission_classes = []
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
-    def get(self, request, uid, token):
+    def get(self, request, token):
+
         try:
-            user_id = urlsafe_base64_decode(uid).decode()
-            user = User.objects.get(pk=user_id)
 
-            if default_token_generator.check_token(user, token):
-                user.is_active = True
-                user.save()
-                return Response({"message": "Conta ativada com sucesso"}, status=200)
+            data = signing.loads(
+                token,
+                salt="signup-activation",
+                max_age=60 * 60 * 24  # 24 horas
+            )
 
-            return Response({"message": "Token inválido"}, status=400)
+            email = data["email"]
+            password = data["password"]
+            n_identificacao = data["n_identificacao"]
+            grupo_nome = data["grupo_nome"]
+            nome_completo = data["nome_completo"]
+            tipo = data["tipo"]
 
-        except Exception:
-            return Response({"message": "Erro na verificação"}, status=400)
+            if User.objects.filter(email=email).exists():
+                return Response(
+                    {
+                        "message": (
+                            "Já existe uma conta com este email."
+                        )
+                    },
+                    status=400
+                )
 
+            if tipo == "aluno":
+
+                instance = AlunoOficial.objects.get(
+                    n_processo=n_identificacao
+                )
+
+            else:
+
+                instance = FuncionarioOficial.objects.get(
+                    n_agente=n_identificacao
+                )
+
+            if instance.perfil:
+                return Response(
+                    {
+                        "message": (
+                            "Este utilizador já possui conta ativa."
+                        )
+                    },
+                    status=400
+                )
+
+            user = User.objects.create_user(
+                username=n_identificacao,
+                email=email,
+                password=password,
+                first_name=nome_completo,
+                is_active=True
+            )
+
+            grupo, _ = Group.objects.get_or_create(
+                name=grupo_nome
+            )
+
+            user.groups.add(grupo)
+
+            perfil = Perfil.objects.create(
+                user=user,
+                telefone=""
+            )
+
+            instance.perfil = perfil
+            instance.save()
+
+            AuditLog.objects.create(
+                usuario=user,
+                acao="Sign up",
+                modelo=ContentType.objects.get_for_model(user),
+                objeto_id=user.id,
+                alteracoes={
+                    "grupo": grupo_nome,
+                    "identificacao": n_identificacao
+                }
+            )
+
+            return Response(
+                {
+                    "message": "Conta ativada com sucesso."
+                },
+                status=200
+            )
+
+        except signing.SignatureExpired:
+            return Response(
+                {
+                    "message": "Link expirado."
+                },
+                status=400
+            )
+
+        except signing.BadSignature:
+            return Response(
+                {
+                    "message": "Link inválido."
+                },
+                status=400
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "message": str(e)
+                },
+                status=400
+            )
 
 
 class RefreshTokenView(APIView):
@@ -126,36 +223,6 @@ class RefreshTokenView(APIView):
 # =====================================================
 # LOGIN - n_processo + senha
 # =====================================================
-# class LoginView(APIView):
-#     permission_classes = [AllowAny]
-#     authentication_classes = []
-
-#     def post(self, request):
-#         serializer = LoginSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         refresh = serializer.validated_data["refresh"]
-#         user = serializer.validated_data["user_obj"]
-
-#         # atualiza último login
-#         update_last_login(None, user)
-
-#         response = Response({
-#             "message": "Login efetuado com sucesso",
-#             "user": serializer.validated_data["user"]
-#         }, status=200)
-
-#         # Cookie HttpOnly para cross-domain
-#         response.set_cookie(
-#             key="refresh_token",
-#             value=refresh,
-#             httponly=True,
-#             secure=False,   # True em produção com HTTPS
-#             samesite="Lax", # 🔥 cross-domain
-#             max_age=7*24*60*60
-#         )
-
-#         return response
-
 class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []

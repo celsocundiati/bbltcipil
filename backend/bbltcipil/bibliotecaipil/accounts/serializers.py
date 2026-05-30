@@ -1,19 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.models import Group
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from audit.models import AuditLog
-from .models import AlunoOficial, FuncionarioOficial, Perfil
-from django.contrib.contenttypes.models import ContentType
+from .models import AlunoOficial, FuncionarioOficial
 from django.conf import settings
-
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
+from django.core import signing
 from django.db.models import Q
-from .services.email_service import send_verification_email, validate_email, is_valid_email_basic
+from .services.email_service import send_verification_email, is_valid_email_basic
 
 User = get_user_model()
 
@@ -92,59 +86,99 @@ class SignupSerializer(serializers.Serializer):
         data["nome_completo"] = nome_completo
 
         return data
-
+    
     def create(self, validated_data):
-        instance = validated_data["instance"]
-        grupo_nome = validated_data["grupo_nome"]
-        email = validated_data["email"]
-        password = validated_data["password"]
-        n_identificacao = validated_data["n_identificacao"]
-        nome_completo = validated_data["nome_completo"]
 
-        # 🔥 criar user (ainda inativo)
-        user = User.objects.create_user(
-            username=n_identificacao,
-            email=email,
-            password=password,
-            first_name=nome_completo,
-            is_active=False
+        payload = {
+            "email": validated_data["email"],
+            "password": validated_data["password"],
+            "n_identificacao": validated_data["n_identificacao"],
+            "grupo_nome": validated_data["grupo_nome"],
+            "nome_completo": validated_data["nome_completo"],
+            "tipo": (
+                "aluno"
+                if validated_data["grupo_nome"] == "Aluno"
+                else "funcionario"
+            )
+        }
+
+        token = signing.dumps(
+            payload,
+            salt="signup-activation"
         )
 
-        grupo, _ = Group.objects.get_or_create(name=grupo_nome)
-        user.groups.add(grupo)
+        verify_link = (
+            f"{settings.FRONTEND_URL}/verify-email/{token}"
+        )
 
-        perfil = Perfil.objects.create(user=user, telefone="")
-        instance.perfil = perfil
-        instance.save()
-
-        # 🔥 gerar link
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-
-        verify_link = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}"
-
-        # 🔥 ENVIAR EMAIL (CRÍTICO)
-        email_sent = send_verification_email(user.email, verify_link)
+        email_sent = send_verification_email(
+            validated_data["email"],
+            verify_link
+        )
 
         if not email_sent:
-            # 🔥 rollback lógico
-            user.delete()
             raise serializers.ValidationError({
-                "email": "Não foi possível enviar email de verificação. Tente novamente."
+                "email": (
+                    "Não foi possível enviar email de verificação."
+                )
             })
 
-        AuditLog.objects.create(
-            usuario=user,
-            acao="Sign up",
-            modelo=ContentType.objects.get_for_model(user),
-            objeto_id=user.id,
-            alteracoes={
-                "grupo": grupo_nome,
-                "identificacao": n_identificacao
-            }
-        )
+        return {
+            "email": validated_data["email"]
+        }
 
-        return user
+        # def create(self, validated_data):
+        #     instance = validated_data["instance"]
+        #     grupo_nome = validated_data["grupo_nome"]
+        #     email = validated_data["email"]
+        #     password = validated_data["password"]
+        #     n_identificacao = validated_data["n_identificacao"]
+        #     nome_completo = validated_data["nome_completo"]
+
+        #     # 🔥 criar user (ainda inativo)
+        #     user = User.objects.create_user(
+        #         username=n_identificacao,
+        #         email=email,
+        #         password=password,
+        #         first_name=nome_completo,
+        #         is_active=False
+        #     )
+
+        #     grupo, _ = Group.objects.get_or_create(name=grupo_nome)
+        #     user.groups.add(grupo)
+
+        #     perfil = Perfil.objects.create(user=user, telefone="")
+        #     instance.perfil = perfil
+        #     instance.save()
+
+        #     # 🔥 gerar link
+        #     uid = urlsafe_base64_encode(force_bytes(user.pk))
+        #     token = default_token_generator.make_token(user)
+
+        #     verify_link = f"{settings.FRONTEND_URL}/verify-email/{uid}/{token}"
+
+        #     # 🔥 ENVIAR EMAIL (CRÍTICO)
+        #     email_sent = send_verification_email(user.email, verify_link)
+
+        #     if not email_sent:
+        #         # 🔥 rollback lógico
+        #         user.delete()
+        #         raise serializers.ValidationError({
+        #             "email": "Não foi possível enviar email de verificação. Tente novamente."
+        #         })
+
+        #     AuditLog.objects.create(
+        #         usuario=user,
+        #         acao="Sign up",
+        #         modelo=ContentType.objects.get_for_model(user),
+        #         objeto_id=user.id,
+        #         alteracoes={
+        #             "grupo": grupo_nome,
+        #             "identificacao": n_identificacao
+        #         }
+        #     )
+
+        #     return user
 
 
 # =====================================================
