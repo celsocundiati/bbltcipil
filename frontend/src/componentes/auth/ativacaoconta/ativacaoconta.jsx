@@ -1,58 +1,22 @@
-// import { useEffect, useState } from "react";
-// import { useParams, useNavigate } from "react-router-dom";
-// import api from "../../service/api/api";
-
-// export default function AtivacaoConta() {
-//   const { uid, token } = useParams();
-//   const navigate = useNavigate();
-
-//   const [status, setStatus] = useState("loading");
-
-//   useEffect(() => {
-//     async function verify() {
-//       try {
-//         await api.get(`/accounts/verify-email/${uid}/${token}/`);
-//         setStatus("success");
-
-//         setTimeout(() => {
-//           navigate("/login");
-//         }, 3000);
-
-//       } catch (err) {
-//         setStatus("error");
-//       }
-//     }
-
-//     verify();
-//   }, [uid, token]);
-
-//   return (
-//     <div className="flex items-center justify-center h-screen">
-//       {status === "loading" && <p>Validando conta...</p>}
-//       {status === "success" && <p>Conta ativada com sucesso!</p>}
-//       {status === "error" && <p>Link inválido ou expirado.</p>}
-//     </div>
-//   );
-// }
-
-
-
-
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../service/api/api";
 
 export default function AtivacaoConta() {
-  const { uid, token } = useParams();
+  const { token } = useParams();
   const navigate = useNavigate();
 
   const [status, setStatus] = useState("loading");
+  const hasRun = useRef(false);
 
   useEffect(() => {
+    if (!token || hasRun.current) return;
+
+    hasRun.current = true;
+
     async function ativarConta() {
       try {
-        await api.get(`/accounts/verify-email/${uid}/${token}/`);
+        await api.get(`/accounts/verify-email/${token}/`);
         setStatus("success");
 
         setTimeout(() => {
@@ -66,7 +30,7 @@ export default function AtivacaoConta() {
     }
 
     ativarConta();
-  }, [uid, token]);
+  }, [token]);
 
   return (
     <div className="flex items-center justify-center h-screen flex-col">

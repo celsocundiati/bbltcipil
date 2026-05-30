@@ -49,7 +49,7 @@ function App() {
             <Route path="/cadastro" element={<CadastroAluno />} />
             <Route path="/recuperacaosenha" element={<PasswordResetForm />} />
             <Route path="reset-password/:uid/:token" element={<ResetPasswordPage />} />
-            <Route path="/verify-email/:uid/:token" element={<AtivacaoConta />} />
+            <Route path="/verify-email/:token" element={<AtivacaoConta />} />
 
             {/* Rotas privadas */}
             <Route path="/" element={<PrivateRoute><Casa /></PrivateRoute>} />
