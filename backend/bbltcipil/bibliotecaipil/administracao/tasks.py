@@ -2,12 +2,9 @@ from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
 from datetime import timedelta
-
 from livros.models import Reserva, Livro, Emprestimo
-from .models import Multa
-# from .audit_service import AuditService
-from .services.multas import calcular_valor_multa
 from bibliotecaipil.events import emit_event
+from administracao.services.multas import criar_multa
 
 
 @shared_task
@@ -19,43 +16,33 @@ def gerar_multas_atraso():
         acoes__in=["ativo", "atrasado"]
     ).select_related("reserva", "reserva__usuario")
 
-    novas = 0
-    atualizadas = 0
     atrasados = 0
+    criadas = 0
 
     for e in emprestimos:
 
-        valor = calcular_valor_multa(e, "Atraso")
-
         with transaction.atomic():
 
-            # Atualiza status sem passar pelo save()
+            # 🔥 atualiza estado
             if e.acoes == "ativo":
-                Emprestimo.objects.filter(
-                    id=e.id
-                ).update(acoes="atrasado")
+                Emprestimo.objects.filter(id=e.id).update(acoes="atrasado")
                 atrasados += 1
 
-            multa, created = Multa.objects.get_or_create(
-                emprestimo=e,
-                motivo="Atraso",
-                defaults={
-                    "valor": valor,
-                    "criado_por": None
-                }
-            )
+            # 🔥 criar multa via SERVICE (única fonte de verdade)
+            try:
+                multa = criar_multa(
+                    emprestimo=e,
+                    motivo="Atraso",
+                    user=None
+                )
+                criadas += 1
 
-            if created:
-                novas += 1
-
-            elif multa.valor != valor:
-                multa.valor = valor
-                multa.save(update_fields=["valor"])
-                atualizadas += 1
+            except Exception:
+                # já existe multa ou não aplicável
+                continue
 
     return {
-        "novas": novas,
-        "atualizadas": atualizadas,
+        "multas_criadas": criadas,
         "emprestimos_atrasados": atrasados
     }
 
@@ -123,9 +110,6 @@ def rotina_automatica_sistema():
     aprovar_reservas_automaticamente.delay()
 
     return {"status": "ok"}
-
-
-
 
 
 

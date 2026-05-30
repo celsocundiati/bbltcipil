@@ -143,9 +143,46 @@ function TabAluno() {
                       <tr key={aluno?.n_processo} className="hover:bg-black/3 transition">
                         <td className="px-5 py-4 truncate">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-[#f97b17] text-white flex items-center justify-center font-bold shrink-0">
-                              {obterIniciais(aluno?.nome_completo)}
-                            </div>
+                            
+                            {
+                              perfil?.foto ? (
+
+                                <img
+                                  src={perfil.foto}
+                                  alt={aluno?.nome_completo}
+                                  className="
+                                    w-12
+                                    h-12
+                                    rounded-full
+                                    object-cover
+                                    shrink-0
+                                    border
+                                    border-black/10
+                                  "
+                                />
+
+                              ) : (
+
+                                <div
+                                  className="
+                                    w-12
+                                    h-12
+                                    rounded-full
+                                    bg-[#f97b17]
+                                    text-white
+                                    flex
+                                    items-center
+                                    justify-center
+                                    font-bold
+                                    shrink-0
+                                  "
+                                >
+                                  {obterIniciais(aluno?.nome_completo)}
+                                </div>
+
+                              )
+                            }
+                            
                             <div className="overflow-hidden">
                               <p className="font-medium truncate">{aluno?.nome_completo}</p>
                               <p className="text-sm text-cinza-900 truncate">{perfil.user?.email || "Nothing"}</p>

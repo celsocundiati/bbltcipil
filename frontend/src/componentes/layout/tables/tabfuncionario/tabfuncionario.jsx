@@ -150,9 +150,45 @@ function TabFuncionario() {
                       <tr key={perfil.id} className="hover:bg-black/3 transition">
                         <td className="px-5 py-4 truncate">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-[#f97b17] text-white flex items-center justify-center font-bold shrink-0">
-                              {obterIniciais(funcionario?.nome)}
-                            </div>
+
+                            {
+                              perfil?.foto ? (
+
+                                <img
+                                  src={perfil.foto}
+                                  alt={funcionario?.nome}
+                                  className="
+                                    w-12
+                                    h-12
+                                    rounded-full
+                                    object-cover
+                                    shrink-0
+                                    border
+                                    border-black/10
+                                  "
+                                />
+
+                              ) : (
+
+                                <div
+                                  className="
+                                    w-12
+                                    h-12
+                                    rounded-full
+                                    bg-[#f97b17]
+                                    text-white
+                                    flex
+                                    items-center
+                                    justify-center
+                                    font-bold
+                                    shrink-0
+                                  "
+                                >
+                                  {obterIniciais(funcionario?.nome)}
+                                </div>
+
+                              )
+                            }
 
                             <div className="overflow-hidden">
                               <p className="font-medium truncate">

@@ -139,6 +139,10 @@ def devolver_emprestimo(emprestimo):
 def calcular_valor_multa(emprestimo, motivo):
 
     config = get_config()
+
+    if not config.cobranca_ativa:
+        return 0
+
     hoje = timezone.now().date()
 
     if not emprestimo or not emprestimo.data_devolucao:
@@ -147,15 +151,21 @@ def calcular_valor_multa(emprestimo, motivo):
     prazo = emprestimo.data_devolucao
 
     if motivo == "Atraso":
-        if hoje > prazo:
-            dias_atraso = (hoje - prazo).days
-            return dias_atraso * config.multa_por_dia
 
-    elif motivo == "Dano":
-        return config.multa_por_dano
+        dias_diff = (hoje - prazo).days
 
-    elif motivo == "Perda":
-        return config.multa_por_perda
+        if dias_diff < config.dias_tolerancia:
+            return 0
+
+        dias_atraso_valido = max(
+            dias_diff - config.dias_tolerancia,
+            0
+        )
+
+        return dias_atraso_valido * config.multa_por_dia
+
+    elif motivo in ["Dano", "Perda"]:
+        return config.multa_por_perda_ou_dano
 
     return 0
 
@@ -167,6 +177,11 @@ def criar_multa(*, emprestimo, motivo, user):
 
     if not emprestimo:
         raise ValidationError("Empréstimo é obrigatório.")
+
+    # 🔥 bloqueio global
+    config = get_config()
+    if not config.cobranca_ativa:
+        raise ValidationError("Cobrança de multas está desativada no sistema.")
 
     if motivo in ["Dano", "Perda"] and Multa.objects.filter(
         emprestimo=emprestimo,
@@ -189,12 +204,22 @@ def criar_multa(*, emprestimo, motivo, user):
 
     valor = calcular_valor_multa(emprestimo, motivo)
 
-    multa = Multa.objects.create(
-        emprestimo=emprestimo,
-        motivo=motivo,
-        valor=valor,
-        criado_por=user
-    )
+    if valor <= 0:
+        raise ValidationError("Multa não aplicável (valor = 0).")
+
+    with transaction.atomic():
+
+        multa = Multa.objects.create(
+            emprestimo=emprestimo,
+            motivo=motivo,
+            valor=valor,
+            criado_por=user
+        )
+
+        # 🔥 EVENTO AQUI (FINALMENTE)
+        emit_event("multa_criada", {
+            "multa_id": multa.id
+        })
 
     return multa
 
@@ -207,11 +232,24 @@ def pagar_multa(*, multa):
     with transaction.atomic():
 
         if multa.estado == "Pago":
-            raise ValidationError("Esta multa já foi paga.")
+            raise ValidationError(
+                "Esta multa já foi paga."
+            )
 
         multa.marcar_como_pago()
 
-        devolver_emprestimo(multa.emprestimo)
+        devolver_emprestimo(
+            multa.emprestimo
+        )
+
+    transaction.on_commit(
+        lambda: emit_event(
+            "multa_paga",
+            {
+                "multa_id": multa.id
+            }
+        )
+    )
 
     return multa
 
@@ -224,14 +262,26 @@ def dispensar_multa(*, multa):
     with transaction.atomic():
 
         if multa.estado == "Pago":
-            raise ValidationError("Não pode dispensar multa já paga.")
+            raise ValidationError(
+                "Não pode dispensar multa já paga."
+            )
 
         multa.dispensar()
 
-        devolver_emprestimo(multa.emprestimo)
+        devolver_emprestimo(
+            multa.emprestimo
+        )
+
+    transaction.on_commit(
+        lambda: emit_event(
+            "multa_dispensada",
+            {
+                "multa_id": multa.id
+            }
+        )
+    )
 
     return multa
-
 
 
 def atualizar_perfil(usuario):

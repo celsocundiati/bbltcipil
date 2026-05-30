@@ -49,7 +49,8 @@ export default function MeuPerfil() {
       {/* Banner e imagem */}
       <section className="relative">
         <article className="bg-[#F86417] h-32 rounded-t-2xl"></article>
-        <ImagemUpload />
+        {/* <ImagemUpload /> */}
+        <ImagemUpload fotoAtual={user?.perfil?.foto} />
       </section>
 
       {/* Card do perfil */}
@@ -79,10 +80,10 @@ export default function MeuPerfil() {
               </p>
             </span>
 
-            {info?.telefone && (
+            {info?.perfil?.telefone && (
               <span className="flex items-center gap-2">
                 <HiOutlineHashtag size={18} className="text-[#F97B17]" />
-                <p className="text-[#000000]/57 text-sm">Telefone: {info.telefone}</p>
+                <p className="text-[#000000]/57 text-sm">Telefone: {user?.perfil?.telefone}</p>
               </span>
             )}
           </div>

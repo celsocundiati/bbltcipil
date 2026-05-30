@@ -262,7 +262,6 @@ class CategoriaAdminViewSet(BaseAdminViewSet):
 # -----------------------------
 # MULTAS
 # -----------------------------
-
 class MultaViewSet(viewsets.ModelViewSet):
     queryset = Multa.objects.select_related(
         "emprestimo",
@@ -367,39 +366,64 @@ class MultaViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
-
     @action(detail=True, methods=["post"])
     def pagar(self, request, pk=None):
+
         multa = self.get_object()
 
-        pagar_multa(multa=multa)
+        try:
+            pagar_multa(multa=multa)
 
-        self.registrar_auditoria_multa(
-            request.user,
-            multa,
-            "Pagou"
-        )
+            self.registrar_auditoria_multa(request.user, multa, "Pagou")
 
-        return Response({
-            "status": "Multa paga e empréstimo devolvido"
-        })
+            return Response({"status": "OK"})
 
+        except Exception as e:
+            print("🔥 ERRO REAL:", repr(e))
+            raise
+
+    # @action(detail=True, methods=["post"])
+    # def dispensar(self, request, pk=None):
+    #     multa = self.get_object()
+
+    #     dispensar_multa(multa=multa)
+
+    #     self.registrar_auditoria_multa(
+    #         request.user,
+    #         multa,
+    #         "Dispensou"
+    #     )
+
+    #     return Response({
+    #         "status": "Multa dispensada e empréstimo devolvido"
+    #     })
 
     @action(detail=True, methods=["post"])
     def dispensar(self, request, pk=None):
         multa = self.get_object()
 
-        dispensar_multa(multa=multa)
+        try:
+            dispensar_multa(multa=multa)
 
-        self.registrar_auditoria_multa(
-            request.user,
-            multa,
-            "Dispensou"
-        )
+            self.registrar_auditoria_multa(
+                request.user,
+                multa,
+                "Dispensou"
+            )
 
-        return Response({
-            "status": "Multa dispensada e empréstimo devolvido"
-        })
+            return Response({
+                "status": "Multa dispensada e empréstimo devolvido"
+            }, status=status.HTTP_200_OK)
+
+        except ValidationError as e:
+            return Response({
+                "error": str(e.detail if hasattr(e, "detail") else e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({
+                "error": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # =============================
