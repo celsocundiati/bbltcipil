@@ -9,7 +9,8 @@ from sentence_transformers import SentenceTransformer
 # ⚙️ CONFIG
 # =========================
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+# os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 # =========================
 # 🔒 GLOBAL STATE
@@ -176,13 +177,13 @@ def buscar_livros(pergunta, top_k=5):
 # =========================
 # 🚀 PRELOAD SEGURO
 # =========================
-def preload():
-    """
-    NÃO toca no banco.
-    Só carrega modelo.
-    """
-    print("🚀 Pré-carregando IA...")
+# def preload():
+#     """
+#     NÃO toca no banco.
+#     Só carrega modelo.
+#     """
+#     print("🚀 Pré-carregando IA...")
 
-    carregar_modelo()
+#     carregar_modelo()
 
-    print("✅ IA pronta (modelo carregado)")
+#     print("✅ IA pronta (modelo carregado)")
