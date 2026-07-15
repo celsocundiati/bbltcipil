@@ -5,11 +5,11 @@ from .models import Exposicao, Evento, Participacao
 from policies.reservas import validar_criacao_reserva
 
 
-
 def criar_reserva(usuario, livro):
 
     from livros.models import Reserva
 
+    
     validar_criacao_reserva(usuario)
 
     reserva = Reserva.objects.create(

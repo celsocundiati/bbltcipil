@@ -1,4 +1,6 @@
 import { HiOutlineUserGroup } from "react-icons/hi2";
+import CelsoImagem from "../../../../assets/sessao03.jpeg";
+import Cristianomagem from "../../../../assets/sessao01.jpeg";
 
 function Seccao3() {
     return (
@@ -25,7 +27,8 @@ function Seccao3() {
 
                     {/* DEV 1 */}
                     <div className="bg-white p-4 sm:p-6 rounded-xl text-center shadow-md hover:shadow-lg transition">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F86417] rounded-full mx-auto mb-4"></div>
+                        {/* <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F86417] rounded-full mx-auto mb-4">{CelsoImagem}</div> */}
+                        <img src={CelsoImagem} className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F86417] rounded-full mx-auto mb-4" />
                         <h4 className="text-gray-800 text-sm sm:text-base">
                             Cristiano Francisco De Carvalho
                         </h4>
@@ -36,7 +39,7 @@ function Seccao3() {
 
                     {/* DEV 2 */}
                     <div className="bg-white p-4 sm:p-6 rounded-xl text-center shadow-md hover:shadow-lg transition">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F86417] rounded-full mx-auto mb-4"></div>
+                        <img src={Cristianomagem} className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F86417] rounded-full mx-auto mb-4" />
                         <h4 className="text-gray-800 text-sm sm:text-base">
                             Celso Paulo Cundiati Huma
                         </h4>

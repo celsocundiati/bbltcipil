@@ -75,6 +75,45 @@ function ModalEditAdmin({ onClose, onSuccess, adm, showToast }) {
         }
     }
 
+    // async function handleSubmit(e) {
+    //     e.preventDefault();
+    //     setLoading(true);
+
+    //     try {
+    //         const payload = montarPayload();
+
+    //         await api.patch("/admin/users/promote/", payload);
+
+    //         showToast({
+    //             type: "success",
+    //             message: `${getTipoUsuario()} atualizado com sucesso!`,
+    //         });
+
+    //         onSuccess?.();
+    //         onClose();
+
+    //     } catch (err) {
+
+    //         const data = err?.response?.data;
+
+    //         let message = "Erro ao atualizar utilizador";
+
+    //         if (data) {
+    //             message = typeof data === "string"
+    //                 ? data
+    //                 : Object.values(data).flat().join(" ");
+    //         }
+
+    //         showToast({
+    //             type: "error",
+    //             message,
+    //         });
+
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setLoading(true);
@@ -84,13 +123,13 @@ function ModalEditAdmin({ onClose, onSuccess, adm, showToast }) {
 
             await api.patch("/admin/users/promote/", payload);
 
-            showToast({
+            showToast?.({
                 type: "success",
                 message: `${getTipoUsuario()} atualizado com sucesso!`,
             });
 
-            onSuccess?.();
-            onClose();
+            // Atualiza a lista no componente pai
+            await onSuccess?.();
 
         } catch (err) {
 
@@ -104,7 +143,7 @@ function ModalEditAdmin({ onClose, onSuccess, adm, showToast }) {
                     : Object.values(data).flat().join(" ");
             }
 
-            showToast({
+            showToast?.({
                 type: "error",
                 message,
             });
@@ -125,7 +164,7 @@ function ModalEditAdmin({ onClose, onSuccess, adm, showToast }) {
 
                 <button
                     onClick={onClose}
-                    className="absolute top-3 right-3 text-black/60 hover:text-black"
+                    className="absolute top-3 right-3 cursor-pointer text-black/60 hover:text-black"
                 >
                     <HiOutlineXMark size={28} />
                 </button>
@@ -176,7 +215,7 @@ function ModalEditAdmin({ onClose, onSuccess, adm, showToast }) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-xl border border-black/10 hover:bg-black/5"
+                            className="px-4 py-2 rounded-xl cursor-pointer border border-black/10 hover:bg-black/5"
                         >
                             Cancelar
                         </button>
@@ -184,7 +223,7 @@ function ModalEditAdmin({ onClose, onSuccess, adm, showToast }) {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 rounded-xl bg-green-500 text-white hover:bg-green-600 disabled:opacity-50"
+                            className="px-4 py-2 rounded-xl cursor-pointer bg-green-500 text-white hover:bg-green-600 disabled:opacity-50"
                         >
                             {loading ? "Atualizando..." : "Atualizar"}
                         </button>

@@ -47,7 +47,7 @@ function ModalAddAdmin({ onClose, onSuccess, showToast }) {
                 montarPayload()
             );
 
-            showToast({
+            showToast?.({
                 type: "success",
                 message: "Utilizador promovido com sucesso!",
             });
@@ -57,8 +57,7 @@ function ModalAddAdmin({ onClose, onSuccess, showToast }) {
                 grupo: "",
             });
 
-            onSuccess?.();
-            onClose();
+            await onSuccess?.();
 
         } catch (err) {
 
@@ -79,6 +78,7 @@ function ModalAddAdmin({ onClose, onSuccess, showToast }) {
 
         } finally {
             setLoading(false);
+            onClose();
         }
     }
 
@@ -94,7 +94,7 @@ function ModalAddAdmin({ onClose, onSuccess, showToast }) {
                 {/* CLOSE */}
                 <button
                     onClick={onClose}
-                    className="absolute top-3 right-3 text-black/60 hover:text-black"
+                    className="absolute top-3 right-3 cursor-pointer text-black/60 hover:text-black"
                 >
                     <HiOutlineXMark size={28} />
                 </button>
@@ -136,7 +136,7 @@ function ModalAddAdmin({ onClose, onSuccess, showToast }) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 border border-black/10 rounded-xl hover:bg-black/5"
+                            className="px-4 py-2 border border-black/10 rounded-xl hover:bg-black/5 cursor-pointer"
                         >
                             Cancelar
                         </button>
@@ -144,7 +144,7 @@ function ModalAddAdmin({ onClose, onSuccess, showToast }) {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 disabled:opacity-50"
+                            className="px-4 py-2 bg-green-500 cursor-pointer text-white rounded-xl hover:bg-green-600 disabled:opacity-50"
                         >
                             {loading ? "Criando..." : "Criar"}
                         </button>

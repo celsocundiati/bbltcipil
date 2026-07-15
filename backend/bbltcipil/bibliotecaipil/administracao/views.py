@@ -629,11 +629,20 @@ class UserAdminViewSet(viewsets.ModelViewSet):
             Q(groups__name__in=["Admin", "Bibliotecario"])
         ).distinct()
 
+        search = self.request.query_params.get("search")
         estado = self.request.query_params.get("estado")
 
-        if estado == "ativo":
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search)
+            )
+
+        if estado == "true":
             queryset = queryset.filter(is_active=True)
-        elif estado == "inativo":
+        elif estado == "false":
             queryset = queryset.filter(is_active=False)
 
         return queryset
@@ -693,7 +702,6 @@ class UserAdminViewSet(viewsets.ModelViewSet):
             "is_staff": user.is_staff,
             "is_superuser": user.is_superuser
         })
-
 
 
 # ----------------------------------------------
