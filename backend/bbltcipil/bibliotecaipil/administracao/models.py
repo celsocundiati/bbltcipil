@@ -96,7 +96,7 @@ class Multa(models.Model):
         self.save()
 
     def __str__(self):
-        return f"{self.usuario} - {self.motivo} - {self.valor} Kz"
+        return f"{self.usuario} - {self.motivo} - {self.valor}"
 
 
 class ConfiguracaoSistema(models.Model):

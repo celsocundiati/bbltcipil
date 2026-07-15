@@ -107,7 +107,7 @@ export default function TabMultas() {
                             <tr className="transition">
                                 <th className="w-[15%] px-5 py-3 text-left">Usuário</th>
                                 <th className="w-[9%] px-5 py-3 text-left">Motivo</th>
-                                <th className="w-[9%] px-5 py-3 text-left">Falta</th>
+                                <th className="w-[9%] px-5 py-3 text-left">Faltas</th>
                                 <th className="w-[10%] px-5 py-3 text-left">Data</th>
                                 <th className="w-[11%] px-5 py-3 text-center">Estado</th>
                                 <th className="w-[20%] px-5 py-3 text-center">Acções</th>
@@ -125,7 +125,7 @@ export default function TabMultas() {
                             <tr key={multa.id} className="hover:bg-black/3 transition">
                                 <td className="px-5 py-4 truncate">{multa.usuario_nome || multa.usuario}</td>
                                 <td className="px-5 py-4 truncate">{multa.motivo}</td>
-                                <td className="px-5 py-4 truncate">{multa.valor} Kz</td>
+                                <td className="px-5 py-4 truncate">{multa.valor}</td>
                                 <td className="px-5 py-4 truncate">{new Date(multa.data_criacao).toLocaleDateString()}</td>
                                 <td className="px-5 py-4 text-center">
                                     <span className={`px-4 py-1 rounded-2xl text-sm ${

@@ -2,6 +2,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from administracao.models import ConfiguracaoSistema
 from livros.models import Reserva, Emprestimo
+from administracao.models import Multa
 
 
 def validar_criacao_reserva(usuario):
@@ -11,6 +12,18 @@ def validar_criacao_reserva(usuario):
         raise ValidationError({
             "erro": "sistema_sem_config",
             "mensagem": "O sistema ainda não está configurado corretamente."
+        })
+
+    total_multas = Multa.objects.filter(
+        usuario=usuario,
+        estado=["Pendente"]
+        ).count()
+
+    if total_multas:
+        raise ValidationError({
+            "erro": "multa_ativa",
+            "mensagem": f"Possui {total_multas} multa, impossível solicitar reserva!",
+            "acao": "Resolva sobre seus empréstimos atrasados na biblioteca."
         })
 
     # =========================
@@ -79,6 +92,19 @@ def validar_criacao_reserva(usuario):
 def validar_aprovar_reserva(reserva):
     if reserva.estado != "reservado":
         raise ValidationError("Apenas reservas 'reservado' podem ser aprovadas.")
+    
+    total_multas = Multa.objects.filter(
+        usuario=reserva.usuario,
+        estado=["Pendente"]
+        ).count()
+
+    if total_multas:
+        raise ValidationError({
+            "erro": "multa_ativa",
+            "mensagem": f"Possui {total_multas} multa, impossível solicitar reserva!",
+            "acao": "Resolva sobre seus empréstimos atrasados na biblioteca."
+        })
+
     return True
 
 

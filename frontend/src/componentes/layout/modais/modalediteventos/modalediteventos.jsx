@@ -234,7 +234,7 @@ function ModalEditEventos({ evento, onClose, setEventos, showToast }) {
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2 bg-black/10 rounded-xl hover:bg-red-500 hover:text-white"
+                                className="px-4 py-2 bg-black/10 rounded-xl cursor-pointer hover:bg-red-500 hover:text-white"
                             >
                                 Cancelar
                             </button>
@@ -242,7 +242,7 @@ function ModalEditEventos({ evento, onClose, setEventos, showToast }) {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 disabled:opacity-50"
+                                className="px-4 py-2 bg-green-500 text-white rounded-xl cursor-pointer hover:bg-green-600 disabled:opacity-50"
                             >
                                 {saving ? "A atualizar..." : "Atualizar"}
                             </button>

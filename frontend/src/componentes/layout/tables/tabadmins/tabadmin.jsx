@@ -31,12 +31,12 @@ function TabAdmins() {
             try {
                 const params = {};
                 if (search) params.search = search;
-                if (estadoFilter) params.user__is_active = estadoFilter;
+                if (estadoFilter) params.estado = estadoFilter;
 
                 setLoading(true);
 
                 const res = await api.get("admin/users/", { params });
-
+                
                 const data = Array.isArray(res.data.results)
                     ? res.data.results
                     : res.data;
@@ -109,10 +109,46 @@ function TabAdmins() {
         setSelectedAdm(null);
     }
 
+    // async function handleUpdateSuccess() {
+    //     try {
+    //         const res = await api.get("admin/users/", {
+    //             params: { search, estado: estadoFilter },
+    //         });
+
+    //         const data = Array.isArray(res.data.results)
+    //             ? res.data.results
+    //             : res.data;
+
+    //         setAdmins(data);
+
+    //         setToast({
+    //             message: "Utilizador atualizado com sucesso",
+    //             type: "success",
+    //         });
+
+    //         closeEditModal();
+
+    //     } catch (err) {
+    //         setToast({
+    //             message: "Erro ao atualizar lista",
+    //             type: "error",
+    //         });
+    //     } finally {
+    //         closeEditModal();
+    //     }
+    // }
+
+    // ==========================
+    // DELETE
+    // ==========================
+    
     async function handleUpdateSuccess() {
         try {
             const res = await api.get("admin/users/", {
-                params: { search, estado: estadoFilter },
+                params: {
+                    search,
+                    user__is_active: estadoFilter,
+                },
             });
 
             const data = Array.isArray(res.data.results)
@@ -126,6 +162,7 @@ function TabAdmins() {
                 type: "success",
             });
 
+
         } catch (err) {
             setToast({
                 message: "Erro ao atualizar lista",
@@ -135,10 +172,7 @@ function TabAdmins() {
             closeEditModal();
         }
     }
-
-    // ==========================
-    // DELETE
-    // ==========================
+    
     async function handleDelete(adm) {
         if (!adm) return;
 
@@ -200,9 +234,9 @@ function TabAdmins() {
                         onChange={(e) => setEstadoFilter(e.target.value)}
                         className="w-full px-3 h-10 rounded-xl border border-black/10 bg-white text-sm focus:ring-2 focus:ring-[#f97b17] outline-none"
                     >
-                        <option value={null}>Todos</option>
-                        <option value= {true}>Activos</option>
-                        <option value={false}>Inactivos</option>
+                        <option value="">Todos</option>
+                        <option value= "true">Activos</option>
+                        <option value="false">Inactivos</option>
                     </select>
                 </div>
 
@@ -348,6 +382,7 @@ function TabAdmins() {
                     adm={selectedAdm}
                     onClose={closeEditModal}
                     onSuccess={handleUpdateSuccess}
+                    showToast={setToast}
                 />
             )}
 

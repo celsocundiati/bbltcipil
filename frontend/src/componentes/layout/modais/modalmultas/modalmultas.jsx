@@ -132,14 +132,14 @@ function ModalMultas({ onClose, onSuccess }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 rounded-lg border border-black/10 hover:bg-red-500 hover:text-white transition"
+                className="px-6 py-2 rounded-lg border cursor-pointer border-black/10 hover:bg-red-500 hover:text-white transition"
               >
                 Cancelar
               </button>
 
               <button
                 type="submit"
-                className="px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition"
+                className="px-6 py-2 rounded-lg cursor-pointer bg-green-500 text-white hover:bg-green-600 transition"
               >
                 {loading ? "Salvando..." : "Aplicar Multa"}
               </button>

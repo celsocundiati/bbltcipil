@@ -491,8 +491,8 @@ class BaseEvento(models.Model):
         if self.capacidade_maxima <= 0:
             raise ValidationError("Capacidade deve ser maior que zero.")
 
-        if self.data_inicio >= self.data_fim:
-            raise ValidationError("Data de início deve ser menor que a data de fim.")
+        if self.data_inicio > self.data_fim:
+            raise ValidationError("Data de início deve ser menor ou igual que a data de fim.")
 
     # =========================
     # SAVE (SEGURO E CORRIGIDO)
