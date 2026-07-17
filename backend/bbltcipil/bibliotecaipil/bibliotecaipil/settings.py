@@ -437,17 +437,39 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = os.getenv(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173"
+    "http://localhost:5173,https://bibliotecaipil2026.vercel.app"
 ).split(",")
+
 
 CSRF_TRUSTED_ORIGINS = os.getenv(
     "CSRF_TRUSTED_ORIGINS",
-    "http://localhost:5173"
+    "http://localhost:5173,https://bibliotecaipil2026.vercel.app"
 ).split(",")
+
 
 CORS_ALLOW_CREDENTIALS = True
 
-FRONTEND_URL = "http://localhost:5173"
+
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "https://bibliotecaipil2026.vercel.app"
+)
+
+
+
+# CORS_ALLOWED_ORIGINS = os.getenv(
+#     "CORS_ALLOWED_ORIGINS",
+#     "http://localhost:5173"
+# ).split(",")
+
+# CSRF_TRUSTED_ORIGINS = os.getenv(
+#     "CSRF_TRUSTED_ORIGINS",
+#     "http://localhost:5173"
+# ).split(",")
+
+# CORS_ALLOW_CREDENTIALS = True
+
+# FRONTEND_URL = "http://localhost:5173"
 
 # ==========================================================
 # INTERNATIONALIZATION
