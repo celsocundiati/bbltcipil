@@ -230,7 +230,6 @@ import threading
 import numpy as np
 
 from livros.models import Livro
-from sentence_transformers import SentenceTransformer
 
 
 # ==========================================================
@@ -282,6 +281,8 @@ def carregar_modelo():
             if model is None:
 
                 try:
+
+                    from sentence_transformers import SentenceTransformer
 
                     print("📥 Carregando modelo IA...")
 
@@ -398,17 +399,10 @@ def gerar_embeddings(docs):
 
 
             embeddings = modelo.encode(
-
                 textos,
-
                 batch_size=16,
-
                 convert_to_numpy=True,
-
-                normalize_embeddings=True,
-
-                show_progress_bar=False
-
+                normalize_embeddings=True
             )
 
 
@@ -612,27 +606,39 @@ def buscar_livros(
 # 🚀 PRELOAD SEGURO
 # ==========================================================
 
+# def preload():
+
+#     """
+#     Apenas carrega o modelo.
+#     Não consulta banco.
+#     Seguro para Celery/Gunicorn.
+#     """
+
+
+#     print(
+#         "🚀 Pré-carregando IA..."
+#     )
+
+
+#     carregar_modelo()
+
+
+
+#     print(
+#         "✅ IA pronta"
+#     )
+
+
+# =========================
+# 🚀 PRELOAD DESATIVADO
+# =========================
+
 def preload():
-
     """
-    Apenas carrega o modelo.
-    Não consulta banco.
-    Seguro para Celery/Gunicorn.
+    Desativado no ambiente web.
+    O modelo será carregado apenas quando houver uma tarefa Celery.
     """
-
-
-    print(
-        "🚀 Pré-carregando IA..."
-    )
-
-
-    carregar_modelo()
-
-
-
-    print(
-        "✅ IA pronta"
-    )
-
+    print("⚠️ Preload ignorado.")
+    return None
 
     
