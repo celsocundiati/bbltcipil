@@ -27,7 +27,7 @@ function Detalhes() {
   const fetchLivros = async () => {
     try {
       setLoading(true)
-      const res = await api.get(`livros/livros/${id}/`);
+      const res = await api.get(`/livros/livros/${id}/`);
       setLivro(res.data);
     } catch (err) {
       console.error("Erro ao carregar livro.", err);

@@ -15,7 +15,7 @@ function Catalogo() {
     useEffect(() => {
         const fetchLivros = async() => {
             try{
-                const res = await api.get('livros/livros/')
+                const res = await api.get('/livros/livros/')
                 setLivros(Array.isArray(res.data.results) ? res.data.results : res.data)
             }catch(err){
                 console.error('Erro ao capturar livros', err)

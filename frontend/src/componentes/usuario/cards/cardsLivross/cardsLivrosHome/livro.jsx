@@ -18,7 +18,7 @@ function CardLivro() {
     const fetchLivros = async () => {
       try {
         setLoading(true);
-        const res = await api.get("livros/livros/");
+        const res = await api.get("/livros/livros/");
         const data = Array.isArray(res.data.results) ? res.data.results : res.data;
         // setLivros(data);
         setLivros(data.slice(0, 8));

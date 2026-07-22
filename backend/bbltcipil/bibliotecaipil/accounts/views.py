@@ -237,8 +237,14 @@ class LoginView(APIView):
         # atualiza último login
         update_last_login(None, user)
 
+        # response = Response({
+        #     "message": "Login efetuado com sucesso",
+        #     "user": serializer.validated_data["user"]
+        # }, status=200)
+
         response = Response({
             "message": "Login efetuado com sucesso",
+            "access": serializer.validated_data["access"],
             "user": serializer.validated_data["user"]
         }, status=200)
 
