@@ -577,6 +577,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+print("=" * 60)
+print("ESTOU A USAR O SETTINGS NOVO")
+print(__file__)
+print("=" * 60)
+
 # ==========================================================
 # BASE
 # ==========================================================
