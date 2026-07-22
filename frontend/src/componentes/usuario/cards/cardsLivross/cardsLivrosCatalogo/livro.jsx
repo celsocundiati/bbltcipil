@@ -26,7 +26,7 @@ function CardLivroCatalogo() {
         if (search) params.search = search;
         if (estadoFilter) params.estado = estadoFilter;
         setLoading(true)
-        const res = await api.get("livros/livros/", {params});
+        const res = await api.get("/livros/livros/", {params});
         const data = Array.isArray(res.data.results) ? res.data.results : res.data;
         setLivros(data);
       } catch (err) {

@@ -20,8 +20,8 @@ function CardReservas() {
     const fetchReservasEmprestimos = async() => {
       try{
           const [resReservas, resEmprestimos] = await Promise.all([
-            api.get("livros/reservas/"),
-            api.get("livros/emprestimos/"),
+            api.get("/livros/reservas/"),
+            api.get("/livros/emprestimos/"),
           ]);
           setReservas(Array.isArray(resReservas.data.results) ? resReservas.data.results : resReservas.data);
           setEmprestimos(Array.isArray(resEmprestimos.data.results) ? resEmprestimos.data.results : resEmprestimos.data);

@@ -7,7 +7,11 @@ from .models import AlunoOficial, FuncionarioOficial
 from django.conf import settings
 from django.core import signing
 from django.db.models import Q
-from .services.email_service import send_verification_email, is_valid_email_basic
+from .services.email_service import (
+    send_verification_email,
+    is_valid_email_basic,
+    generate_verification_link
+)
 
 User = get_user_model()
 
@@ -107,10 +111,8 @@ class SignupSerializer(serializers.Serializer):
             salt="signup-activation"
         )
 
-        verify_link = (
-            f"{settings.FRONTEND_URL}/verify-email/{token}"
-        )
-
+        verify_link = generate_verification_link(token)
+        
         email_sent = send_verification_email(
             validated_data["email"],
             verify_link
