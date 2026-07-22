@@ -662,6 +662,11 @@ WSGI_APPLICATION = "bibliotecaipil.wsgi.application"
 # ==========================================================
 # DATABASE (PRODUCTION READY)
 # ==========================================================
+print("Todas as variáveis:", list(os.environ.keys()))
+
+print("=" * 50)
+print("DATABASE_URL =", os.getenv("DATABASE_URL"))
+print("=" * 50)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
