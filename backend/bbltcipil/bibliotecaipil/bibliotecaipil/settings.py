@@ -797,6 +797,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # SECURITY (PROD ONLY)
 # ==========================================================
 
+SECURE_PROXY_SSL_HEADER = (
+    "HTTP_X_FORWARDED_PROTO",
+    "https",
+)
+
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
