@@ -2,6 +2,5 @@ services:
   - type: web
     name: biblioteca-ipil
     env: python
-    rootDir: backend/bbltcipil
     buildCommand: "./build.sh"
     startCommand: "gunicorn bibliotecaipil.wsgi:application --timeout 120"
