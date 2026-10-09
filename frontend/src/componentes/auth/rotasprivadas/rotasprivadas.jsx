@@ -7,10 +7,18 @@ export default function PrivateRoute({ children }) {
 
   // if (loading) return <div className="text-center">Carregando...</div>;
 
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
+
+  if(loading){
+    return <Loading />;
+  }
+
+  if(!user){
+    return <Navigate to="/login" replace />;
+  }
   
 
-  if (!user) return <Navigate to="/login" replace />;
+  // if (!user) return <Navigate to="/login" replace />;
 
   return children;
 }

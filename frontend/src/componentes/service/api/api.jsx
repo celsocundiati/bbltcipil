@@ -1,11 +1,4 @@
-
 import axios from "axios";
-
-// const api = axios.create({
-//   baseURL: "http://localhost:8000/api",
-//   timeout: 10000,
-//   withCredentials: true,
-// });
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -61,25 +54,10 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      // try {
-      //   const res = await axios.post(
-      //     "http://localhost:8000/api/accounts/refresh/",
-      //     {},
-      //     { withCredentials: true }
-      //   );
-
         
         try {
 
           const res = await api.post("/accounts/refresh/");
-
-          // const res = await axios.post(
-          //   `${API_URL}/api/accounts/refresh/`,
-          //   {},
-          //   {
-          //     withCredentials: true
-          //   }
-          // );
 
         const newAccessToken = res.data.access;
 
