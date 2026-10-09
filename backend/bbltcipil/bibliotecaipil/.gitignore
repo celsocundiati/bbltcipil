@@ -24,3 +24,7 @@ Thumbs.db
 *.env
 
 celerybeat-schedule*
+
+# Backups de bases de dados
+*.dump
+*.sql
