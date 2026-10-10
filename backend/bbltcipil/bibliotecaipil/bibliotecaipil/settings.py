@@ -9,6 +9,7 @@ from celery.schedules import crontab
 import dj_database_url
 import cloudinary
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -111,33 +112,26 @@ WSGI_APPLICATION = "bibliotecaipil.wsgi.application"
 # DATABASE — LOCAL + PRODUCTION (NEON)
 # ==========================================================
 
-from django.core.exceptions import ImproperlyConfigured
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True,
-        )
-    }
-elif DEBUG:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "bibliotecaipil",
-            "USER": "postgres",
-            "PASSWORD": "1234",
-            "HOST": "localhost",
-            "PORT": "5432",
-        }
-    }
-else:
+if not DATABASE_URL:
     raise ImproperlyConfigured(
-        "DATABASE_URL é obrigatória em produção."
+        "DATABASE_URL não está definida nas variáveis de ambiente."
     )
+
+DATABASES = {
+    "default": dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True,
+    )
+}
+
+if not DATABASES["default"].get("ENGINE"):
+    raise ImproperlyConfigured(
+        "DATABASE_URL não gerou um ENGINE válido para a base de dados."
+    )
+
 
 
 # ==========================================================
